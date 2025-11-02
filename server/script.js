@@ -99,7 +99,6 @@ app.post("/workouts", async (req, res) => {
     });
     await newWorkout.save();
 
-    // Create notification
     await Notification.create({
       userId,
       type: "activity",
@@ -112,6 +111,66 @@ app.post("/workouts", async (req, res) => {
     res.status(500).send({ message: "Server error" });
   }
 });
+
+
+
+app.put("/workouts/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { exerciseName, sets, reps, weights, notes, category, tags, date } = req.body;
+    const updated = await workout_model.findByIdAndUpdate(
+      id,
+      {
+        exerciseName,
+        sets,
+        reps,
+        weights,
+        notes,
+        category,
+        tags,
+        date: new Date(date),
+      },
+      { new: true }
+    );
+    if (!updated) return res.status(404).send({ message: "Not found" });
+
+    await Notification.create({
+      userId: updated.userId,
+      type: "activity",
+      message: `Workout "${updated.exerciseName}" updated successfully.`,
+    });
+
+    res.send({ message: "Workout updated successfully", updated });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+app.delete("/workouts/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await workout_model.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).send({ message: "Not found" });
+
+    await Notification.create({
+      userId: deleted.userId,
+      type: "activity",
+      message: `Workout "${deleted.exerciseName}" deleted.`,
+    });
+
+    res.send({ message: "Deleted" });
+  } catch (err) {
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+
+
+
+
+
+
 
 
 // ========================= PROGRESS CRUD =========================
