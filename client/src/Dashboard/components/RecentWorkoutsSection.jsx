@@ -20,7 +20,8 @@ const RecentWorkoutsSection = () => {
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const API_BASE_URL = 'https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app'; 
+  const API_BASE_URL =
+    "https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app";
 
   // Fetch workouts on component mount
   useEffect(() => {
@@ -35,7 +36,9 @@ const RecentWorkoutsSection = () => {
     }
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/workouts`, { params: { userId } });
+      const res = await axios.get(`${API_BASE_URL}/workouts`, {
+        params: { userId },
+      });
       setWorkouts(res.data);
     } catch (error) {
       toast.error("Unable to fetch workouts");
@@ -64,7 +67,7 @@ const RecentWorkoutsSection = () => {
           notes,
           category,
           tags,
-          date
+          date,
         });
         toast.success("Updated successfully");
         console.log(res.data.message);
@@ -79,7 +82,7 @@ const RecentWorkoutsSection = () => {
           notes,
           category,
           tags,
-          date
+          date,
         });
         toast.success("Inserted successfully");
         console.log(res.data.message);
@@ -227,9 +230,13 @@ const RecentWorkoutsSection = () => {
             borderColor: "var(--border)",
           }}
         >
-          {["Strength", "Cardio", "Yoga", "HIIT", "Mobility", "Other"].map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
+          {["Strength", "Cardio", "Yoga", "HIIT", "Mobility", "Other"].map(
+            (c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            )
+          )}
         </select>
 
         <input
@@ -284,47 +291,110 @@ const RecentWorkoutsSection = () => {
         Recent Workouts
       </h3>
 
+      {/* ──────────────────────  RECENT WORKOUTS TABLE  ────────────────────── */}
       {loading ? (
-        <p>Loading...</p>
+        <p className="text-center py-4 text-var(--text-muted)">Loading…</p>
       ) : workouts.length === 0 ? (
-        <p>No workouts found.</p>
+        <p className="text-center py-4 text-var(--text-muted)">
+          No workouts found.
+        </p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+          <table className="min-w-full divide-y divide-[var(--border)]">
+            {/* ── HEAD ── */}
+            <thead className="bg-[var(--bg-card-hover)]">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exercise</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sets</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reps</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tags</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                {[
+                  "Date",
+                  "Exercise",
+                  "Sets",
+                  "Reps",
+                  "Weight",
+                  "Category",
+                  "Tags",
+                  "Notes",
+                  "Actions",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {workouts.map((workout) => (
-                <tr key={workout._id}>
-                  <td className="px-6 py-4 whitespace-nowrap">{new Date(workout.date).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{workout.exerciseName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{workout.sets}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{workout.reps}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{workout.weights}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{workout.category}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{workout.tags}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{workout.notes}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+
+            {/* ── BODY ── */}
+            <tbody className="divide-y divide-[var(--border)]">
+              {workouts.map((w) => (
+                <tr
+                  key={w._id}
+                  className="hover:bg-[var(--bg-card-hover)] transition-colors duration-150"
+                >
+                  <td
+                    className="px-4 py-3 whitespace-nowrap text-sm"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {new Date(w.date).toLocaleDateString()}
+                  </td>
+                  <td
+                    className="px-4 py-3 whitespace-nowrap text-sm"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {w.exerciseName}
+                  </td>
+                  <td
+                    className="px-4 py-3 whitespace-nowrap text-sm"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {w.sets}
+                  </td>
+                  <td
+                    className="px-4 py-3 whitespace-nowrap text-sm"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {w.reps}
+                  </td>
+                  <td
+                    className="px-4 py-3 whitespace-nowrap text-sm"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {w.weights}
+                  </td>
+                  <td
+                    className="px-4 py-3 whitespace-nowrap text-sm"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {w.category}
+                  </td>
+                  <td
+                    className="px-4 py-3 whitespace-nowrap text-sm"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {w.tags}
+                  </td>
+                  <td
+                    className="px-4 py-3 whitespace-nowrap text-sm"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {w.notes}
+                  </td>
+
+                  {/* ── ACTIONS ── */}
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">
                     <button
-                      onClick={() => handleEdit(workout)}
-                      className="text-blue-600 hover:text-blue-900 mr-2"
+                      onClick={() => handleEdit(w)}
+                      className="mr-3 font-medium transition-colors"
+                      style={{ color: "var(--accent)" }}
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(workout._id)}
-                      className="text-red-600 hover:text-red-900"
+                      onClick={() => handleDelete(w._id)}
+                      className="font-medium transition-colors"
+                      style={{ color: "#ef4444" }} // red-500
                     >
                       Delete
                     </button>
