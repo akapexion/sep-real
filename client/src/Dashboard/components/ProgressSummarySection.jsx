@@ -1,5 +1,5 @@
 // src/Dashboard/components/ProgressSummarySection.jsx
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   LineChart,
@@ -14,7 +14,77 @@ import {
 import axios from "axios";
 import toast from "react-hot-toast";
 
-const ProgressSummarySection = ({ progressEntries = [], onEditEntry, onDeleteEntry, onProgressUpdate }) => {
+const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const API_BASE_URL = 'https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app'; 
+
+
+  const handleEdit = (entry) => {
+    setEditingId(entry._id);
+    setEditForm({
+      date: entry.date.split("T")[0],
+      weight: entry.weight || "",
+      chest: entry.measurements?.chest || "",
+      waist: entry.measurements?.waist || "",
+      runTime: entry.performance?.runTime || "",
+      liftWeight: entry.performance?.liftWeight || "",
+    });
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    setEditForm({});
+  };
+
+  const handleUpdate = async () => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) return toast.error("Login required");
+
+    const payload = {
+      userId,
+      date: editForm.date,
+      weight: editForm.weight ? parseFloat(editForm.weight) : null,
+      measurements: {
+        chest: editForm.chest ? parseFloat(editForm.chest) : null,
+        waist: editForm.waist ? parseFloat(editForm.waist) : null,
+      },
+      performance: {
+        runTime: editForm.runTime ? parseFloat(editForm.runTime) : null,
+        liftWeight: editForm.liftWeight ? parseFloat(editForm.liftWeight) : null,
+      },
+    };
+
+    try {
+      await axios.put(
+        `${API_BASE_URL}/progress/${editingId}`,
+        payload
+      );
+      toast.success("Progress updated!");
+      setEditingId(null);
+      // onProgressUpdate();
+    } catch (err) {
+      toast.error("Update failed");
+      console.error(err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(
+        `${API_BASE_URL}/progress/${id}`
+      );
+      toast.success("Deleted!");
+    } catch (err) {
+      toast.error("Delete failed");
+      console.error(err);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
   const chartData = progressEntries.map((entry) => ({
     date: new Date(entry.date).toLocaleDateString("en-US", {
       month: "short",
@@ -65,31 +135,150 @@ const ProgressSummarySection = ({ progressEntries = [], onEditEntry, onDeleteEnt
             ) : (
               progressEntries.map((e) => (
                 <tr key={e._id} className="hover:bg-var(--bg-card-hover)">
-                  <td className="px-4 py-3 text-sm">
-                    {new Date(e.date).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3 text-sm">{e.weight ?? "-"}</td>
-                  <td className="px-4 py-3 text-sm">{e.measurements?.chest ?? "-"}</td>
-                  <td className="px-4 py-3 text-sm">{e.measurements?.waist ?? "-"}</td>
-                  <td className="px-4 py-3 text-sm">{e.performance?.runTime ?? "-"}</td>
-                  <td className="px-4 py-3 text-sm">{e.performance?.liftWeight ?? "-"}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => onEditEntry(e)}
-                        className="px-2 py-1 text-xs rounded text-white"
-                        style={{ backgroundColor: "#10b981" }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => onDeleteEntry(e._id)}
-                        className="px-2 py-1 text-xs rounded bg-red-600 text-white"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
+                  {editingId === e._id ? (
+                    <>
+                      {/* EDIT MODE */}
+                      <td className="px-4 py-3">
+                        <input
+                          type="date"
+                          name="date"
+                          value={editForm.date}
+                          onChange={handleInputChange}
+                          className="w-full px-2 py-1 rounded border text-sm"
+                          style={{
+                            backgroundColor: "var(--input-bg)",
+                            color: "var(--text-primary)",
+                            borderColor: "var(--border)",
+                          }}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="number"
+                          name="weight"
+                          value={editForm.weight}
+                          onChange={handleInputChange}
+                          step="0.1"
+                          placeholder="kg"
+                          className="w-full px-2 py-1 rounded border text-sm"
+                          style={{
+                            backgroundColor: "var(--input-bg)",
+                            color: "var(--text-primary)",
+                            borderColor: "var(--border)",
+                          }}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="number"
+                          name="chest"
+                          value={editForm.chest}
+                          onChange={handleInputChange}
+                          step="0.1"
+                          placeholder="cm"
+                          className="w-full px-2 py-1 rounded border text-sm"
+                          style={{
+                            backgroundColor: "var(--input-bg)",
+                            color: "var(--text-primary)",
+                            borderColor: "var(--border)",
+                          }}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="number"
+                          name="waist"
+                          value={editForm.waist}
+                          onChange={handleInputChange}
+                          step="0.1"
+                          placeholder="cm"
+                          className="w-full px-2 py-1 rounded border text-sm"
+                          style={{
+                            backgroundColor: "var(--input-bg)",
+                            color: "var(--text-primary)",
+                            borderColor: "var(--border)",
+                          }}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="number"
+                          name="runTime"
+                          value={editForm.runTime}
+                          onChange={handleInputChange}
+                          step="0.1"
+                          placeholder="min"
+                          className="w-full px-2 py-1 rounded border text-sm"
+                          style={{
+                            backgroundColor: "var(--input-bg)",
+                            color: "var(--text-primary)",
+                            borderColor: "var(--border)",
+                          }}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="number"
+                          name="liftWeight"
+                          value={editForm.liftWeight}
+                          onChange={handleInputChange}
+                          step="0.1"
+                          placeholder="kg"
+                          className="w-full px-2 py-1 rounded border text-sm"
+                          style={{
+                            backgroundColor: "var(--input-bg)",
+                            color: "var(--text-primary)",
+                            borderColor: "var(--border)",
+                          }}
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex gap-1">
+                          <button
+                            onClick={handleUpdate}
+                            className="px-2 py-1 text-xs rounded text-white"
+                            style={{ backgroundColor: "var(--accent)" }}
+                          >
+                            Update
+                          </button>
+                          <button
+                            onClick={handleCancel}
+                            className="px-2 py-1 text-xs rounded bg-gray-500 text-white"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-4 py-3 text-sm">
+                        {new Date(e.date).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm">{e.weight ?? "-"}</td>
+                      <td className="px-4 py-3 text-sm">{e.measurements?.chest ?? "-"}</td>
+                      <td className="px-4 py-3 text-sm">{e.measurements?.waist ?? "-"}</td>
+                      <td className="px-4 py-3 text-sm">{e.performance?.runTime ?? "-"}</td>
+                      <td className="px-4 py-3 text-sm">{e.performance?.liftWeight ?? "-"}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleEdit(e)}
+                            className="px-2 py-1 text-xs rounded text-white"
+                            style={{ backgroundColor: "#10b981" }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(e._id)}
+                            className="px-2 py-1 text-xs rounded bg-red-600 text-white"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))
             )}
