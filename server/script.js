@@ -113,8 +113,22 @@ app.post("/workouts", async (req, res) => {
 });
 
 
+app.get("/workouts", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).send({ message: "userId required" });
 
-app.put("/workouts/:id", async (req, res) => {
+    const workouts = await workout_model.find({ userId }).sort({ date: -1 }).lean();
+    res.send(workouts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+
+
+app.post("/workouts/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { exerciseName, sets, reps, weights, notes, category, tags, date } = req.body;
