@@ -228,7 +228,7 @@ app.get("/profile", async (req, res) => {
   }
 });
 
-app.put("/profile", upload.single("profilePic"), async (req, res) => {
+app.post("/profile", upload.single("profilePic"), async (req, res) => {
   try {
     const { userId, name, email } = req.body;
     if (!userId) return res.status(400).send({ message: "userId required" });
@@ -243,6 +243,26 @@ app.put("/profile", upload.single("profilePic"), async (req, res) => {
   }
 });
 
+
+
+app.delete("/profile", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).send({ message: "userId required" });
+
+    const user = await reg_model.findByIdAndDelete(userId);
+    if (!user) return res.status(404).send({ message: "User not found" });
+
+    await workout_model.deleteMany({ userId });
+    await progress_model.deleteMany({ userId });
+    await nutrition_model.deleteMany({ userId });
+
+    res.send({ message: "Profile deleted" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Server error" });
+  }
+});
 
 
 app.post("/nutrition", async (req, res) => {

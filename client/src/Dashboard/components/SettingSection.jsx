@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const SettingSection = () => {
   const [preferences, setPreferences] = useState({
@@ -14,7 +15,8 @@ const SettingSection = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userId = user._id; 
   const API_BASE_URL = 'https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app'; 
-  
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchPreferences = async () => {
       if (!userId) {
@@ -54,6 +56,24 @@ const SettingSection = () => {
       document.documentElement.setAttribute('data-theme', preferences.theme);
     } catch (err) {
       toast.error('Failed to update preferences');
+    }
+  };
+
+  const handleDeleteProfile = async () => {
+    if (!window.confirm('Are you sure you want to delete your profile? This action cannot be undone.')) {
+      return;
+    }
+    if (!userId) {
+      toast.error('User not logged in');
+      return;
+    }
+    try {
+      await axios.delete(`${API_BASE_URL}/profile?userId=${userId}`);
+      toast.success('Profile deleted successfully');
+      localStorage.removeItem('user');
+      navigate('/login');
+    } catch (err) {
+      toast.error('Failed to delete profile');
     }
   };
 
@@ -113,6 +133,14 @@ const SettingSection = () => {
           Save Changes
         </button>
       </form>
+      <div className="mt-6 pt-6 border-t border-[var(--border)]">
+        <button
+          onClick={handleDeleteProfile}
+          className="w-full py-2 rounded-md font-bold bg-red-600 text-white hover:bg-red-700 transition-colors"
+        >
+          Delete Profile
+        </button>
+      </div>
     </motion.div>
   );
 };
