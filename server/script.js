@@ -255,7 +255,8 @@ app.delete("/profile", async (req, res) => {
 
     await workout_model.deleteMany({ userId });
     await progress_model.deleteMany({ userId });
-    await nutrition_model.deleteMany({ userId });
+    await Nutrition.deleteMany({ userId });
+    await reg_model.deleteMany({ userId });
 
     res.send({ message: "Profile deleted" });
   } catch (error) {
