@@ -35,7 +35,7 @@ const RecentWorkoutsSection = () => {
     }
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/workouts`, { params: { userId } });
+      const res = await axios.get(`${API_BASE_URL}/workouts`, { userId });
       setWorkouts(res.data);
     } catch (error) {
       toast.error("Unable to fetch workouts");
