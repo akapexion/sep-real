@@ -79,7 +79,8 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
     navigate('/dashboard/profile');
   };
 
-  const profileImageUrl = `${API_BASE_URL}/uploads/${user.profilePic}` 
+  const profileImageUrl = `${API_BASE_URL}/uploads/${user.profilePic}`;
+  console.log(profileImageUrl)
     
 
   return (
