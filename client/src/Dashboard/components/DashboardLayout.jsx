@@ -35,7 +35,7 @@ const DashboardLayout = ({ user, logout }) => {
           transition={{ duration: 0.4 }}
           className="dashboard-header px-6 py-4"
         >
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>Fitness Tracker</h1>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>SimpleFit</h1>
         </motion.header>
         <main className="flex-1 p-6 overflow-auto">
           <Outlet />
