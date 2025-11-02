@@ -9,6 +9,7 @@ import ProgressSummarySection from "../components/ProgressSummarySection";
 const ProgressPage = () => {
   const [progressEntries, setProgressEntries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingEntry, setEditingEntry] = useState(null);
 
   const fetchProgress = async () => {
     const userId = localStorage.getItem("userId");
@@ -39,6 +40,29 @@ const ProgressPage = () => {
     fetchProgress(); // Refresh after save
   };
 
+  const handleEditEntry = (entry) => {
+    setEditingEntry(entry);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingEntry(null);
+  };
+
+  const handleDeleteEntry = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this entry?")) return;
+
+    try {
+      await axios.delete(
+        `https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app/progress/${id}`
+      );
+      toast.success("Entry deleted");
+      fetchProgress();
+    } catch (err) {
+      toast.error("Failed to delete entry");
+      console.error(err);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -53,19 +77,24 @@ const ProgressPage = () => {
           Track Your Progress
         </h1>
 
-        {/* Input Form */}
+        {/* Input Form - Handles both Add and Edit */}
         <div className="mb-12">
-          <ProgressInputSection onProgressAdded={handleProgressAdded} />
+          <ProgressInputSection 
+            onProgressAdded={handleProgressAdded} 
+            editingEntry={editingEntry}
+            onCancelEdit={handleCancelEdit}
+          />
         </div>
 
-        {/* Summary */}
         {loading ? (
           <p className="text-center text-var(--text-muted)">Loading progress...</p>
         ) : (
           <ProgressSummarySection
-  progressEntries={progressEntries}
-  onProgressUpdate={fetchProgress}
-/>
+            progressEntries={progressEntries}
+            onEditEntry={handleEditEntry}
+            onDeleteEntry={handleDeleteEntry}
+            onProgressUpdate={fetchProgress}
+          />
         )}
       </div>
     </motion.div>
