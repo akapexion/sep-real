@@ -190,7 +190,6 @@ app.delete("/workouts/:id", async (req, res) => {
 
 
 
-// ========================= PROGRESS CRUD =========================
 app.post("/progress", async (req, res) => {
   try {
     const { userId, date, weight, measurements, performance } = req.body;
@@ -203,12 +202,25 @@ app.post("/progress", async (req, res) => {
     });
     await newProgress.save();
 
-    // Create notification
     await Notification.create({
       userId,
       type: "reminder",
       message: `Progress updated for ${new Date(date).toLocaleDateString()}.`,
     });
+
+    const goals = await goals_model.find({ userId });
+
+    for (const goal of goals) {
+      if (goal.goalType === "weight") {
+        if (newProgress.weight <= goal.target) {
+          await Notification.create({
+            userId,
+            type: "goal",
+            message: `🎯 Congratulations! You achieved your weight goal of ${goal.target} kg.`,
+          });
+        }
+      }
+    }
 
     res.status(201).send({ message: "Progress added successfully" });
   } catch (error) {
@@ -216,6 +228,7 @@ app.post("/progress", async (req, res) => {
     res.status(500).send({ message: "Server error" });
   }
 });
+
 
 app.get("/progress", async (req, res) => {
   try {
@@ -230,16 +243,51 @@ app.get("/progress", async (req, res) => {
   }
 });
 
-app.post("/progress/:id", async (req, res) => {
+app.put("/progress/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const updated = await progress_model.findByIdAndUpdate(id, req.body, { new: true });
-    if (!updated) return res.status(404).send({ message: "Not found" });
-    res.send(updated);
-  } catch (err) {
+    const { userId, weight, measurements, performance } = req.body;
+
+    const updatedProgress = await progress_model.findByIdAndUpdate(
+      id,
+      { weight, measurements, performance },
+      { new: true }
+    );
+
+    if (!updatedProgress) {
+      return res.status(404).send({ message: "Progress not found" });
+    }
+
+    await Notification.create({
+      userId,
+      type: "reminder",
+      message: `Progress updated on ${new Date().toLocaleDateString()}.`,
+    });
+
+    const goals = await goals_model.find({ userId });
+
+    for (const goal of goals) {
+      if (goal.goalType === "weight") {
+        if (updatedProgress.weight <= goal.target) {
+          await Notification.create({
+            userId,
+            type: "goal",
+            message: `🎯 Congratulations! You achieved your weight goal of ${goal.target} kg.`,
+          });
+        }
+      }
+    }
+
+    res.status(200).send({
+      message: "Progress updated successfully",
+      updatedProgress,
+    });
+  } catch (error) {
+    console.log(error);
     res.status(500).send({ message: "Server error" });
   }
 });
+
 
 app.delete("/progress/:id", async (req, res) => {
   try {
@@ -523,6 +571,5 @@ app.delete("/goals/:id", async (req, res) => {
   }
 });
 
-// ========================= SERVER START =========================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
