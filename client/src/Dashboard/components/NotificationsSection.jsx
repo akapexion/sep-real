@@ -1,3 +1,4 @@
+// Update NotificationsSection.jsx - Style goal notifications differently
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -90,7 +91,7 @@ export default function NotificationsSection() {
               </tr>
             ) : (
               notifications.map(notif => (
-                <tr key={notif._id} className={`hover:bg-[var(--bg-card-hover)] transition ${notif.isRead ? 'opacity-60' : ''}`}>
+                <tr key={notif._id} className={`hover:bg-[var(--bg-card-hover)] transition ${notif.isRead ? 'opacity-60' : ''} ${notif.type === 'goal' ? 'bg-green-500/10' : ''}`}>
                   <td className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)" }}>{notif.type}</td>
                   <td className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)" }}>{notif.message}</td>
                   <td className="px-4 py-3 text-sm" style={{ color: "var(--text-muted)" }}>{new Date(notif.date).toLocaleDateString()}</td>
