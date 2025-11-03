@@ -11,6 +11,7 @@ const workout_model = require("./models/workout");
 const progress_model = require("./models/progress");
 const Notification = require("./models/notification");
 const Nutrition = require("./models/nutrition");
+const goals_model = require("./models/goals");
 
 const app = express();
 
@@ -460,6 +461,107 @@ app.delete("/notifications/:id", async (req, res) => {
   } catch (err) {
     console.error("DELETE /notifications/:id error:", err);
     res.status(500).send({ message: "Server error", error: err.message });
+  }
+});
+
+
+
+
+
+
+app.post("/goals", async (req, res) => {
+  try {
+    const { userId, goalType, target, current, deadline, notes } = req.body;
+    const newGoal = new goals_model({
+      userId,
+      goalType,
+      target,
+      current,
+      deadline: new Date(deadline),
+      notes,
+    });
+    await newGoal.save();
+    res.status(201).json({ message: "Goal added", goal: newGoal });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.get("/goals", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ message: "userId required" });
+
+    const goals = await goals_model.find({ userId }).sort({ deadline: 1 }).lean();
+    res.json(goals);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.post("/goals/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { goalType, target, current, deadline, notes } = req.body;
+    const updated = await goals_model.findByIdAndUpdate(
+      id,
+      { goalType, target, current, deadline: new Date(deadline), notes },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: "Not found" });
+    res.send(updated);
+  } catch (error) {
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+app.delete("/goals/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await goals_model.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).send({ message: "Not found" });
+    res.send({ message: "Deleted" });
+  } catch (error) {
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+app.post("/workouts", async (req, res) => {
+  try {
+    const { userId, exerciseName, sets, reps, weights, notes, category, tags, date } = req.body;
+    const newWorkout = new workout_model({
+      userId,
+      exerciseName,
+      sets,
+      reps,
+      weights,
+      notes,
+      category,
+      tags,
+      date: new Date(date),
+    });
+    await newWorkout.save();
+
+    const goals = await goals_model.find({ userId });
+    for (const goal of goals) {
+      let achieved = false;
+      if (goal.goalType === "Workout") {
+        if (goal.targetType === "weights" && weights >= goal.target) achieved = true;
+        if (goal.targetType === "sets" && sets >= goal.target) achieved = true;
+      }
+      if (achieved) {
+        await Notification.create({
+          userId,
+          type: "goal",
+          message: `Goal "${goal.goalType}" achieved with ${exerciseName}!`,
+        });
+      }
+    }
+
+    res.status(201).json({ message: "Workout added successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
