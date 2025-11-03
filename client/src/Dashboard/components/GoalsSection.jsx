@@ -13,7 +13,7 @@ export default function GoalsSection() {
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  const [goalType, setGoalType] = useState("Weight Loss");
+  const [goalType, setGoalType] = useState("weight");
   const [target, setTarget] = useState("");
   const [current, setCurrent] = useState("");
   const [deadline, setDeadline] = useState(new Date().toISOString().split("T")[0]);
@@ -23,7 +23,7 @@ export default function GoalsSection() {
   const userId = user?._id;
 
   const resetForm = () => {
-    setGoalType("Weight Loss");
+    setGoalType("weight");
     setTarget("");
     setCurrent("");
     setDeadline(new Date().toISOString().split("T")[0]);

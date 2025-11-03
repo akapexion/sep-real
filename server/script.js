@@ -193,7 +193,6 @@ app.delete("/workouts/:id", async (req, res) => {
 app.post("/progress", async (req, res) => {
   try {
     const { userId, date, weight, measurements, performance } = req.body;
-
     const newProgress = new progress_model({
       userId,
       date: new Date(date),
@@ -201,7 +200,6 @@ app.post("/progress", async (req, res) => {
       measurements,
       performance,
     });
-
     await newProgress.save();
 
     await Notification.create({
@@ -213,25 +211,12 @@ app.post("/progress", async (req, res) => {
     const goals = await goals_model.find({ userId });
 
     for (const goal of goals) {
-      const goalType = goal.goalType?.toLowerCase() || "";
-      const target = Number(goal.target);
-      const currentWeight = Number(newProgress.weight);
-
-      if (isNaN(target) || isNaN(currentWeight)) continue;
-
-      if (goalType.includes("weight")) {
-        if (goal.current > goal.target && currentWeight <= target) {
+      if (goal.goalType === "weight") {
+        if (newProgress.weight <= goal.target) {
           await Notification.create({
             userId,
             type: "goal",
-            message: `🎯 Congratulations! You achieved your weight loss goal of ${target} kg.`,
-          });
-        }
-        else if (goal.current < goal.target && currentWeight >= target) {
-          await Notification.create({
-            userId,
-            type: "goal",
-            message: `💪 Great job! You achieved your weight gain goal of ${target} kg.`,
+            message: `🎯 Congratulations! You achieved your weight goal of ${goal.target} kg.`,
           });
         }
       }
@@ -239,73 +224,24 @@ app.post("/progress", async (req, res) => {
 
     res.status(201).send({ message: "Progress added successfully" });
   } catch (error) {
-    console.log("Error in /progress POST:", error);
+    console.log(error);
     res.status(500).send({ message: "Server error" });
   }
 });
 
 
-
-app.post("/progress", async (req, res) => {
+app.get("/progress", async (req, res) => {
   try {
-    const { userId, date, weight, measurements, performance } = req.body;
+    const { userId } = req.query;
+    if (!userId) return res.status(400).send({ message: "userId required" });
 
-    const newProgress = new progress_model({
-      userId,
-      date: new Date(date),
-      weight,
-      measurements,
-      performance,
-    });
-
-    await newProgress.save();
-
-    // ✅ 1. Reminder Notification
-    await Notification.create({
-      userId,
-      type: "reminder",
-      message: `Progress updated for ${new Date(date).toLocaleDateString()}.`,
-    });
-
-    // ✅ 2. Goal Achievement Check
-    const goals = await goals_model.find({ userId });
-
-    for (const goal of goals) {
-      const goalType = goal.goalType?.toLowerCase() || "";
-      const target = Number(goal.target);
-      const currentWeight = Number(newProgress.weight);
-
-      // Skip if invalid
-      if (isNaN(target) || isNaN(currentWeight)) continue;
-
-      // ✅ Weight-related goals (loss or gain)
-      if (goalType.includes("weight")) {
-        // If it's weight loss goal (target < current)
-        if (goal.current > goal.target && currentWeight <= target) {
-          await Notification.create({
-            userId,
-            type: "goal",
-            message: `🎯 Congratulations! You achieved your weight loss goal of ${target} kg.`,
-          });
-        }
-        // If it's weight gain goal (target > current)
-        else if (goal.current < goal.target && currentWeight >= target) {
-          await Notification.create({
-            userId,
-            type: "goal",
-            message: `💪 Great job! You achieved your weight gain goal of ${target} kg.`,
-          });
-        }
-      }
-    }
-
-    res.status(201).send({ message: "Progress added successfully" });
+    const entries = await progress_model.find({ userId }).sort({ date: 1 }).lean();
+    res.send(entries);
   } catch (error) {
-    console.log("Error in /progress POST:", error);
+    console.error(error);
     res.status(500).send({ message: "Server error" });
   }
 });
-
 
 app.put("/progress/:id", async (req, res) => {
   try {
@@ -322,38 +258,21 @@ app.put("/progress/:id", async (req, res) => {
       return res.status(404).send({ message: "Progress not found" });
     }
 
-    // ✅ 1. Reminder Notification for update
     await Notification.create({
       userId,
       type: "reminder",
       message: `Progress updated on ${new Date().toLocaleDateString()}.`,
     });
 
-    // ✅ 2. Goal Achievement Check
     const goals = await goals_model.find({ userId });
 
     for (const goal of goals) {
-      const goalType = goal.goalType?.toLowerCase() || "";
-      const target = Number(goal.target);
-      const currentWeight = Number(updatedProgress.weight);
-
-      if (isNaN(target) || isNaN(currentWeight)) continue;
-
-      if (goalType.includes("weight")) {
-        // Weight loss
-        if (goal.current > goal.target && currentWeight <= target) {
+      if (goal.goalType === "weight") {
+        if (updatedProgress.weight <= goal.target) {
           await Notification.create({
             userId,
             type: "goal",
-            message: `🎯 Congratulations! You achieved your weight loss goal of ${target} kg.`,
-          });
-        }
-        // Weight gain
-        else if (goal.current < goal.target && currentWeight >= target) {
-          await Notification.create({
-            userId,
-            type: "goal",
-            message: `💪 Great job! You achieved your weight gain goal of ${target} kg.`,
+            message: `🎯 Congratulations! You achieved your weight goal of ${goal.target} kg.`,
           });
         }
       }
@@ -364,12 +283,10 @@ app.put("/progress/:id", async (req, res) => {
       updatedProgress,
     });
   } catch (error) {
-    console.log("Error in /progress PUT:", error);
+    console.log(error);
     res.status(500).send({ message: "Server error" });
   }
 });
-
-
 
 
 app.delete("/progress/:id", async (req, res) => {
