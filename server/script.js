@@ -246,20 +246,68 @@ app.post("/progress", async (req, res) => {
 
 
 
-app.get("/progress", async (req, res) => {
+app.post("/progress", async (req, res) => {
   try {
-    const { userId } = req.query;
-    if (!userId) return res.status(400).send({ message: "userId required" });
+    const { userId, date, weight, measurements, performance } = req.body;
 
-    const entries = await progress_model.find({ userId }).sort({ date: 1 }).lean();
-    res.send(entries);
+    const newProgress = new progress_model({
+      userId,
+      date: new Date(date),
+      weight,
+      measurements,
+      performance,
+    });
+
+    await newProgress.save();
+
+    // ✅ 1. Reminder Notification
+    await Notification.create({
+      userId,
+      type: "reminder",
+      message: `Progress updated for ${new Date(date).toLocaleDateString()}.`,
+    });
+
+    // ✅ 2. Goal Achievement Check
+    const goals = await goals_model.find({ userId });
+
+    for (const goal of goals) {
+      const goalType = goal.goalType?.toLowerCase() || "";
+      const target = Number(goal.target);
+      const currentWeight = Number(newProgress.weight);
+
+      // Skip if invalid
+      if (isNaN(target) || isNaN(currentWeight)) continue;
+
+      // ✅ Weight-related goals (loss or gain)
+      if (goalType.includes("weight")) {
+        // If it's weight loss goal (target < current)
+        if (goal.current > goal.target && currentWeight <= target) {
+          await Notification.create({
+            userId,
+            type: "goal",
+            message: `🎯 Congratulations! You achieved your weight loss goal of ${target} kg.`,
+          });
+        }
+        // If it's weight gain goal (target > current)
+        else if (goal.current < goal.target && currentWeight >= target) {
+          await Notification.create({
+            userId,
+            type: "goal",
+            message: `💪 Great job! You achieved your weight gain goal of ${target} kg.`,
+          });
+        }
+      }
+    }
+
+    res.status(201).send({ message: "Progress added successfully" });
   } catch (error) {
-    console.error(error);
+    console.log("Error in /progress POST:", error);
     res.status(500).send({ message: "Server error" });
   }
 });
 
-app.post("/progress/:id", async (req, res) => {
+
+app.put("/progress/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { userId, weight, measurements, performance } = req.body;
@@ -320,6 +368,7 @@ app.post("/progress/:id", async (req, res) => {
     res.status(500).send({ message: "Server error" });
   }
 });
+
 
 
 
