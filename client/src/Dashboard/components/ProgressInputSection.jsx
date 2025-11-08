@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 const ProgressInputSection = ({ onProgressAdded }) => {
 
 
-  const API_BASE_URL = 'https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app'; 
+  const API_BASE_URL = 'http://localhost:3000'; 
 
 
 

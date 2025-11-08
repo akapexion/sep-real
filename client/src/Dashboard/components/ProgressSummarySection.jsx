@@ -17,7 +17,7 @@ import toast from "react-hot-toast";
 const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
-  const API_BASE_URL = 'https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app'; 
+  const API_BASE_URL = 'http://localhost:3000'; 
 
 
   const handleEdit = (entry) => {

@@ -20,7 +20,7 @@ const ProgressPage = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app/progress?userId=${userId}`
+        `http://localhost:3000/progress?userId=${userId}`
       );
       setProgressEntries(Array.isArray(res.data) ? res.data : []);
     } catch (err) {

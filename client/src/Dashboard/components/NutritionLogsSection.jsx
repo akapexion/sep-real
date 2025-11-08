@@ -5,7 +5,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Trash2, Edit2, Plus, Loader2 } from "lucide-react";
 
-const API_BASE = "https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app";
+const API_BASE = "http://localhost:3000";
 
 export default function NutritionLogsSection() {
   const [logs, setLogs] = useState([]);

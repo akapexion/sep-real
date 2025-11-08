@@ -15,7 +15,7 @@ const ProfileSection = () => {
   const [loading, setLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userId = user._id;
-  const API_BASE_URL = 'https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app'; 
+  const API_BASE_URL = 'http://localhost:3000'; 
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -91,7 +91,7 @@ const ProfileSection = () => {
       <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6 mb-6">
         <div className="relative">
           <img
-            src={preview || 'https://via.placeholder.com/150'}
+            src={preview || ''}
             alt="Profile"
             className="w-32 h-32 rounded-full object-cover ring-2 ring-[var(--accent)]/20"
           />

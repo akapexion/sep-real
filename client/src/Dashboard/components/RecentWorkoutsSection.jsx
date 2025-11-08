@@ -5,7 +5,6 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 
 const RecentWorkoutsSection = () => {
-  // ——— ALL useState (8 fields) ———
   const [exerciseName, setExerciseName] = useState("");
   const [sets, setSets] = useState("");
   const [reps, setReps] = useState("");
@@ -15,13 +14,12 @@ const RecentWorkoutsSection = () => {
   const [tags, setTags] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
-  // Additional state for fetched workouts, editing, etc.
   const [workouts, setWorkouts] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const API_BASE_URL =
-    "https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app";
+    "http://localhost:3000";
 
   // Fetch workouts on component mount
   useEffect(() => {
