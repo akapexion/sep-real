@@ -6,7 +6,7 @@ const WeightProgressSection = () => {
   const [weightEntries, setWeightEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const API_BASE_URL = 'https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app'; 
+  const API_BASE_URL = 'http://localhost:3000'; 
 
   useEffect(() => {
     const fetchWeights = async () => {

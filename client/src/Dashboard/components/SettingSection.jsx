@@ -14,7 +14,7 @@ const SettingSection = () => {
   const [loading, setLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userId = user._id; 
-  const API_BASE_URL = 'https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app'; 
+  const API_BASE_URL = 'http://localhost:3000'; 
   const navigate = useNavigate();
 
   useEffect(() => {

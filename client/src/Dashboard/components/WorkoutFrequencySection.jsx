@@ -12,7 +12,7 @@ const WorkoutFrequencySection = () => {
     const fetchFrequency = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:3000/api/analytics/workout-frequency', {
+        const res = await axios.get('http://localhost:3000', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setFrequencyData(res.data);

@@ -18,7 +18,7 @@ export default function LoginSection({ Loginuser }) {
 
     try {
       const res = await axios.post(
-        "https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app/login",
+        "http://localhost:3000/login",
         { email, password }
       );
 

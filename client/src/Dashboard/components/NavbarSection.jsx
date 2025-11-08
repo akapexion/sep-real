@@ -8,7 +8,7 @@ import axios from 'axios';
 const NavbarSection = ({ user, toggleTheme, isDark }) => {
   const navigate = useNavigate();
 
-  const API_BASE_URL = 'https://exotic-felipa-studentofsoftware-ceffa507.koyeb.app';
+  const API_BASE_URL = 'http://localhost:3000';
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);

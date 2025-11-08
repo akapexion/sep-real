@@ -12,7 +12,7 @@ const MacroDistributionSection = () => {
     const fetchMacros = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:3000/api/analytics/macros', {
+        const res = await axios.get('http://localhost:3000/macros', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setMacroData(res.data);
