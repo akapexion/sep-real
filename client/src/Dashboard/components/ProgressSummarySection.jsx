@@ -1,5 +1,5 @@
 // src/Dashboard/components/ProgressSummarySection.jsx
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   LineChart,
@@ -13,12 +13,14 @@ import {
 } from "recharts";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { Download, FileText } from "lucide-react";
 
 const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
+  const printRef = useRef(); // <-- for PDF
+
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
-  const API_BASE_URL = 'http://localhost:3000'; 
-
+  const API_BASE_URL = "http://localhost:3000";
 
   const handleEdit = (entry) => {
     setEditingId(entry._id);
@@ -56,13 +58,10 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
     };
 
     try {
-      await axios.put(
-        `${API_BASE_URL}/progress/${editingId}`,
-        payload
-      );
+      await axios.put(`${API_BASE_URL}/progress/${editingId}`, payload);
       toast.success("Progress updated!");
       setEditingId(null);
-      // onProgressUpdate();
+      onProgressUpdate?.();
     } catch (err) {
       toast.error("Update failed");
       console.error(err);
@@ -71,10 +70,9 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(
-        `${API_BASE_URL}/progress/${id}`
-      );
+      await axios.delete(`${API_BASE_URL}/progress/${id}`);
       toast.success("Deleted!");
+      onProgressUpdate?.();
     } catch (err) {
       toast.error("Delete failed");
       console.error(err);
@@ -83,6 +81,45 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
 
   const handleInputChange = (e) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  /* ------------------- EXPORT PDF ------------------- */
+  const exportPDF = () => {
+    const win = window.open("", "", "width=900,height=650");
+    win.document.write(`
+      <html><head><title>Progress Report – ${new Date().toLocaleDateString()}</title>
+      <style>
+        body{font-family:Arial,sans-serif;margin:2rem;}
+        table{width:100%;border-collapse:collapse;margin-top:1rem;}
+        th,td{border:1px solid #ddd;padding:8px;text-align:left;}
+        th{background:#f4f4f4;}
+      </style></head><body>`);
+    win.document.write(printRef.current.innerHTML);
+    win.document.write(`</body></html>`);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 500);
+  };
+
+  /* ------------------- EXPORT CSV ------------------- */
+  const exportCSV = () => {
+    const header = ["Date","Weight(kg)","Chest(cm)","Waist(cm)","Run(min)","Lift(kg)"];
+    const rows = progressEntries.map(e => [
+      new Date(e.date).toLocaleDateString(),
+      e.weight ?? "",
+      e.measurements?.chest ?? "",
+      e.measurements?.waist ?? "",
+      e.performance?.runTime ?? "",
+      e.performance?.liftWeight ?? "",
+    ]);
+    const csv = [header, ...rows].map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `progress-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const chartData = progressEntries.map((entry) => ({
@@ -104,215 +141,229 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
       className="mt-8 p-6 rounded-xl shadow-md"
       style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
     >
-      <h3 className="text-2xl font-bold mb-6" style={{ color: "var(--accent)" }}>
-        Progress Summary
-      </h3>
-
-      <div className="overflow-x-auto mb-8">
-        <table className="min-w-full divide-y divide-var(--border)">
-          <thead style={{ backgroundColor: "var(--bg-secondary)" }}>
-            <tr>
-              {["Date", "Weight", "Chest", "Waist", "Run Time", "Lift Weight", "Actions"].map(
-                (h) => (
-                  <th
-                    key={h}
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    {h}
-                  </th>
-                )
-              )}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-var(--border)">
-            {progressEntries.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-var(--text-muted)">
-                  No progress recorded yet.
-                </td>
-              </tr>
-            ) : (
-              progressEntries.map((e) => (
-                <tr key={e._id} className="hover:bg-var(--bg-card-hover)">
-                  {editingId === e._id ? (
-                    <>
-                      {/* EDIT MODE */}
-                      <td className="px-4 py-3">
-                        <input
-                          type="date"
-                          name="date"
-                          value={editForm.date}
-                          onChange={handleInputChange}
-                          className="w-full px-2 py-1 rounded border text-sm"
-                          style={{
-                            backgroundColor: "var(--input-bg)",
-                            color: "var(--text-primary)",
-                            borderColor: "var(--border)",
-                          }}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <input
-                          type="number"
-                          name="weight"
-                          value={editForm.weight}
-                          onChange={handleInputChange}
-                          step="0.1"
-                          placeholder="kg"
-                          className="w-full px-2 py-1 rounded border text-sm"
-                          style={{
-                            backgroundColor: "var(--input-bg)",
-                            color: "var(--text-primary)",
-                            borderColor: "var(--border)",
-                          }}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <input
-                          type="number"
-                          name="chest"
-                          value={editForm.chest}
-                          onChange={handleInputChange}
-                          step="0.1"
-                          placeholder="cm"
-                          className="w-full px-2 py-1 rounded border text-sm"
-                          style={{
-                            backgroundColor: "var(--input-bg)",
-                            color: "var(--text-primary)",
-                            borderColor: "var(--border)",
-                          }}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <input
-                          type="number"
-                          name="waist"
-                          value={editForm.waist}
-                          onChange={handleInputChange}
-                          step="0.1"
-                          placeholder="cm"
-                          className="w-full px-2 py-1 rounded border text-sm"
-                          style={{
-                            backgroundColor: "var(--input-bg)",
-                            color: "var(--text-primary)",
-                            borderColor: "var(--border)",
-                          }}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <input
-                          type="number"
-                          name="runTime"
-                          value={editForm.runTime}
-                          onChange={handleInputChange}
-                          step="0.1"
-                          placeholder="min"
-                          className="w-full px-2 py-1 rounded border text-sm"
-                          style={{
-                            backgroundColor: "var(--input-bg)",
-                            color: "var(--text-primary)",
-                            borderColor: "var(--border)",
-                          }}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <input
-                          type="number"
-                          name="liftWeight"
-                          value={editForm.liftWeight}
-                          onChange={handleInputChange}
-                          step="0.1"
-                          placeholder="kg"
-                          className="w-full px-2 py-1 rounded border text-sm"
-                          style={{
-                            backgroundColor: "var(--input-bg)",
-                            color: "var(--text-primary)",
-                            borderColor: "var(--border)",
-                          }}
-                        />
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <div className="flex gap-1">
-                          <button
-                            onClick={handleUpdate}
-                            className="px-2 py-1 text-xs rounded text-white"
-                            style={{ backgroundColor: "var(--accent)" }}
-                          >
-                            Update
-                          </button>
-                          <button
-                            onClick={handleCancel}
-                            className="px-2 py-1 text-xs rounded bg-gray-500 text-white"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="px-4 py-3 text-sm">
-                        {new Date(e.date).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3 text-sm">{e.weight ?? "-"}</td>
-                      <td className="px-4 py-3 text-sm">{e.measurements?.chest ?? "-"}</td>
-                      <td className="px-4 py-3 text-sm">{e.measurements?.waist ?? "-"}</td>
-                      <td className="px-4 py-3 text-sm">{e.performance?.runTime ?? "-"}</td>
-                      <td className="px-4 py-3 text-sm">{e.performance?.liftWeight ?? "-"}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => handleEdit(e)}
-                            className="px-2 py-1 text-xs rounded text-white"
-                            style={{ backgroundColor: "#10b981" }}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(e._id)}
-                            className="px-2 py-1 text-xs rounded bg-red-600 text-white"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      {/* TITLE + EXPORT */}
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-2xl font-bold" style={{ color: "var(--accent)" }}>
+          Progress Summary
+        </h3>
+        <div className="flex gap-2">
+          <button onClick={exportPDF} title="Export PDF" className="p-2 rounded hover:bg-[var(--bg-secondary)]">
+            <FileText className="w-5 h-5" style={{ color: "var(--accent)" }} />
+          </button>
+          <button onClick={exportCSV} title="Export CSV" className="p-2 rounded hover:bg-[var(--bg-secondary)]">
+            <Download className="w-5 h-5" style={{ color: "var(--accent)" }} />
+          </button>
+        </div>
       </div>
 
-      {progressEntries.length > 0 && (
-        <div>
-          <h4 className="text-lg font-semibold mb-4" style={{ color: "var(--accent)" }}>
-            Progress Over Time
-          </h4>
-          <ResponsiveContainer width="100%" height={340}>
-            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="date" tick={{ fill: "var(--text-secondary)" }} />
-              <YAxis tick={{ fill: "var(--text-secondary)" }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "var(--bg-card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                }}
-              />
-              <Legend />
-              <Line type="monotone" dataKey="weight" stroke="#8884d8" name="Weight (kg)" strokeWidth={2} />
-              <Line type="monotone" dataKey="chest" stroke="#82ca9d" name="Chest (cm)" strokeWidth={2} />
-              <Line type="monotone" dataKey="waist" stroke="#ffc658" name="Waist (cm)" strokeWidth={2} />
-              <Line type="monotone" dataKey="runTime" stroke="#ff7300" name="Run Time (min)" strokeWidth={2} />
-              <Line type="monotone" dataKey="liftWeight" stroke="#a4de6c" name="Lift Weight (kg)" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
+      {/* TABLE & CHART – wrapped for PDF */}
+      <div ref={printRef}>
+        <div className="overflow-x-auto mb-8">
+          <table className="min-w-full divide-y" style={{ borderColor: "var(--border)" }}>
+            <thead style={{ backgroundColor: "var(--bg-secondary)" }}>
+              <tr>
+                {["Date", "Weight", "Chest", "Waist", "Run Time", "Lift Weight", "Actions"].map(
+                  (h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      {h}
+                    </th>
+                  )
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y" style={{ borderColor: "var(--border)" }}>
+              {progressEntries.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center" style={{ color: "var(--text-muted)" }}>
+                    No progress recorded yet.
+                  </td>
+                </tr>
+              ) : (
+                progressEntries.map((e) => (
+                  <tr key={e._id} className="hover:bg-[var(--bg-card-hover)]">
+                    {editingId === e._id ? (
+                      <>
+                        {/* EDIT MODE – unchanged */}
+                        <td className="px-4 py-3">
+                          <input
+                            type="date"
+                            name="date"
+                            value={editForm.date}
+                            onChange={handleInputChange}
+                            className="w-full px-2 py-1 rounded border text-sm"
+                            style={{
+                              backgroundColor: "var(--input-bg)",
+                              color: "var(--text-primary)",
+                              borderColor: "var(--border)",
+                            }}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="number"
+                            name="weight"
+                            value={editForm.weight}
+                            onChange={handleInputChange}
+                            step="0.1"
+                            placeholder="kg"
+                            className="w-full px-2 py-1 rounded border text-sm"
+                            style={{
+                              backgroundColor: "var(--input-bg)",
+                              color: "var(--text-primary)",
+                              borderColor: "var(--border)",
+                            }}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="number"
+                            name="chest"
+                            value={editForm.chest}
+                            onChange={handleInputChange}
+                            step="0.1"
+                            placeholder="cm"
+                            className="w-full px-2 py-1 rounded border text-sm"
+                            style={{
+                              backgroundColor: "var(--input-bg)",
+                              color: "var(--text-primary)",
+                              borderColor: "var(--border)",
+                            }}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="number"
+                            name="waist"
+                            value={editForm.waist}
+                            onChange={handleInputChange}
+                            step="0.1"
+                            placeholder="cm"
+                            className="w-full px-2 py-1 rounded border text-sm"
+                            style={{
+                              backgroundColor: "var(--input-bg)",
+                              color: "var(--text-primary)",
+                              borderColor: "var(--border)",
+                            }}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="number"
+                            name="runTime"
+                            value={editForm.runTime}
+                            onChange={handleInputChange}
+                            step="0.1"
+                            placeholder="min"
+                            className="w-full px-2 py-1 rounded border text-sm"
+                            style={{
+                              backgroundColor: "var(--input-bg)",
+                              color: "var(--text-primary)",
+                              borderColor: "var(--border)",
+                            }}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="number"
+                            name="liftWeight"
+                            value={editForm.liftWeight}
+                            onChange={handleInputChange}
+                            step="0.1"
+                            placeholder="kg"
+                            className="w-full px-2 py-1 rounded border text-sm"
+                            style={{
+                              backgroundColor: "var(--input-bg)",
+                              color: "var(--text-primary)",
+                              borderColor: "var(--border)",
+                            }}
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          <div className="flex gap-1">
+                            <button
+                              onClick={handleUpdate}
+                              className="px-2 py-1 text-xs rounded text-white"
+                              style={{ backgroundColor: "var(--accent)" }}
+                            >
+                              Update
+                            </button>
+                            <button
+                              onClick={handleCancel}
+                              className="px-2 py-1 text-xs rounded bg-gray-500 text-white"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-4 py-3 text-sm">
+                          {new Date(e.date).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 text-sm">{e.weight ?? "-"}</td>
+                        <td className="px-4 py-3 text-sm">{e.measurements?.chest ?? "-"}</td>
+                        <td className="px-4 py-3 text-sm">{e.measurements?.waist ?? "-"}</td>
+                        <td className="px-4 py-3 text-sm">{e.performance?.runTime ?? "-"}</td>
+                        <td className="px-4 py-3 text-sm">{e.performance?.liftWeight ?? "-"}</td>
+                        <td className="px-4 py-3 text-sm">
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleEdit(e)}
+                              className="px-2 py-1 text-xs rounded text-white"
+                              style={{ backgroundColor: "#10b981" }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(e._id)}
+                              className="px-2 py-1 text-xs rounded bg-red-600 text-white"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+
+        {progressEntries.length > 0 && (
+          <div>
+            <h4 className="text-lg font-semibold mb-4" style={{ color: "var(--accent)" }}>
+              Progress Over Time
+            </h4>
+            <ResponsiveContainer width="100%" height={340}>
+              <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="date" tick={{ fill: "var(--text-secondary)" }} />
+                <YAxis tick={{ fill: "var(--text-secondary)" }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "var(--bg-card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="weight" stroke="#8884d8" name="Weight (kg)" strokeWidth={2} />
+                <Line type="monotone" dataKey="chest" stroke="#82ca9d" name="Chest (cm)" strokeWidth={2} />
+                <Line type="monotone" dataKey="waist" stroke="#ffc658" name="Waist (cm)" strokeWidth={2} />
+                <Line type="monotone" dataKey="runTime" stroke="#ff7300" name="Run Time (min)" strokeWidth={2} />
+                <Line type="monotone" dataKey="liftWeight" stroke="#a4de6c" name="Lift Weight (kg)" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 };

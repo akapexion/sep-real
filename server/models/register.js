@@ -1,17 +1,25 @@
-// server/models/register.js (Update existing schema if needed; already has name, email, image)
-const mongoose = require('mongoose');
+// server/models/register.js
+const mongoose = require("mongoose");
 
 const registerSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, unique: true, required: true },
-  password: { type: String, required: true },
-  image: { type: String, default: '' },
+  name: String,
+  email: { type: String, unique: true },
+  password: String,
+  image: String,
   preferences: {
-    notifications: { type: Boolean, default: true },
-    units: { type: String, default: 'metric' },
-    theme: { type: String, default: 'dark' },
+    notifications: {
+      push: { type: Boolean, default: true },
+      email: { type: Boolean, default: true },
+      sms: { type: Boolean, default: false },
+    },
+    units: { type: String, default: "metric", enum: ["metric", "imperial"] },
+    theme: { type: String, default: "dark", enum: ["dark", "light"] },
+    language: { type: String, default: "en", enum: ["en", "es", "fr", "de", "ur"] },
+    reminders: {
+      workout: { type: String, default: "07:00" },
+      meal: { type: String, default: "12:00" },
+    },
   },
-  createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('register', registerSchema);
+module.exports = mongoose.model("Register", registerSchema);

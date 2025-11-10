@@ -1,4 +1,4 @@
-// Update NotificationsSection.jsx - Style goal notifications differently
+// src/Dashboard/components/NotificationsSection.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -58,7 +58,11 @@ export default function NotificationsSection() {
   }, [fetchNotifications]);
 
   if (loading) {
-    return <div className="flex items-center justify-center py-12"><Bell className="w-8 h-8 animate-spin" style={{ color: "var(--accent)" }} /></div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Bell className="w-8 h-8 animate-spin" style={{ color: "var(--accent)" }} />
+      </div>
+    );
   }
 
   return (
@@ -76,10 +80,18 @@ export default function NotificationsSection() {
         <table className="min-w-full divide-y" style={{ borderColor: "var(--border)" }}>
           <thead style={{ backgroundColor: "var(--bg-secondary)" }}>
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>Type</th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>Message</th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>Date</th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>Actions</th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                Type
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                Message
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                Date
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y" style={{ borderColor: "var(--border)" }}>
@@ -90,19 +102,41 @@ export default function NotificationsSection() {
                 </td>
               </tr>
             ) : (
-              notifications.map(notif => (
-                <tr key={notif._id} className={`hover:bg-[var(--bg-card-hover)] transition ${notif.isRead ? 'opacity-60' : ''} ${notif.type === 'goal' ? 'bg-green-500/10' : ''}`}>
-                  <td className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)" }}>{notif.type}</td>
-                  <td className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)" }}>{notif.message}</td>
-                  <td className="px-4 py-3 text-sm" style={{ color: "var(--text-muted)" }}>{new Date(notif.date).toLocaleDateString()}</td>
+              notifications.map((notif) => (
+                <tr
+                  key={notif._id}
+                  className={`
+                    hover:bg-[var(--bg-card-hover)] transition
+                    ${notif.isRead ? "opacity-60" : ""}
+                    ${notif.type === "goal" ? "bg-green-500/10" : ""}
+                    ${notif.type === "reminder" ? "bg-blue-500/10" : ""}
+                  `}
+                >
+                  <td className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)" }}>
+                    {notif.type}
+                  </td>
+                  <td className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)" }}>
+                    {notif.message}
+                  </td>
+                  <td className="px-4 py-3 text-sm" style={{ color: "var(--text-muted)" }}>
+                    {new Date(notif.date).toLocaleDateString()}
+  </td>
                   <td className="px-4 py-3 text-sm">
                     <div className="flex gap-2">
                       {!notif.isRead && (
-                        <button onClick={() => markAsRead(notif._id)} className="p-1 rounded hover:bg-[var(--bg-secondary)]" title="Mark as read">
+                        <button
+                          onClick={() => markAsRead(notif._id)}
+                          className="p-1 rounded hover:bg-[var(--bg-secondary)]"
+                          title="Mark as read"
+                        >
                           <CheckCircle className="w-4 h-4" style={{ color: "var(--accent)" }} />
                         </button>
                       )}
-                      <button onClick={() => deleteNotification(notif._id)} className="p-1 rounded hover:bg-red-500/10" title="Delete">
+                      <button
+                        onClick={() => deleteNotification(notif._id)}
+                        className="p-1 rounded hover:bg-red-500/10"
+                        title="Delete"
+                      >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </button>
                     </div>

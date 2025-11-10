@@ -1,13 +1,15 @@
 // src/Dashboard/components/NutritionLogsSection.jsx
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { Trash2, Edit2, Plus, Loader2 } from "lucide-react";
+import { Trash2, Edit2, Plus, Loader2, Download, FileText } from "lucide-react";
 
 const API_BASE = "http://localhost:3000";
 
 export default function NutritionLogsSection() {
+  const printRef = useRef(); // <-- for PDF
+
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -129,6 +131,49 @@ export default function NutritionLogsSection() {
     setFats(String(first.fats));
   };
 
+  /* ------------------- EXPORT PDF ------------------- */
+  const exportPDF = () => {
+    const content = printRef.current;
+    const win = window.open("", "", "width=900,height=650");
+    win.document.write(`
+      <html><head><title>Nutrition Report – ${new Date().toLocaleDateString()}</title>
+      <style>
+        body{font-family:Arial,sans-serif;margin:2rem;}
+        table{width:100%;border-collapse:collapse;margin-top:1rem;}
+        th,td{border:1px solid #ddd;padding:8px;text-align:left;}
+        th{background:#f4f4f4;}
+        .totals{font-weight:bold;margin-top:1rem;}
+      </style></head><body>`);
+    win.document.write(content.innerHTML);
+    win.document.write(`</body></html>`);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 500);
+  };
+
+  /* ------------------- EXPORT CSV ------------------- */
+  const exportCSV = () => {
+    const header = ["Meal","Food","Qty","Cal","P","C","F","Date"];
+    const rows = logs.map(l => [
+      l.mealType,
+      l.foodItems.map(i=>i.name).join(" | "),
+      l.foodItems.map(i=>i.quantity).join(" | "),
+      l.totalCalories,
+      l.totalProteins,
+      l.totalCarbs,
+      l.totalFats,
+      new Date(l.date).toLocaleDateString(),
+    ]);
+    const csv = [header, ...rows].map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `nutrition-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
@@ -148,10 +193,22 @@ export default function NutritionLogsSection() {
       className="mt-6 p-4 rounded-lg shadow-md"
       style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
     >
-      <h3 className="text-xl font-semibold mb-4" style={{ color: "var(--accent)" }}>
-        Nutrition Logs
-      </h3>
+      {/* TITLE + EXPORT */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-semibold" style={{ color: "var(--accent)" }}>
+          Nutrition Logs
+        </h3>
+        <div className="flex gap-2">
+          <button onClick={exportPDF} title="Export PDF" className="p-2 rounded hover:bg-[var(--bg-secondary)]">
+            <FileText className="w-5 h-5" style={{ color: "var(--accent)" }} />
+          </button>
+          <button onClick={exportCSV} title="Export CSV" className="p-2 rounded hover:bg-[var(--bg-secondary)]">
+            <Download className="w-5 h-5" style={{ color: "var(--accent)" }} />
+          </button>
+        </div>
+      </div>
 
+      {/* FORM – unchanged */}
       <form onSubmit={saveLog} className="grid md:grid-cols-2 gap-4 mb-6">
         <select
           value={mealType}
@@ -292,90 +349,105 @@ export default function NutritionLogsSection() {
         </div>
       </form>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y" style={{ borderColor: "var(--border)" }}>
-          <thead style={{ backgroundColor: "var(--bg-secondary)" }}>
-            <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                Meal
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                Food
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                Qty
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                Cal
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                P
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                C
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                F
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                Date
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y" style={{ borderColor: "var(--border)" }}>
-            {logs.length === 0 ? (
+      {/* TABLE – wrapped for PDF */}
+      <div ref={printRef}>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y" style={{ borderColor: "var(--border)" }}>
+            <thead style={{ backgroundColor: "var(--bg-secondary)" }}>
               <tr>
-                <td colSpan={9} className="px-4 py-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
-                  No logs yet – add your first meal!
-                </td>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                  Meal
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                  Food
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                  Qty
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                  Cal
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                  P
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                  C
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                  F
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                  Date
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                  Actions
+                </th>
               </tr>
-            ) : (
-              logs.map((log) => (
-                <tr key={log._id} className="hover:bg-[var(--bg-card-hover)] transition">
-                  <td className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)" }}>
-                    {log.mealType}
-                  </td>
-                  <td className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)" }}>
-                    {log.foodItems.map((i) => i.name).join(", ")}
-                  </td>
-                  <td className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)" }}>
-                    {log.foodItems.map((i) => i.quantity).join(", ")}
-                  </td>
-                  <td className="px-4 py-3 text-sm font-medium" style={{ color: "var(--accent)" }}>
-                    {log.totalCalories}
-                  </td>
-                  <td className="px-4 py-3 text-sm">{log.totalProteins}</td>
-                  <td className="px-4 py-3 text-sm">{log.totalCarbs}</td>
-                  <td className="px-4 py-3 text-sm">{log.totalFats}</td>
-                  <td className="px-4 py-3 text-sm" style={{ color: "var(--text-muted)" }}>
-                    {new Date(log.date).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => startEdit(log)}
-                        className="p-1 rounded hover:bg-[var(--bg-secondary)]"
-                        title="Edit"
-                      >
-                        <Edit2 className="w-4 h-4" style={{ color: "var(--accent)" }} />
-                      </button>
-                      <button
-                        onClick={() => deleteLog(log._id)}
-                        className="p-1 rounded hover:bg-red-500/10"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </button>
-                    </div>
+            </thead>
+            <tbody className="divide-y" style={{ borderColor: "var(--border)" }}>
+              {logs.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-4 py-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+                    No logs yet – add your first meal!
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                logs.map((log) => (
+                  <tr key={log._id} className="hover:bg-[var(--bg-card-hover)] transition">
+                    <td className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)" }}>
+                      {log.mealType}
+                    </td>
+                    <td className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)" }}>
+                      {log.foodItems.map((i) => i.name).join(", ")}
+                    </td>
+                    <td className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)" }}>
+                      {log.foodItems.map((i) => i.quantity).join(", ")}
+                    </td>
+                    <td className="px-4 py-3 text-sm font-medium" style={{ color: "var(--accent)" }}>
+                      {log.totalCalories}
+                    </td>
+                    <td className="px-4 py-3 text-sm">{log.totalProteins}</td>
+                    <td className="px-4 py-3 text-sm">{log.totalCarbs}</td>
+                    <td className="px-4 py-3 text-sm">{log.totalFats}</td>
+                    <td className="px-4 py-3 text-sm" style={{ color: "var(--text-muted)" }}>
+                      {new Date(log.date).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => startEdit(log)}
+                          className="p-1 rounded hover:bg-[var(--bg-secondary)]"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-4 h-4" style={{ color: "var(--accent)" }} />
+                        </button>
+                        <button
+                          onClick={() => deleteLog(log._id)}
+                          className="p-1 rounded hover:bg-red-500/10"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* OPTIONAL TOTALS – shown in PDF */}
+        {logs.length > 0 && (
+          <div className="mt-6 p-4 rounded bg-[var(--bg-secondary)]">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div><strong>Total Calories:</strong> {logs.reduce((s,l)=>s+l.totalCalories,0)}</div>
+              <div><strong>Proteins:</strong> {logs.reduce((s,l)=>s+l.totalProteins,0)}g</div>
+              <div><strong>Carbs:</strong> {logs.reduce((s,l)=>s+l.totalCarbs,0)}g</div>
+              <div><strong>Fats:</strong> {logs.reduce((s,l)=>s+l.totalFats,0)}g</div>
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

@@ -63,7 +63,7 @@ const ProfileSection = () => {
       formData.append('profilePic', e.target.profilePic.files[0]);
     }
     try {
-      const res = await axios.put(`${API_BASE_URL}/profile`, formData, {
+      const res = await axios.post(`${API_BASE_URL}/profile`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setProfile(res.data);

@@ -15,11 +15,48 @@ const Notification = require("./models/notification");
 const Nutrition = require("./models/nutrition");
 const goals_model = require("./models/goals");
 
+
+
+
+
+
+
+
+
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 connectDb();
+
+
+const cron = require('node-cron');
+
+cron.schedule('0 7 * * *', async () => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const reminders = await Reminder.find({
+      isActive: true,
+      date: { $gte: today, $lt: tomorrow },
+    }).lean();
+
+    for (const r of reminders) {
+      await Notification.create({
+        userId: r.userId,
+        type: "reminder",
+        message: `Reminder: ${r.title} at ${new Date(r.date).toLocaleTimeString()}`,
+      });
+    }
+    console.log('Daily reminder cron finished');
+  } catch (e) {
+    console.error('Reminder cron error:', e);
+  }
+});
+
 
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -570,6 +607,194 @@ app.delete("/goals/:id", async (req, res) => {
     res.status(500).send({ message: "Server error" });
   }
 });
+
+
+
+// ---------- AFTER GOALS CRUD ----------
+const Reminder = require("./models/reminder");
+
+// CREATE
+app.post("/reminders", async (req, res) => {
+  try {
+    const { userId, title, date, type, notes } = req.body;
+    if (!userId || !title || !date) return res.status(400).send({ message: "Missing fields" });
+
+    const reminder = await Reminder.create({
+      userId,
+      title,
+      date: new Date(date),
+      type,
+      notes,
+    });
+
+    // instantly create a notification so the user sees it in the list
+    await Notification.create({
+      userId,
+      type: "reminder",
+      message: `Reminder set: ${title} on ${new Date(date).toLocaleString()}`,
+    });
+
+    res.status(201).send({ message: "Reminder created", reminder });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+// READ (all for a user)
+app.get("/reminders", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).send({ message: "userId required" });
+
+    const list = await Reminder.find({ userId }).sort({ date: -1 }).lean();
+    res.send(list);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+// UPDATE
+app.put("/reminders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, date, type, notes, isActive } = req.body;
+
+    const updated = await Reminder.findByIdAndUpdate(
+      id,
+      { title, date: new Date(date), type, notes, isActive },
+      { new: true }
+    );
+    if (!updated) return res.status(404).send({ message: "Not found" });
+
+    await Notification.create({
+      userId: updated.userId,
+      type: "reminder",
+      message: `Reminder updated: ${title}`,
+    });
+
+    res.send(updated);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+// DELETE
+app.delete("/reminders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Reminder.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).send({ message: "Not found" });
+
+    await Notification.create({
+      userId: deleted.userId,
+      type: "reminder",
+      message: `Reminder removed: ${deleted.title}`,
+    });
+
+    res.send({ message: "Deleted" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+
+
+// TOP: Add these
+// const nodemailer = require("nodemailer");
+// const twilio = require("twilio");
+
+// // CONFIG (apna daal do)
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   auth: { user: "tumhara@gmail.com", pass: "app-password" },
+// });
+// const twilioClient = twilio("TWILIO_SID", "TWILIO_TOKEN");
+
+
+app.post("/preferences", async (req, res) => {
+  try {
+    const { userId, ...prefs } = req.body;
+    if (!userId) return res.status(400).send({ message: "userId required" });
+
+    const updated = await reg_model.findByIdAndUpdate(
+      userId,
+      { preferences: prefs },
+      { new: true }
+    ).select("preferences");
+
+    if (!updated) return res.status(404).send({ message: "User not found" });
+    res.send(updated.preferences);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+
+cron.schedule('*/5 * * * *', async () => {
+  try {
+    const now = new Date();
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    console.log(`[Cron] Checking reminders at ${currentTime}`);
+
+    // Users jinke reminder time match karta hai
+    const users = await reg_model.find({
+      $and: [
+        { "preferences.notifications.push": true },
+        {
+          $or: [
+            { "preferences.reminders.workout": currentTime },
+            { "preferences.reminders.meal": currentTime }
+          ]
+        }
+      ]
+    });
+
+    for (const user of users) {
+      const isWorkout = user.preferences.reminders.workout === currentTime;
+      const isMeal = user.preferences.reminders.meal === currentTime;
+
+      const message = isWorkout 
+        ? "Workout ka time ho gaya! Chalo gym!" 
+        : "Khana khane ka time! Healthy raho!";
+
+      // 1. Push Notification (in-app)
+      await Notification.create({
+        userId: user._id,
+        type: "reminder",
+        message,
+      });
+
+      // 2. Email (agar on hai)
+      if (user.preferences.notifications.email && user.email) {
+        await transporter.sendMail({
+          from: '"Fitness Tracker" <no-reply@fit.com>',
+          to: user.email,
+          subject: isWorkout ? "Workout Reminder" : "Meal Reminder",
+          text: message,
+        });
+      }
+
+      // 3. SMS (agar phone field add kiya ho)
+      // if (user.preferences.notifications.sms && user.phone) {
+      //   await twilioClient.messages.create({
+      //     body: message,
+      //     from: '+1234567890',
+      //     to: user.phone
+      //   });
+      // }
+    }
+  } catch (error) {
+    console.error("5-minute reminder cron error:", error);
+  }
+});
+
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

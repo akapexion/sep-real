@@ -9,13 +9,8 @@ import MacroDistributionSection from '../components/MacroDistributionSection';
 
 const HomePage = () => (
   <>
-    {/* <ProgressSummarySection /> */}
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {/* <RecentWorkoutsSection /> */}
-      {/* <NutritionLogsSection /> */}
-      {/* <WeightProgressSection /> */}
-      {/* <WorkoutFrequencySection /> */}
-      {/* <MacroDistributionSection /> */}
+
     </div>
   </>
 );

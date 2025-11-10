@@ -4,143 +4,127 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { Loader2, Save, Trash2, Bell, Globe, Clock } from 'lucide-react';
+import { usePreferences } from './usePreferences';
+import { t } from '../../i18n';
 
 const SettingSection = () => {
-  const [preferences, setPreferences] = useState({
-    notifications: true,
-    units: 'metric',
-    theme: 'dark',
-  });
-  const [loading, setLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const userId = user._id; 
-  const API_BASE_URL = 'http://localhost:3000'; 
+  const { prefs: preferences, update } = usePreferences(user._id);
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchPreferences = async () => {
-      if (!userId) {
-        toast.error('User not logged in');
-        setLoading(false);
-        return;
-      }
-      try {
-        const res = await axios.get(`${API_BASE_URL}/preferences?userId=${userId}`);
-        setPreferences(res.data);
-      } catch (err) {
-        toast.error('Failed to load preferences');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPreferences();
-  }, [userId]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setPreferences((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    const [parent, child] = name.split('.');
+    const newPrefs = { ...preferences };
+
+    if (child) {
+      newPrefs[parent][child] = type === 'checkbox' ? checked : value;
+    } else {
+      newPrefs[name] = type === 'checkbox' ? checked : value;
+    }
+    update(newPrefs);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!userId) {
-      toast.error('User not logged in');
-      return;
-    }
+    setSaving(true);
     try {
-      await axios.put(`${API_BASE_URL}/preferences`, { ...preferences, userId });
-      toast.success('Preferences updated!');
-      document.documentElement.setAttribute('data-theme', preferences.theme);
-    } catch (err) {
-      toast.error('Failed to update preferences');
+      await update(preferences);
+      toast.success('Settings saved!');
+    } catch {
+      toast.error('Save failed');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDeleteProfile = async () => {
-    if (!window.confirm('Are you sure you want to delete your profile? This action cannot be undone.')) {
-      return;
-    }
-    if (!userId) {
-      toast.error('User not logged in');
-      return;
-    }
+    if (!confirm('Profile delete karna chahte ho?')) return;
     try {
-      await axios.delete(`${API_BASE_URL}/profile?userId=${userId}`);
-      toast.success('Profile deleted successfully');
-      localStorage.removeItem('user');
+      await axios.delete(`http://localhost:3000/profile?userId=${user._id}`);
+      localStorage.clear();
       navigate('/login');
-    } catch (err) {
-      toast.error('Failed to delete profile');
+    } catch {
+      toast.error('Delete failed');
     }
   };
 
-  if (loading) return <p className="text-var(--text-muted)">Loading settings...</p>;
+  if (!preferences) return <Loader2 className="animate-spin" />;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="mt-6 p-6 rounded-lg shadow-md"
-      style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}
-    >
-      <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--accent)' }}>User Preferences</h3>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="notifications"
-            name="notifications"
-            checked={preferences.notifications}
-            onChange={handleChange}
-            className="mr-2"
-          />
-          <label htmlFor="notifications" className="text-var(--text-primary)">Enable Notifications</label>
-        </div>
+    <motion.div className="p-6 rounded-lg shadow" style={{ background: 'var(--bg-card)' }}>
+      <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--accent)' }}>
+        {t('settings', preferences.language) || 'Settings'}
+      </h3>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+
+        {/* Notifications */}
         <div>
-          <label className="block text-var(--text-secondary) mb-1">Units of Measurement</label>
-          <select
-            name="units"
-            value={preferences.units}
-            onChange={handleChange}
-            className="w-full p-2 rounded-md"
-            style={{ backgroundColor: 'var(--input-bg)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-          >
+          <h4 className="flex items-center gap-2 mb-2"><Bell className="w-4 h-4" /> Notifications</h4>
+          <div className="grid grid-cols-3 gap-3">
+            {['push', 'email', 'sms'].map(ch => (
+              <label key={ch} className="flex items-center">
+                <input type="checkbox" name={`notifications.${ch}`} checked={preferences.notifications[ch]} onChange={handleChange} className="mr-2" />
+                <span className="capitalize">{ch}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Units */}
+        <div>
+          <label>Units</label>
+          <select name="units" value={preferences.units} onChange={handleChange} className="w-full p-2 rounded mt-1" style={{ background: 'var(--input-bg)' }}>
             <option value="metric">Metric (kg, cm)</option>
             <option value="imperial">Imperial (lbs, in)</option>
           </select>
         </div>
+
+        {/* Theme */}
         <div>
-          <label className="block text-var(--text-secondary) mb-1">Theme</label>
-          <select
-            name="theme"
-            value={preferences.theme}
-            onChange={handleChange}
-            className="w-full p-2 rounded-md"
-            style={{ backgroundColor: 'var(--input-bg)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-          >
+          <label>Theme</label>
+          <select name="theme" value={preferences.theme} onChange={handleChange} className="w-full p-2 rounded mt-1" style={{ background: 'var(--input-bg)' }}>
             <option value="dark">Dark</option>
             <option value="light">Light</option>
           </select>
         </div>
-        <button
-          type="submit"
-          className="w-full py-2 rounded-md font-bold"
-          style={{ backgroundColor: 'var(--accent)', color: 'var(--bg-primary)' }}
-        >
-          Save Changes
+
+        {/* Language */}
+        <div>
+          <label className="flex items-center gap-2"><Globe className="w-4 h-4" /> Language</label>
+          <select name="language" value={preferences.language} onChange={handleChange} className="w-full p-2 rounded mt-1" style={{ background: 'var(--input-bg)' }}>
+            <option value="en">English</option>
+            <option value="ur">اردو</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+
+        {/* Reminders */}
+        <div>
+          <h4 className="flex items-center gap-2 mb-2"><Clock className="w-4 h-4" /> Reminders</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label>Workout</label>
+              <input type="time" name="reminders.workout" value={preferences.reminders.workout} onChange={handleChange} className="w-full p-2 rounded mt-1" style={{ background: 'var(--input-bg)' }} />
+            </div>
+            <div>
+              <label>Meal</label>
+              <input type="time" name="reminders.meal" value={preferences.reminders.meal} onChange={handleChange} className="w-full p-2 rounded mt-1" style={{ background: 'var(--input-bg)' }} />
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" disabled={saving} className="w-full flex justify-center items-center gap-2 py-2 rounded font-bold" style={{ background: 'var(--accent)', color: 'white' }}>
+          {saving ? <Loader2 className="animate-spin" /> : <Save />} {saving ? "Saving..." : "Save"}
         </button>
       </form>
-      <div className="mt-6 pt-6 border-t border-[var(--border)]">
-        <button
-          onClick={handleDeleteProfile}
-          className="w-full py-2 rounded-md font-bold bg-red-600 text-white hover:bg-red-700 transition-colors"
-        >
-          Delete Profile
-        </button>
-      </div>
+
+      <button onClick={handleDeleteProfile} className="mt-6 w-full flex justify-center items-center gap-2 py-2 rounded bg-red-600 text-white">
+        <Trash2 /> Delete Profile
+      </button>
     </motion.div>
   );
 };

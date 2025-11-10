@@ -1,3 +1,4 @@
+// src/Dashboard/components/SidebarSection.jsx
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -12,7 +13,7 @@ const menu = [
   { Icon: Apple,       label: 'Nutrition',   path: '/dashboard/nutrition' },
   { Icon: TrendingUp,  label: 'Progress',    path: '/dashboard/progress' },
   { Icon: Target,      label: 'Goals',       path: '/dashboard/goals' },
-  { Icon: Calendar,    label: 'Schedule',    path: '/dashboard/schedule' },
+  { Icon: Calendar,    label: 'Reminders',    path: '/dashboard/reminders' },
   { Icon: BarChart3,   label: 'Analytics',   path: '/dashboard/analytics' },
   { Icon: Settings,    label: 'Settings',    path: '/dashboard/settings' },
 ];
@@ -28,9 +29,12 @@ const SidebarSection = ({ user, logout }) => {
 
   return (
     <motion.aside
-      animate={{ width: 260 }} // ✅ fixed width (no collapse)
-      className="sidebar relative flex flex-col justify-between h-screen"
+      initial={{ width: 260 }}
+      animate={{ width: 260 }}
+      transition={{ type: 'tween', duration: 0.2 }}
+      className="sidebar flex-shrink-0 flex flex-col min-h-screen overflow-hidden"  // Changed to min-h-screen
       style={{
+        width: 260,
         backgroundColor: 'var(--bg-card)',
         borderRight: '1px solid var(--border)',
       }}
@@ -45,7 +49,7 @@ const SidebarSection = ({ user, logout }) => {
         </div>
 
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--accent)' }}>Fitness Tracker</h1>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--accent)' }}>FitTrack</h1>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Level 12</p>
         </div>
       </div>

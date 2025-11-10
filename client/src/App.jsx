@@ -16,6 +16,7 @@ import SettingsPage    from './Dashboard/pages/SettingsPage';
 import ProfilePage from './Dashboard/pages/ProfilePage';
 import toast from 'react-hot-toast';
 import Notification from './Dashboard/pages/Notification';
+import RemindersPage from './Dashboard/pages/RemindersPage';
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -97,11 +98,12 @@ const App = () => {
           <Route path="/dashboard/nutrition" element={<NutritionPage />} />
           <Route path="/dashboard/progress" element={<ProgressPage />} />
           <Route path="/dashboard/goals" element={<GoalsPage />} />
-          <Route path="/dashboard/schedule" element={<SchedulePage />} />
+          {/* <Route path="/dashboard/schedule" element={<SchedulePage />} /> */}
           <Route path="/dashboard/analytics" element={<AnalyticsPage />} />
           <Route path="/dashboard/settings" element={<SettingsPage />} />
           <Route path="/dashboard/profile" element={<ProfilePage />} />
           <Route path="/dashboard/notifications" element={<Notification />} />
+          <Route path="/dashboard/reminders" element={<RemindersPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

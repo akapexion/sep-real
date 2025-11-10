@@ -27,7 +27,7 @@ const DashboardLayout = ({ user, logout }) => {
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       <Sidebar user={user} logout={logout} />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Navbar user={user} toggleTheme={toggleTheme} isDark={isDark} />
         <motion.header
           initial={{ opacity: 0, y: -30 }}
@@ -35,7 +35,7 @@ const DashboardLayout = ({ user, logout }) => {
           transition={{ duration: 0.4 }}
           className="dashboard-header px-6 py-4"
         >
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>SimpleFit</h1>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>FitTrack</h1>
         </motion.header>
         <main className="flex-1 p-6 overflow-auto">
           <Outlet />
