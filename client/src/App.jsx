@@ -2,27 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import ComingSoon from './components/ComingSoon';
 import DashboardLayout from './Dashboard/components/DashboardLayout';
 
-import HomePage        from './Dashboard/pages/HomePage';
-import WorkoutsPage    from './Dashboard/pages/WorkoutsPage';
-import NutritionPage   from './Dashboard/pages/NutritionPage';
-import ProgressPage    from './Dashboard/pages/ProgressPage';
-import GoalsPage       from './Dashboard/pages/GoalsPage';
-import SchedulePage    from './Dashboard/pages/SchedulePage';
-import AnalyticsPage   from './Dashboard/pages/AnalyticsPage';
-import SettingsPage    from './Dashboard/pages/SettingsPage';
+import HomePage from './Dashboard/pages/HomePage';
+import WorkoutsPage from './Dashboard/pages/WorkoutsPage';
+import NutritionPage from './Dashboard/pages/NutritionPage';
+import ProgressPage from './Dashboard/pages/ProgressPage';
+import GoalsPage from './Dashboard/pages/GoalsPage';
+import SchedulePage from './Dashboard/pages/SchedulePage';
+import AnalyticsPage from './Dashboard/pages/AnalyticsPage';
+import SettingsPage from './Dashboard/pages/SettingsPage';
 import ProfilePage from './Dashboard/pages/ProfilePage';
-import toast from 'react-hot-toast';
 import Notification from './Dashboard/pages/Notification';
 import RemindersPage from './Dashboard/pages/RemindersPage';
+import toast from 'react-hot-toast';
 
 const App = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const SESSION_TIMEOUT = 30 * 60 * 1000; 
+  const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -32,7 +31,7 @@ const App = () => {
       try {
         const parsedUser = JSON.parse(storedUser);
         const timeElapsed = Date.now() - parseInt(storedLoginTime);
-        
+
         if (timeElapsed < SESSION_TIMEOUT) {
           setUser(parsedUser);
           const remainingTime = SESSION_TIMEOUT - timeElapsed;
@@ -41,7 +40,7 @@ const App = () => {
           handleLogout();
         }
       } catch (e) {
-        console.error("Failed to parse user from localStorage", e);
+        console.error('Failed to parse user from localStorage', e);
         handleLogout();
       }
     }
@@ -82,29 +81,49 @@ const App = () => {
   }
 
   const ProtectedDashboard = ({ children }) => {
-    return user ? <DashboardLayout user={user} logout={handleLogout}>{children}</DashboardLayout> : <Navigate to="/login" replace />;
+    return user ? (
+      <DashboardLayout user={user} logout={handleLogout}>
+        {children}
+      </DashboardLayout>
+    ) : (
+      <Navigate to="/login" replace />
+    );
   };
 
   return (
     <BrowserRouter>
       <Routes>
+        {/* Authentication */}
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login Loginuser={loginUser} />} />
-        <Route path="/" element={<ComingSoon />} />
 
-        <Route element={<ProtectedDashboard />}>
+        {/* ✅ Redirect root ("/") dynamically */}
+        <Route
+          path="/"
+          element={
+            user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
+          }
+        />
+
+        {/* Protected Dashboard Routes */}
+        <Route
+          element={<ProtectedDashboard />}
+        >
           <Route path="/dashboard" element={<HomePage />} />
           <Route path="/dashboard/workouts" element={<WorkoutsPage />} />
           <Route path="/dashboard/nutrition" element={<NutritionPage />} />
           <Route path="/dashboard/progress" element={<ProgressPage />} />
           <Route path="/dashboard/goals" element={<GoalsPage />} />
-          {/* <Route path="/dashboard/schedule" element={<SchedulePage />} /> */}
+          <Route path="/dashboard/schedule" element={<SchedulePage />} />
           <Route path="/dashboard/analytics" element={<AnalyticsPage />} />
           <Route path="/dashboard/settings" element={<SettingsPage />} />
           <Route path="/dashboard/profile" element={<ProfilePage />} />
           <Route path="/dashboard/notifications" element={<Notification />} />
           <Route path="/dashboard/reminders" element={<RemindersPage />} />
         </Route>
+
+        {/* Catch-all route (optional) */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
