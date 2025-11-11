@@ -16,6 +16,8 @@ import ProfilePage from './Dashboard/pages/ProfilePage';
 import Notification from './Dashboard/pages/Notification';
 import RemindersPage from './Dashboard/pages/RemindersPage';
 import toast from 'react-hot-toast';
+import Home from './pages/Home';
+import AppLayout from './AppLayout';
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -94,6 +96,9 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         {/* Authentication */}
+        <Route path="/" element={<AppLayout />}>
+          <Route path="/" element={<Home />} />
+        </Route>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login Loginuser={loginUser} />} />
 
