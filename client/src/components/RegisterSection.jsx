@@ -50,6 +50,8 @@ export default function RegisterSectionFitness() {
     formData.append("password", password);
     formData.append("profilePic", profilePic);
 
+
+
     try {
         const res = await axios.post("http://localhost:3000/register", formData, {
         headers: { "Content-Type": "multipart/form-data" },

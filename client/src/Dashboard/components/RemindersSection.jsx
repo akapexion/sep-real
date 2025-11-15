@@ -52,7 +52,7 @@ const save = async (e) => {
   setSaving(true);
   try {
     if (editingId) {
-      await axios.put(`${API_BASE}/reminders/${editingId}`, payload);
+      await axios.post(`${API_BASE}/reminders/${editingId}`, payload);
       toast.success("Reminder updated");
     } else {
       await axios.post(`${API_BASE}/reminders`, payload);

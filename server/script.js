@@ -280,7 +280,7 @@ app.get("/progress", async (req, res) => {
   }
 });
 
-app.put("/progress/:id", async (req, res) => {
+app.post("/progress/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { userId, weight, measurements, performance } = req.body;
@@ -351,7 +351,7 @@ app.get("/preferences", async (req, res) => {
   }
 });
 
-app.put("/preferences", async (req, res) => {
+app.post("/preferences", async (req, res) => {
   try {
     const { userId, notifications, units, theme } = req.body;
     if (!userId) return res.status(400).send({ message: "userId required" });
@@ -467,7 +467,7 @@ app.get("/nutrition", async (req, res) => {
   }
 });
 
-app.put("/nutrition/:id", async (req, res) => {
+app.post("/nutrition/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { mealType, foodItems, date, notes } = req.body;
@@ -656,7 +656,7 @@ app.get("/reminders", async (req, res) => {
 });
 
 // UPDATE
-app.put("/reminders/:id", async (req, res) => {
+app.post("/reminders/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { title, date, type, notes, isActive } = req.body;

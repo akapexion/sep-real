@@ -1,15 +1,8 @@
-// src/Dashboard/components/ProgressInputSection.jsx
 import React, { useState } from "react";
 import axios from "axios";
-import toast from "react-hot-toast";
-
+import toast, { Toaster } from "react-hot-toast";
 const ProgressInputSection = ({ onProgressAdded }) => {
-
-
-  const API_BASE_URL = 'http://localhost:3000'; 
-
-
-
+  const API_BASE_URL = 'http://localhost:3000';
   const [form, setForm] = useState({
     date: "",
     weight: "",
@@ -18,12 +11,9 @@ const ProgressInputSection = ({ onProgressAdded }) => {
     runTime: "",
     liftWeight: "",
   });
-
-
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const userId = localStorage.getItem("userId");
@@ -31,7 +21,6 @@ const ProgressInputSection = ({ onProgressAdded }) => {
       toast.error("Please log in to save progress");
       return;
     }
-
     const payload = {
       userId,
       date: form.date,
@@ -45,7 +34,6 @@ const ProgressInputSection = ({ onProgressAdded }) => {
         liftWeight: form.liftWeight ? parseFloat(form.liftWeight) : null,
       },
     };
-
     try {
       await axios.post(
         `${API_BASE_URL}/progress`,
@@ -66,103 +54,131 @@ const ProgressInputSection = ({ onProgressAdded }) => {
       console.error(err);
     }
   };
-
   return (
     <form
       onSubmit={handleSubmit}
       className="p-6 rounded-xl shadow-md space-y-5"
       style={{ backgroundColor: "var(--bg-secondary)" }}
     >
+      <Toaster />
       <h2 className="text-xl font-semibold" style={{ color: "var(--accent)" }}>
         Log New Progress
       </h2>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <input
-          type="date"
-          name="date"
-          required
-          value={form.date}
-          onChange={handleChange}
-          className="px-4 py-2 rounded border focus:ring-2 focus:ring-var(--accent)"
-          style={{
-            backgroundColor: "var(--input-bg)",
-            color: "var(--text-primary)",
-            borderColor: "var(--border)",
-          }}
-        />
-        <input
-          type="number"
-          name="weight"
-          placeholder="Weight (kg)"
-          step="0.1"
-          value={form.weight}
-          onChange={handleChange}
-          className="px-4 py-2 rounded border focus:ring-2 focus:ring-var(--accent)"
-          style={{
-            backgroundColor: "var(--input-bg)",
-            color: "var(--text-primary)",
-            borderColor: "var(--border)",
-          }}
-        />
-        <input
-          type="number"
-          name="chest"
-          placeholder="Chest (cm)"
-          step="0.1"
-          value={form.chest}
-          onChange={handleChange}
-          className="px-4 py-2 rounded border focus:ring-2 focus:ring-var(--accent)"
-          style={{
-            backgroundColor: "var(--input-bg)",
-            color: "var(--text-primary)",
-            borderColor: "var(--border)",
-          }}
-        />
-        <input
-          type="number"
-          name="waist"
-          placeholder="Waist (cm)"
-          step="0.1"
-          value={form.waist}
-          onChange={handleChange}
-          className="px-4 py-2 rounded border focus:ring-2 focus:ring-var(--accent)"
-          style={{
-            backgroundColor: "var(--input-bg)",
-            color: "var(--text-primary)",
-            borderColor: "var(--border)",
-          }}
-        />
-        <input
-          type="number"
-          name="runTime"
-          placeholder="Run Time (min)"
-          step="0.1"
-          value={form.runTime}
-          onChange={handleChange}
-          className="px-4 py-2 rounded border focus:ring-2 focus:ring-var(--accent)"
-          style={{
-            backgroundColor: "var(--input-bg)",
-            color: "var(--text-primary)",
-            borderColor: "var(--border)",
-          }}
-        />
-        <input
-          type="number"
-          name="liftWeight"
-          placeholder="Lift Weight (kg)"
-          step="0.1"
-          value={form.liftWeight}
-          onChange={handleChange}
-          className="px-4 py-2 rounded border focus:ring-2 focus:ring-var(--accent)"
-          style={{
-            backgroundColor: "var(--input-bg)",
-            color: "var(--text-primary)",
-            borderColor: "var(--border)",
-          }}
-        />
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+            Date
+          </label>
+          <input
+            type="date"
+            name="date"
+            required
+            value={form.date}
+            onChange={handleChange}
+            className="px-4 py-2 rounded border focus:ring-2 focus:ring-var(--accent)"
+            style={{
+              backgroundColor: "var(--input-bg)",
+              color: "var(--text-primary)",
+              borderColor: "var(--border)",
+            }}
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+            Weight (kg)
+          </label>
+          <input
+            type="number"
+            name="weight"
+            placeholder="Weight (kg)"
+            step="0.1"
+            value={form.weight}
+            onChange={handleChange}
+            className="px-4 py-2 rounded border focus:ring-2 focus:ring-var(--accent)"
+            style={{
+              backgroundColor: "var(--input-bg)",
+              color: "var(--text-primary)",
+              borderColor: "var(--border)",
+            }}
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+            Chest (cm)
+          </label>
+          <input
+            type="number"
+            name="chest"
+            placeholder="Chest (cm)"
+            step="0.1"
+            value={form.chest}
+            onChange={handleChange}
+            className="px-4 py-2 rounded border focus:ring-2 focus:ring-var(--accent)"
+            style={{
+              backgroundColor: "var(--input-bg)",
+              color: "var(--text-primary)",
+              borderColor: "var(--border)",
+            }}
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+            Waist (cm)
+          </label>
+          <input
+            type="number"
+            name="waist"
+            placeholder="Waist (cm)"
+            step="0.1"
+            value={form.waist}
+            onChange={handleChange}
+            className="px-4 py-2 rounded border focus:ring-2 focus:ring-var(--accent)"
+            style={{
+              backgroundColor: "var(--input-bg)",
+              color: "var(--text-primary)",
+              borderColor: "var(--border)",
+            }}
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+            Run Time (min)
+          </label>
+          <input
+            type="number"
+            name="runTime"
+            placeholder="Run Time (min)"
+            step="0.1"
+            value={form.runTime}
+            onChange={handleChange}
+            className="px-4 py-2 rounded border focus:ring-2 focus:ring-var(--accent)"
+            style={{
+              backgroundColor: "var(--input-bg)",
+              color: "var(--text-primary)",
+              borderColor: "var(--border)",
+            }}
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+            Lift Weight (kg)
+          </label>
+          <input
+            type="number"
+            name="liftWeight"
+            placeholder="Lift Weight (kg)"
+            step="0.1"
+            value={form.liftWeight}
+            onChange={handleChange}
+            className="px-4 py-2 rounded border focus:ring-2 focus:ring-var(--accent)"
+            style={{
+              backgroundColor: "var(--input-bg)",
+              color: "var(--text-primary)",
+              borderColor: "var(--border)",
+            }}
+          />
+        </div>
       </div>
-
       <button
         type="submit"
         className="w-full sm:w-auto px-6 py-2.5 rounded font-medium text-white transition hover:opacity-90"
@@ -173,5 +189,4 @@ const ProgressInputSection = ({ onProgressAdded }) => {
     </form>
   );
 };
-
 export default ProgressInputSection;

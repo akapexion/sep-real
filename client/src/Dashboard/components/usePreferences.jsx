@@ -16,7 +16,7 @@ export const usePreferences = (userId) => {
   }, [userId]);
 
   const update = async (newPrefs) => {
-    await axios.put(`${API}/preferences`, { userId, ...newPrefs });
+    await axios.post(`${API}/preferences`, { userId, ...newPrefs });
     setPrefs(newPrefs);
     document.documentElement.setAttribute("data-theme", newPrefs.theme);
   };

@@ -1,22 +1,33 @@
-// src/Dashboard/components/ProgressSummarySection.jsx
 import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-} from "recharts";
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Download, FileText } from "lucide-react";
+import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
-  const printRef = useRef(); // <-- for PDF
+  const printRef = useRef();
 
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -58,7 +69,7 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
     };
 
     try {
-      await axios.put(`${API_BASE_URL}/progress/${editingId}`, payload);
+      await axios.post(`${API_BASE_URL}/progress/${editingId}`, payload);
       toast.success("Progress updated!");
       setEditingId(null);
       onProgressUpdate?.();
@@ -68,22 +79,25 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
     }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`${API_BASE_URL}/progress/${id}`);
-      toast.success("Deleted!");
-      onProgressUpdate?.();
-    } catch (err) {
-      toast.error("Delete failed");
-      console.error(err);
-    }
+  const handleDelete = (id) => {
+    showDeleteConfirm({
+      message: "Are you sure you want to delete this workout?",
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_BASE_URL}/progress/${id}`);
+          toast.success("Deleted successfully");
+          onProgressUpdate?.();
+        } catch (error) {
+          toast.error("Unable to delete");
+        }
+      },
+    });
   };
 
   const handleInputChange = (e) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
   };
 
-  /* ------------------- EXPORT PDF ------------------- */
   const exportPDF = () => {
     const win = window.open("", "", "width=900,height=650");
     win.document.write(`
@@ -101,7 +115,6 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
     setTimeout(() => win.print(), 500);
   };
 
-  /* ------------------- EXPORT CSV ------------------- */
   const exportCSV = () => {
     const header = ["Date","Weight(kg)","Chest(cm)","Waist(cm)","Run(min)","Lift(kg)"];
     const rows = progressEntries.map(e => [
@@ -122,17 +135,93 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
     URL.revokeObjectURL(url);
   };
 
-  const chartData = progressEntries.map((entry) => ({
-    date: new Date(entry.date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    }),
-    weight: entry.weight ?? 0,
-    chest: entry.measurements?.chest ?? 0,
-    waist: entry.measurements?.waist ?? 0,
-    runTime: entry.performance?.runTime ?? 0,
-    liftWeight: entry.performance?.liftWeight ?? 0,
+  const sortedProgress = [...progressEntries].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  const labels = sortedProgress.map((entry) => new Date(entry.date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
   }));
+
+  const bodyChartData = {
+    labels,
+    datasets: [
+      {
+        label: "Weight (kg)",
+        data: sortedProgress.map((entry) => entry.weight ?? null),
+        borderColor: "#8884d8",
+        backgroundColor: "#8884d8",
+        borderWidth: 2,
+        tension: 0.1,
+      },
+      {
+        label: "Chest (cm)",
+        data: sortedProgress.map((entry) => entry.measurements?.chest ?? null),
+        borderColor: "#82ca9d",
+        backgroundColor: "#82ca9d",
+        borderWidth: 2,
+        tension: 0.1,
+      },
+      {
+        label: "Waist (cm)",
+        data: sortedProgress.map((entry) => entry.measurements?.waist ?? null),
+        borderColor: "#ffc658",
+        backgroundColor: "#ffc658",
+        borderWidth: 2,
+        tension: 0.1,
+      },
+    ],
+  };
+
+  const performanceChartData = {
+    labels,
+    datasets: [
+      {
+        label: "Run Time (min)",
+        data: sortedProgress.map((entry) => entry.performance?.runTime ?? null),
+        borderColor: "#ff7300",
+        backgroundColor: "#ff7300",
+        borderWidth: 2,
+        tension: 0.1,
+      },
+      {
+        label: "Lift Weight (kg)",
+        data: sortedProgress.map((entry) => entry.performance?.liftWeight ?? null),
+        borderColor: "#a4de6c",
+        backgroundColor: "#a4de6c",
+        borderWidth: 2,
+        tension: 0.1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      tooltip: {
+        mode: "index",
+        intersect: false,
+      },
+    },
+    scales: {
+      x: {
+        display: true,
+        title: {
+          display: true,
+          text: "Date",
+        },
+      },
+      y: {
+        display: true,
+        title: {
+          display: true,
+          text: "Value",
+        },
+      },
+    },
+  };
 
   return (
     <motion.div
@@ -141,7 +230,6 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
       className="mt-8 p-6 rounded-xl shadow-md"
       style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
     >
-      {/* TITLE + EXPORT */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-bold" style={{ color: "var(--accent)" }}>
           Progress Summary
@@ -156,7 +244,6 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
         </div>
       </div>
 
-      {/* TABLE & CHART – wrapped for PDF */}
       <div ref={printRef}>
         <div className="overflow-x-auto mb-8">
           <table className="min-w-full divide-y" style={{ borderColor: "var(--border)" }}>
@@ -176,18 +263,17 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
               </tr>
             </thead>
             <tbody className="divide-y" style={{ borderColor: "var(--border)" }}>
-              {progressEntries.length === 0 ? (
+              {sortedProgress.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center" style={{ color: "var(--text-muted)" }}>
                     No progress recorded yet.
                   </td>
                 </tr>
               ) : (
-                progressEntries.map((e) => (
+                sortedProgress.map((e) => (
                   <tr key={e._id} className="hover:bg-[var(--bg-card-hover)]">
                     {editingId === e._id ? (
                       <>
-                        {/* EDIT MODE – unchanged */}
                         <td className="px-4 py-3">
                           <input
                             type="date"
@@ -336,33 +422,26 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
           </table>
         </div>
 
-        {progressEntries.length > 0 && (
-          <div>
-            <h4 className="text-lg font-semibold mb-4" style={{ color: "var(--accent)" }}>
-              Progress Over Time
-            </h4>
-            <ResponsiveContainer width="100%" height={340}>
-              <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="date" tick={{ fill: "var(--text-secondary)" }} />
-                <YAxis tick={{ fill: "var(--text-secondary)" }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "var(--bg-card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Legend />
-                <Line type="monotone" dataKey="weight" stroke="#8884d8" name="Weight (kg)" strokeWidth={2} />
-                <Line type="monotone" dataKey="chest" stroke="#82ca9d" name="Chest (cm)" strokeWidth={2} />
-                <Line type="monotone" dataKey="waist" stroke="#ffc658" name="Waist (cm)" strokeWidth={2} />
-                <Line type="monotone" dataKey="runTime" stroke="#ff7300" name="Run Time (min)" strokeWidth={2} />
-                <Line type="monotone" dataKey="liftWeight" stroke="#a4de6c" name="Lift Weight (kg)" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+        {sortedProgress.length > 1 ? (
+          <>
+            <div className="mb-8">
+              <h4 className="text-lg font-semibold mb-4" style={{ color: "var(--accent)" }}>
+                Body Composition Over Time
+              </h4>
+              <Line data={bodyChartData} options={chartOptions} />
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold mb-4" style={{ color: "var(--accent)" }}>
+                Performance Over Time
+              </h4>
+              <Line data={performanceChartData} options={chartOptions} />
+            </div>
+          </>
+        ) : sortedProgress.length > 0 ? (
+          <p className="text-center text-sm" style={{ color: "var(--text-muted)" }}>
+            Add more progress entries to see trends over time.
+          </p>
+        ) : null}
       </div>
     </motion.div>
   );

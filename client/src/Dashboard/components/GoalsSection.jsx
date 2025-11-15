@@ -1,4 +1,3 @@
-// src/Dashboard/components/GoalsSection.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -62,7 +61,7 @@ export default function GoalsSection() {
     setSaving(true);
     try {
       if (editingId) {
-        await axios.put(`${API_BASE}/goals/${editingId}`, payload);
+        await axios.post(`${API_BASE}/goals/${editingId}`, payload);
         toast.success("Goal updated");
       } else {
         await axios.post(`${API_BASE}/goals`, payload);
@@ -121,76 +120,101 @@ export default function GoalsSection() {
       </h3>
 
       <form onSubmit={saveGoal} className="grid md:grid-cols-2 gap-4 mb-6">
-        <select
-          value={goalType}
-          onChange={(e) => setGoalType(e.target.value)}
-          className="p-2 rounded-md"
-          style={{
-            backgroundColor: "var(--input-bg)",
-            color: "var(--text-primary)",
-            border: "1px solid var(--border)",
-          }}
-          required
-        >
-          {["Weight Loss", "Muscle Gain", "Run Distance", "Lift Target", "Other"].map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+            Goal Type
+          </label>
+          <select
+            value={goalType}
+            onChange={(e) => setGoalType(e.target.value)}
+            className="p-2 rounded-md"
+            style={{
+              backgroundColor: "var(--input-bg)",
+              color: "var(--text-primary)",
+              border: "1px solid var(--border)",
+            }}
+            required
+          >
+            {["Weight Loss", "Muscle Gain", "Run Distance", "Lift Target", "Other"].map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <input
-          type="date"
-          value={deadline}
-          onChange={(e) => setDeadline(e.target.value)}
-          className="p-2 rounded-md"
-          style={{
-            backgroundColor: "var(--input-bg)",
-            color: "var(--text-primary)",
-            border: "1px solid var(--border)",
-          }}
-          required
-        />
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+            Deadline
+          </label>
+          <input
+            type="date"
+            value={deadline}
+            onChange={(e) => setDeadline(e.target.value)}
+            className="p-2 rounded-md"
+            style={{
+              backgroundColor: "var(--input-bg)",
+              color: "var(--text-primary)",
+              border: "1px solid var(--border)",
+            }}
+            required
+          />
+        </div>
 
-        <input
-          type="number"
-          placeholder="Target (e.g. 70 kg)"
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-          className="p-2 rounded-md"
-          style={{
-            backgroundColor: "var(--input-bg)",
-            color: "var(--text-primary)",
-            border: "1px solid var(--border)",
-          }}
-          required
-        />
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+            Target
+          </label>
+          <input
+            type="number"
+            placeholder="Target (e.g. 70 kg)"
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            className="p-2 rounded-md"
+            style={{
+              backgroundColor: "var(--input-bg)",
+              color: "var(--text-primary)",
+              border: "1px solid var(--border)",
+            }}
+            required
+          />
+        </div>
 
-        <input
-          type="number"
-          placeholder="Current (e.g. 80 kg)"
-          value={current}
-          onChange={(e) => setCurrent(e.target.value)}
-          className="p-2 rounded-md"
-          style={{
-            backgroundColor: "var(--input-bg)",
-            color: "var(--text-primary)",
-            border: "1px solid var(--border)",
-          }}
-          required
-        />
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+            Current
+          </label>
+          <input
+            type="number"
+            placeholder="Current (e.g. 80 kg)"
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+            className="p-2 rounded-md"
+            style={{
+              backgroundColor: "var(--input-bg)",
+              color: "var(--text-primary)",
+              border: "1px solid var(--border)",
+            }}
+            required
+          />
+        </div>
 
-        <input
-          placeholder="Notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="p-2 rounded-md md:col-span-2"
-          style={{
-            backgroundColor: "var(--input-bg)",
-            color: "var(--text-primary)",
-            border: "1px solid var(--border)",
-          }}
-        />
+        <div className="flex flex-col md:col-span-2">
+          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+            Notes
+          </label>
+          <input
+            placeholder="Notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="p-2 rounded-md"
+            style={{
+              backgroundColor: "var(--input-bg)",
+              color: "var(--text-primary)",
+              border: "1px solid var(--border)",
+            }}
+          />
+        </div>
 
         <div className="md:col-span-2 flex gap-2">
           <button
@@ -261,4 +285,4 @@ export default function GoalsSection() {
       </div>
     </motion.div>
   );
-}
+} 
