@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
+import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
+
 import { Trash2, Edit2, Plus, Loader2 } from "lucide-react";
 
 const API_BASE = "http://localhost:3000";
@@ -76,15 +78,20 @@ export default function GoalsSection() {
     }
   };
 
-  const deleteGoal = async (id) => {
-    if (!window.confirm("Delete this goal?")) return;
-    try {
-      await axios.delete(`${API_BASE}/goals/${id}`);
-      toast.success("Goal deleted");
-      fetchGoals();
-    } catch (err) {
-      toast.error("Delete failed");
-    }
+
+  const deleteGoal = (id) => {
+    showDeleteConfirm({
+      message: "Are you sure you want to delete this goal?",
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_BASE_URL}/goals/${id}`);
+          toast.success("Goal deleted successfully");
+          fetchGoals();
+        } catch (error) {
+          toast.error("Unable to delete");
+        }
+      },
+    });
   };
 
   const startEdit = (goal) => {
@@ -118,6 +125,9 @@ export default function GoalsSection() {
       <h3 className="text-xl font-semibold mb-4" style={{ color: "var(--accent)" }}>
         Fitness Goals
       </h3>
+
+      <Toaster />
+
 
       <form onSubmit={saveGoal} className="grid md:grid-cols-2 gap-4 mb-6">
         <div className="flex flex-col">
@@ -274,8 +284,9 @@ export default function GoalsSection() {
                     {((goal.current / goal.target) * 100).toFixed(1)}%
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button onClick={() => startEdit(goal)} className="text-var(--accent) mr-2">Edit</button>
-                    <button onClick={() => deleteGoal(goal._id)} className="text-red-500">Delete</button>
+                    <button onClick={() => startEdit(goal)} className="text-var(--accent) mr-2"><Edit2 className="w-4 h-4" style={{ color: "var(--accent)" }} /></button>
+                    <button onClick={() => deleteGoal(goal._id)} className="text-red-500">                          <Trash2 className="w-4 h-4 text-red-500" />
+</button>
                   </td>
                 </tr>
               ))

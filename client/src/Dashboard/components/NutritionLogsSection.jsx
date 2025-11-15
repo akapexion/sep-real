@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import { Trash2, Edit2, Plus, Loader2, Download, FileText } from "lucide-react";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
 
@@ -191,7 +191,6 @@ export default function NutritionLogsSection() {
     );
   }
 
-  /* ===================== RETURN UI ======================== */
 
   return (
     <motion.div
@@ -201,11 +200,12 @@ export default function NutritionLogsSection() {
       style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
     >
 
-      {/* TITLE + EXPORT BUTTONS */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-semibold" style={{ color: "var(--accent)" }}>
           Nutrition Logs
         </h3>
+
+        <Toaster />
 
         <div className="flex gap-2">
           <button onClick={exportPDF} title="Export PDF" className="p-2 rounded hover:bg-[var(--bg-secondary)]">

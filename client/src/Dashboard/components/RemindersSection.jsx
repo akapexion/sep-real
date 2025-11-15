@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
-import toast from "react-hot-toast";
-import { Trash2, Edit2, Plus, Loader2, Bell } from "lucide-react";
+import toast, {Toaster} from "react-hot-toast";
+import { Trash2, Edit2, Plus, Loader2 } from "lucide-react";
+import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
 
 const API_BASE = "http://localhost:3000";   
 
@@ -86,14 +87,32 @@ const startEdit = (r) => {
   setTime(timeStr);
 };
 
-  const del = async (id) => {
-    if (!window.confirm("Delete reminder?")) return;
-    try {
-      await axios.delete(`${API_BASE}/reminders/${id}`);
-      toast.success("Deleted");
-      fetchReminders();
-    } catch { toast.error("Delete failed"); }
+  // const del = async (id) => {
+  //   if (!window.confirm("Delete reminder?")) return;
+  //   try {
+  //     await axios.delete(`${API_BASE}/reminders/${id}`);
+  //     toast.success("Deleted");
+  //     fetchReminders();
+  //   } catch { toast.error("Delete failed"); }
+  // };
+
+  const del = (id) => {
+    showDeleteConfirm({
+      message: "Are you sure you want to delete this workout?",
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_BASE}/reminders/${id}`);
+          toast.success("Reminder deleted successfully");
+          fetchReminders(); 
+        } catch (error) {
+          toast.error("Unable to delete");
+        }
+      },
+    });
   };
+
+
+
 
   useEffect(() => { fetchReminders(); }, [fetchReminders]);
 
@@ -105,7 +124,9 @@ const startEdit = (r) => {
       style={{backgroundColor:"var(--bg-card)",border:"1px solid var(--border)"}}>
       <h3 className="text-xl font-semibold mb-4" style={{color:"var(--accent)"}}>Reminders & Alerts</h3>
 
-      {/* ---- FORM ---- */}
+            <Toaster />
+      
+
       <form onSubmit={save} className="grid md:grid-cols-2 gap-3 mb-6">
         <input placeholder="Title" value={title} onChange={e=>setTitle(e.target.value)}
           className="p-2 rounded" style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}} required/>
@@ -162,8 +183,9 @@ const startEdit = (r) => {
                 <td className="px-4 py-3 text-sm" style={{color:"var(--text-primary)"}}>{r.type}</td>
                 <td className="px-4 py-3 text-sm" style={{color:"var(--text-primary)"}}>{r.isActive?"Yes":"No"}</td>
                 <td className="px-4 py-3 text-sm">
-                  <button onClick={()=>startEdit(r)} className="mr-2 text-[var(--accent)]">Edit</button>
-                  <button onClick={()=>del(r._id)} className="text-red-500">Delete</button>
+                  <button onClick={()=>startEdit(r)} className="mr-2 text-[var(--accent)]"><Edit2 className="w-4 h-4" style={{ color: "var(--accent)" }} /></button>
+                  <button onClick={()=>del(r._id)} className="text-red-500">                          <Trash2 className="w-4 h-4 text-red-500" />
+</button>
                 </td>
               </tr>
             ))}

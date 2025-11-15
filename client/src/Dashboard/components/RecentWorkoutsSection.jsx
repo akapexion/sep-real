@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
-
+import { Trash2, Edit2, Plus, Loader2 } from "lucide-react";
 const RecentWorkoutsSection = () => {
   const [exerciseName, setExerciseName] = useState("");
   const [sets, setSets] = useState("");
@@ -292,16 +292,17 @@ const RecentWorkoutsSection = () => {
                     <button
                       onClick={() => handleEdit(w)}
                       className="mr-3 font-medium transition-colors"
-                      style={{ color: "var(--accent)" }}
+                      
                     >
-                      Edit
+                      <Edit2 className="w-4 h-4" style={{ color: "var(--accent)" }} />
                     </button>
                     <button
                       onClick={() => handleDelete(w._id)}
                       className="font-medium transition-colors"
-                      style={{ color: "#ef4444" }}
+                      
                     >
-                      Delete
+                                                <Trash2 className="w-4 h-4 text-red-500" />
+
                     </button>
                   </td>
                 </tr>

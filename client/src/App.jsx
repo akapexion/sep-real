@@ -23,7 +23,13 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
+  const updateUser = (newUser) => {
+  setUser(newUser);
+  localStorage.setItem("user", JSON.stringify(newUser));
+};
+
+  const SESSION_TIMEOUT = 30 * 60 * 1000; 
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -84,7 +90,7 @@ const App = () => {
 
   const ProtectedDashboard = ({ children }) => {
     return user ? (
-      <DashboardLayout user={user} logout={handleLogout}>
+      <DashboardLayout user={user} logout={handleLogout} updateUser={updateUser}>
         {children}
       </DashboardLayout>
     ) : (

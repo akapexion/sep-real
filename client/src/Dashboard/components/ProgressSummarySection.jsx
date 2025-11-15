@@ -13,7 +13,7 @@ import {
 import { Line } from 'react-chartjs-2';
 import axios from "axios";
 import toast from "react-hot-toast";
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, Trash2, Edit2 } from "lucide-react";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
 
 ChartJS.register(
@@ -166,28 +166,6 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
         data: sortedProgress.map((entry) => entry.measurements?.waist ?? null),
         borderColor: "#ffc658",
         backgroundColor: "#ffc658",
-        borderWidth: 2,
-        tension: 0.1,
-      },
-    ],
-  };
-
-  const performanceChartData = {
-    labels,
-    datasets: [
-      {
-        label: "Run Time (min)",
-        data: sortedProgress.map((entry) => entry.performance?.runTime ?? null),
-        borderColor: "#ff7300",
-        backgroundColor: "#ff7300",
-        borderWidth: 2,
-        tension: 0.1,
-      },
-      {
-        label: "Lift Weight (kg)",
-        data: sortedProgress.map((entry) => entry.performance?.liftWeight ?? null),
-        borderColor: "#a4de6c",
-        backgroundColor: "#a4de6c",
         borderWidth: 2,
         tension: 0.1,
       },
@@ -401,15 +379,16 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
                             <button
                               onClick={() => handleEdit(e)}
                               className="px-2 py-1 text-xs rounded text-white"
-                              style={{ backgroundColor: "#10b981" }}
+                            
                             >
-                              Edit
+                              <Edit2 className="w-4 h-4" style={{ color: "var(--accent)" }} />
                             </button>
                             <button
                               onClick={() => handleDelete(e._id)}
-                              className="px-2 py-1 text-xs rounded bg-red-600 text-white"
+                              className="px-2 py-1 text-xs rounded"
                             >
-                              Delete
+                                                        <Trash2 className="w-4 h-4 text-red-500" />
+
                             </button>
                           </div>
                         </td>
@@ -423,20 +402,12 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
         </div>
 
         {sortedProgress.length > 1 ? (
-          <>
-            <div className="mb-8">
-              <h4 className="text-lg font-semibold mb-4" style={{ color: "var(--accent)" }}>
-                Body Composition Over Time
-              </h4>
-              <Line data={bodyChartData} options={chartOptions} />
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-4" style={{ color: "var(--accent)" }}>
-                Performance Over Time
-              </h4>
-              <Line data={performanceChartData} options={chartOptions} />
-            </div>
-          </>
+          <div>
+            <h4 className="text-lg font-semibold mb-4" style={{ color: "var(--accent)" }}>
+              Body Composition Over Time
+            </h4>
+            <Line data={bodyChartData} options={chartOptions} />
+          </div>
         ) : sortedProgress.length > 0 ? (
           <p className="text-center text-sm" style={{ color: "var(--text-muted)" }}>
             Add more progress entries to see trends over time.

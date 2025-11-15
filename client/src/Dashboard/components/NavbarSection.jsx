@@ -1,7 +1,7 @@
 // src/Dashboard/components/NavbarSection.jsx
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Search, Sun, Moon, CheckCircle, Trash2 } from 'lucide-react';
+import { Bell, Search, Sun, Moon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -11,8 +11,9 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
+  const [profilePic, setProfilePic] = useState(user?.profilePic || '');
 
+  // Load notifications
   useEffect(() => {
     if (user?._id) {
       fetchNotifications();
@@ -29,11 +30,31 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
     }
   };
 
+  // Load profile picture on mount
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    if (storedUser?.profilePic) {
+      setProfilePic(storedUser.profilePic);
+    }
+  }, []);
+
+  // 🔥 Listen for profile updates (Fix: navbar updates without refresh)
+  useEffect(() => {
+    const updateProfilePic = () => {
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+      setProfilePic(storedUser.profilePic || "");
+    };
+
+    window.addEventListener("profile-updated", updateProfilePic);
+
+    return () => window.removeEventListener("profile-updated", updateProfilePic);
+  }, []);
+
   const handleProfileClick = () => navigate('/dashboard/profile');
 
-  const profileImageUrl = user?.profilePic
-    ? `${API_BASE_URL}/uploads/${user.profilePic}`
-    : '/default-avatar.png';
+  const profileImageUrl = profilePic
+    ? `${API_BASE_URL}/uploads/${profilePic}`
+    : '';
 
   return (
     <motion.header
@@ -41,10 +62,13 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
       animate={{ opacity: 1, y: 0 }}
       className="dashboard-header px-6 py-4 flex items-center justify-between"
     >
-      {/* Search */}
+      {/* Search Bar */}
       <div className="flex items-center space-x-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'var(--text-muted)' }} />
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
+            style={{ color: 'var(--text-muted)' }}
+          />
           <input
             type="text"
             placeholder="Search workouts, meals..."
@@ -53,9 +77,10 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
         </div>
       </div>
 
-      {/* Right side */}
+      {/* Right Section */}
       <div className="flex items-center space-x-4">
-        {/* Theme toggle */}
+
+        {/* Theme Toggle */}
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
@@ -83,7 +108,7 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
               src={profileImageUrl}
               alt="Profile"
               className="w-10 h-10 rounded-full object-cover ring-2 ring-[var(--accent)]/30 shadow-md"
-              onError={(e) => (e.target.src = '/default-avatar.png')}
+              onError={(e) => (e.target.src = '')}
             />
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[var(--bg-card-hover)]"></div>
           </div>
@@ -102,3 +127,4 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
 };
 
 export default NavbarSection;
+  

@@ -5,7 +5,7 @@ import { Outlet } from 'react-router-dom';
 import Navbar from '../pages/Navbar';
 import Sidebar from '../pages/Sidebar';
 
-const DashboardLayout = ({ user, logout }) => {
+const DashboardLayout = ({ user, logout, updateUser }) => {
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
@@ -37,9 +37,10 @@ const DashboardLayout = ({ user, logout }) => {
         >
           <h1 className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>FitTrack</h1>
         </motion.header>
-        <main className="flex-1 p-6 overflow-auto">
-          <Outlet />
-        </main>
+<main className="flex-1 p-6 overflow-auto">
+  <Outlet context={{ user, updateUser }} />
+</main>
+
       </div>
     </div>
   );
