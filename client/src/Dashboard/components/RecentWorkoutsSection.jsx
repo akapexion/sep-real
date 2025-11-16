@@ -5,7 +5,10 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
 import { Trash2, Edit2, Plus, Loader2 } from "lucide-react";
+import { usePreferencesContext } from "../pages/PreferencesContext";
+
 const RecentWorkoutsSection = () => {
+  const { preferences, formatWeight, getWeightUnit } = usePreferencesContext();
   const [exerciseName, setExerciseName] = useState("");
   const [sets, setSets] = useState("");
   const [reps, setReps] = useState("");
@@ -26,7 +29,8 @@ const RecentWorkoutsSection = () => {
   }, []);
 
   const fetchWorkouts = async () => {
-    const userId = localStorage.getItem("userId");
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = user._id;
     if (!userId) return toast.error("User not logged in");
 
     setLoading(true);
@@ -45,7 +49,8 @@ const RecentWorkoutsSection = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const userId = localStorage.getItem("userId");
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = user._id;
     if (!userId) return toast.error("User not logged in");
 
     try {
@@ -167,7 +172,7 @@ const RecentWorkoutsSection = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>Weight (kg)</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>Weight ({getWeightUnit()})</label>
             <input
               type="number"
               value={weights}
@@ -277,7 +282,7 @@ const RecentWorkoutsSection = () => {
                     {w.reps}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm" style={{ color: "var(--text-primary)" }}>
-                    {w.weights}
+                    {formatWeight(w.weights)}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm" style={{ color: "var(--text-primary)" }}>
                     {w.category}
@@ -292,17 +297,14 @@ const RecentWorkoutsSection = () => {
                     <button
                       onClick={() => handleEdit(w)}
                       className="mr-3 font-medium transition-colors"
-                      
                     >
                       <Edit2 className="w-4 h-4" style={{ color: "var(--accent)" }} />
                     </button>
                     <button
                       onClick={() => handleDelete(w._id)}
                       className="font-medium transition-colors"
-                      
                     >
-                                                <Trash2 className="w-4 h-4 text-red-500" />
-
+                      <Trash2 className="w-4 h-4 text-red-500" />
                     </button>
                   </td>
                 </tr>

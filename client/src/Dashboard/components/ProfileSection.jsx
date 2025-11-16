@@ -13,6 +13,7 @@ const ProfileSection = () => {
 
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userId = user._id;
@@ -59,6 +60,7 @@ const ProfileSection = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setSelectedFile(file);
       setPreview(URL.createObjectURL(file));
     }
   };
@@ -79,9 +81,8 @@ const ProfileSection = () => {
     formData.append('name', profile.name);
     formData.append('email', profile.email);
 
-    const file = e.target.profilePic.files[0];
-    if (file) {
-      formData.append('profilePic', file);
+    if (selectedFile) {
+      formData.append('profilePic', selectedFile);
     }
 
     try {
@@ -89,36 +90,48 @@ const ProfileSection = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
+      // Update local state with response
       setProfile(res.data);
 
+      // Update preview with new image
       const newImageURL = res.data.image
         ? `${API_BASE_URL}/uploads/${res.data.image}`
         : null;
-
       setPreview(newImageURL);
 
       // ---------------------------
-      // Update localStorage (Navbar Refresh Fix)
+      // FIX: Update localStorage correctly
       // ---------------------------
       const updatedUser = {
         ...user,
         name: res.data.name,
-        profilePic: res.data.image,
+        email: res.data.email,
+        image: res.data.image, // Use 'image' field consistently
       };
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
       // 🔥 IMPORTANT: Trigger event so NAVBAR updates without refresh
-      window.dispatchEvent(new Event("profile-updated"));
+      window.dispatchEvent(new CustomEvent("profile-updated", {
+        detail: updatedUser
+      }));
 
-      toast.success('Profile updated!');
+      // Clear selected file after successful upload
+      setSelectedFile(null);
+
+      toast.success('Profile updated successfully! 🎉');
     } catch (err) {
+      console.error('Profile update error:', err);
       toast.error('Failed to update profile');
     }
   };
 
   if (loading)
-    return <p className="text-var(--text-muted)">Loading profile...</p>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p style={{ color: 'var(--text-muted)' }}>Loading profile...</p>
+      </div>
+    );
 
   return (
     <motion.div
@@ -128,24 +141,38 @@ const ProfileSection = () => {
       style={{
         backgroundColor: 'var(--bg-card)',
         border: '1px solid var(--border)',
+        maxWidth: '500px',
+        margin: '0 auto'
       }}
     >
       <Toaster position="top-right" />
 
-      <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--accent)' }}>
+      <h3 className="text-xl font-semibold mb-6" style={{ color: 'var(--accent)' }}>
         User Profile
       </h3>
 
       {/* Profile Header */}
-      <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6 mb-6">
-        <img
-          src={preview || ''}
-          alt="Profile"
-          className="w-32 h-32 rounded-full object-cover ring-2 ring-[var(--accent)]/20"
-        />
+      <div className="flex flex-col items-center space-y-4 mb-8">
+        <div className="relative">
+          {preview ? (
+            <img
+              src={preview}
+              alt="Profile"
+              className="w-32 h-32 rounded-full object-cover ring-4 ring-[var(--accent)]/20 shadow-lg"
+            />
+          ) : (
+            <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center ring-4 ring-[var(--accent)]/20 shadow-lg">
+              <span className="text-2xl font-bold text-gray-600">
+                {profile.name?.charAt(0)?.toUpperCase() || 'U'}
+              </span>
+            </div>
+          )}
+        </div>
 
-        <div>
-          <p className="text-lg font-medium">{profile.name}</p>
+        <div className="text-center">
+          <p className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>
+            {profile.name}
+          </p>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {profile.email}
           </p>
@@ -153,41 +180,47 @@ const ProfileSection = () => {
       </div>
 
       {/* Profile Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-var(--text-secondary) mb-1">Name</label>
+          <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+            Full Name
+          </label>
           <input
             type="text"
             name="name"
             value={profile.name}
             onChange={handleChange}
-            className="w-full p-2 rounded-md"
+            className="w-full p-3 rounded-lg transition-all focus:ring-2 focus:ring-[var(--accent)]"
             style={{
               backgroundColor: 'var(--input-bg)',
               color: 'var(--text-primary)',
               border: '1px solid var(--border)',
             }}
+            required
           />
         </div>
 
         <div>
-          <label className="block text-var(--text-secondary) mb-1">Email</label>
+          <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+            Email Address
+          </label>
           <input
             type="email"
             name="email"
             value={profile.email}
             onChange={handleChange}
-            className="w-full p-2 rounded-md"
+            className="w-full p-3 rounded-lg transition-all focus:ring-2 focus:ring-[var(--accent)]"
             style={{
               backgroundColor: 'var(--input-bg)',
               color: 'var(--text-primary)',
               border: '1px solid var(--border)',
             }}
+            required
           />
         </div>
 
         <div>
-          <label className="block text-var(--text-secondary) mb-1">
+          <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
             Profile Picture
           </label>
           <input
@@ -195,21 +228,24 @@ const ProfileSection = () => {
             name="profilePic"
             accept="image/*"
             onChange={handleFileChange}
-            className="w-full p-2 rounded-md file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[var(--accent)] file:text-var(--bg-primary) hover:file:bg-[var(--accent)]/80"
+            className="w-full p-3 rounded-lg transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--accent)] file:text-white hover:file:bg-[var(--accent)]/80"
             style={{
               backgroundColor: 'var(--input-bg)',
               color: 'var(--text-primary)',
               border: '1px solid var(--border)',
             }}
           />
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+            Choose a new profile picture (JPEG, PNG, etc.)
+          </p>
         </div>
 
         <button
           type="submit"
-          className="w-full py-2 rounded-md font-bold"
+          className="w-full py-3 px-4 rounded-lg font-bold transition-all hover:scale-105 hover:shadow-lg"
           style={{
             backgroundColor: 'var(--accent)',
-            color: 'var(--bg-primary)',
+            color: 'white',
           }}
         >
           Update Profile

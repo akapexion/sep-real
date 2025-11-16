@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
-import toast from "react-hot-toast";
 import { Trash2, CheckCircle, Bell } from "lucide-react";
+import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
+import toast, { Toaster } from "react-hot-toast";
 
 const API_BASE = "http://localhost:3000";
 
@@ -42,15 +43,18 @@ export default function NotificationsSection() {
   };
 
   const deleteNotification = async (id) => {
-    if (!window.confirm("Delete notification?")) return;
-    try {
-      await axios.delete(`${API_BASE}/notifications/${id}?userId=${userId}`);
-      toast.success("Deleted");
-      fetchNotifications();
-    } catch (err) {
-      console.error("Delete error:", err);
-      toast.error("Delete failed");
-    }
+    showDeleteConfirm({
+      message: "Are you sure you want to delete this notification?",
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_BASE}/notifications/${id}?userId=${userId}`);
+          toast.success("Notification deleted successfully");
+          fetchNotifications(); // FIXED: Changed from fetchGoals() to fetchNotifications()
+        } catch (error) {
+          toast.error("Unable to delete");
+        }
+      },
+    });
   };
 
   useEffect(() => {
@@ -75,6 +79,8 @@ export default function NotificationsSection() {
       <h3 className="text-xl font-semibold mb-4" style={{ color: "var(--accent)" }}>
         Notifications
       </h3>
+
+      <Toaster/>
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y" style={{ borderColor: "var(--border)" }}>
@@ -120,7 +126,7 @@ export default function NotificationsSection() {
                   </td>
                   <td className="px-4 py-3 text-sm" style={{ color: "var(--text-muted)" }}>
                     {new Date(notif.date).toLocaleDateString()}
-  </td>
+                  </td>
                   <td className="px-4 py-3 text-sm">
                     <div className="flex gap-2">
                       {!notif.isRead && (

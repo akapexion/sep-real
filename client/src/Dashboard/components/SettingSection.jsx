@@ -4,127 +4,322 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Save, Trash2, Bell, Globe, Clock } from 'lucide-react';
-import { usePreferences } from './usePreferences';
-import { t } from '../../i18n';
+import { Loader2, Save, Trash2, Bell, Globe, Smartphone, Shield, AlertTriangle } from 'lucide-react';
+import { usePreferencesContext } from '../pages/PreferencesContext';
 
 const SettingSection = () => {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const { prefs: preferences, update } = usePreferences(user._id);
+  const { preferences, updatePreferences, loading } = usePreferencesContext();
   const [saving, setSaving] = useState(false);
+  const [localPrefs, setLocalPrefs] = useState(null);
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  // Initialize local preferences when context loads
+  useEffect(() => {
+    if (preferences) {
+      setLocalPrefs(JSON.parse(JSON.stringify(preferences))); // Deep copy
+    }
+  }, [preferences]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     const [parent, child] = name.split('.');
-    const newPrefs = { ...preferences };
-
-    if (child) {
-      newPrefs[parent][child] = type === 'checkbox' ? checked : value;
-    } else {
-      newPrefs[name] = type === 'checkbox' ? checked : value;
-    }
-    update(newPrefs);
+    
+    setLocalPrefs(prev => {
+      const newPrefs = JSON.parse(JSON.stringify(prev)); // Deep copy
+      
+      if (child) {
+        if (!newPrefs[parent]) newPrefs[parent] = {};
+        newPrefs[parent][child] = type === 'checkbox' ? checked : value;
+      } else {
+        newPrefs[name] = type === 'checkbox' ? checked : value;
+      }
+      
+      return newPrefs;
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!localPrefs) return;
+    
     setSaving(true);
     try {
-      await update(preferences);
-      toast.success('Settings saved!');
-    } catch {
-      toast.error('Save failed');
+      await updatePreferences(localPrefs);
+      toast.success('Settings saved successfully! 🎉');
+    } catch (error) {
+      toast.error('Failed to save settings');
+      console.error('Save error:', error);
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeleteProfile = async () => {
-    if (!confirm('Profile delete karna chahte ho?')) return;
+    if (!window.confirm(
+      '⚠️ Are you absolutely sure?\n\nThis will permanently delete your profile, workout history, progress data, and all your information. This action cannot be undone!'
+    )) return;
+    
     try {
       await axios.delete(`http://localhost:3000/profile?userId=${user._id}`);
       localStorage.clear();
-      navigate('/login');
-    } catch {
-      toast.error('Delete failed');
+      toast.success('Profile deleted successfully');
+      setTimeout(() => navigate('/login'), 1000);
+    } catch (error) {
+      toast.error('Failed to delete profile');
+      console.error('Delete error:', error);
     }
   };
 
-  if (!preferences) return <Loader2 className="animate-spin" />;
+  const handleResetForm = () => {
+    setLocalPrefs(JSON.parse(JSON.stringify(preferences))); // Deep copy
+    toast.info('Changes discarded');
+  };
+
+  if (loading || !localPrefs) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--accent)" }} />
+      </div>
+    );
+  }
+
+  const hasChanges = JSON.stringify(localPrefs) !== JSON.stringify(preferences);
 
   return (
-    <motion.div className="p-6 rounded-lg shadow" style={{ background: 'var(--bg-card)' }}>
-      <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--accent)' }}>
-        {t('settings', preferences.language) || 'Settings'}
-      </h3>
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="rounded-lg shadow-lg border"
+      style={{ 
+        background: 'var(--bg-card)', 
+        borderColor: 'var(--border)'
+      }}
+    >
+      {/* Header */}
+      <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-full" style={{ backgroundColor: 'var(--accent)/20' }}>
+            <Shield className="w-6 h-6" style={{ color: 'var(--accent)' }} />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>
+              Preferences
+            </h3>
+            <p style={{ color: 'var(--text-muted)' }} className="mt-1">
+              Manage your app settings and notification preferences
+            </p>
+          </div>
+        </div>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="p-6 space-y-8">
+        {/* Notification Settings - SIMPLIFIED */}
+        <div className="setting-group">
+          <div className="flex items-center gap-2 mb-4">
+            <Bell className="w-5 h-5" style={{ color: 'var(--accent)' }} />
+            <h4 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Notifications
+            </h4>
+          </div>
+          
+          <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+            <label className="flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md"
+              style={{ 
+                backgroundColor: localPrefs.notifications.push ? 'var(--accent)/10' : 'var(--bg-card)',
+                borderColor: localPrefs.notifications.push ? 'var(--accent)' : 'var(--border)'
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  name="notifications.push" 
+                  checked={localPrefs.notifications.push} 
+                  onChange={handleChange} 
+                  className="w-5 h-5 rounded focus:ring-2 focus:ring-offset-2"
+                  style={{ 
+                    accentColor: 'var(--accent)',
+                    focusRingColor: 'var(--accent)'
+                  }}
+                />
+                <Smartphone className="w-5 h-5" style={{ color: 'var(--accent)' }} />
+              </div>
+              <div>
+                <span className="font-medium text-lg" style={{ color: 'var(--text-primary)' }}>
+                  Push Notifications
+                </span>
+                <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+                  Receive in-app alerts for workouts, goals, and reminders
+                </p>
+              </div>
+            </label>
+          </div>
+          
+          {/* Notification Help */}
+          <div className="mt-4 p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border)' }}>
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: 'var(--accent)' }} />
+              <div>
+                <p className="font-medium" style={{ color: 'var(--text-primary)' }}>How notifications work:</p>
+                <ul className="text-sm mt-2 space-y-1" style={{ color: 'var(--text-muted)' }}>
+                  <li>• <strong>Workout Reminders:</strong> Get notified when it's time for your scheduled workouts</li>
+                  <li>• <strong>Goal Achievements:</strong> Celebrate when you reach your fitness milestones</li>
+                  <li>• <strong>Progress Updates:</strong> Stay motivated with regular progress notifications</li>
+                  <li>• <strong>Activity Alerts:</strong> Get notified about your workout completions</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        {/* Notifications */}
-        <div>
-          <h4 className="flex items-center gap-2 mb-2"><Bell className="w-4 h-4" /> Notifications</h4>
-          <div className="grid grid-cols-3 gap-3">
-            {['push', 'email', 'sms'].map(ch => (
-              <label key={ch} className="flex items-center">
-                <input type="checkbox" name={`notifications.${ch}`} checked={preferences.notifications[ch]} onChange={handleChange} className="mr-2" />
-                <span className="capitalize">{ch}</span>
+        {/* Units & Measurement */}
+        <div className="setting-group">
+          <h4 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+            Units & Measurement
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-muted)' }}>
+                Measurement System
               </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Units */}
-        <div>
-          <label>Units</label>
-          <select name="units" value={preferences.units} onChange={handleChange} className="w-full p-2 rounded mt-1" style={{ background: 'var(--input-bg)' }}>
-            <option value="metric">Metric (kg, cm)</option>
-            <option value="imperial">Imperial (lbs, in)</option>
-          </select>
-        </div>
-
-        {/* Theme */}
-        <div>
-          <label>Theme</label>
-          <select name="theme" value={preferences.theme} onChange={handleChange} className="w-full p-2 rounded mt-1" style={{ background: 'var(--input-bg)' }}>
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
-          </select>
-        </div>
-
-        {/* Language */}
-        <div>
-          <label className="flex items-center gap-2"><Globe className="w-4 h-4" /> Language</label>
-          <select name="language" value={preferences.language} onChange={handleChange} className="w-full p-2 rounded mt-1" style={{ background: 'var(--input-bg)' }}>
-            <option value="en">English</option>
-            <option value="ur">اردو</option>
-            <option value="es">Español</option>
-          </select>
-        </div>
-
-        {/* Reminders */}
-        <div>
-          <h4 className="flex items-center gap-2 mb-2"><Clock className="w-4 h-4" /> Reminders</h4>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label>Workout</label>
-              <input type="time" name="reminders.workout" value={preferences.reminders.workout} onChange={handleChange} className="w-full p-2 rounded mt-1" style={{ background: 'var(--input-bg)' }} />
-            </div>
-            <div>
-              <label>Meal</label>
-              <input type="time" name="reminders.meal" value={preferences.reminders.meal} onChange={handleChange} className="w-full p-2 rounded mt-1" style={{ background: 'var(--input-bg)' }} />
+              <select 
+                name="units" 
+                value={localPrefs.units} 
+                onChange={handleChange} 
+                className="w-full p-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-offset-2"
+                style={{ 
+                  background: 'var(--input-bg)', 
+                  color: 'var(--text-primary)', 
+                  borderColor: 'var(--border)'
+                }}
+              >
+                <option value="metric">🇪🇺 Metric System (kg, cm)</option>
+                <option value="imperial">🇺🇸 Imperial System (lbs, in)</option>
+              </select>
+              <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+                Affects weight, height, and measurement displays across the app
+              </p>
             </div>
           </div>
         </div>
 
-        <button type="submit" disabled={saving} className="w-full flex justify-center items-center gap-2 py-2 rounded font-bold" style={{ background: 'var(--accent)', color: 'white' }}>
-          {saving ? <Loader2 className="animate-spin" /> : <Save />} {saving ? "Saving..." : "Save"}
-        </button>
+        {/* Appearance */}
+        <div className="setting-group">
+          <h4 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+            Appearance
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-muted)' }}>
+                Theme
+              </label>
+              <select 
+                name="theme" 
+                value={localPrefs.theme} 
+                onChange={handleChange} 
+                className="w-full p-3 rounded-lg border transition-all duration-200"
+                style={{ 
+                  background: 'var(--input-bg)', 
+                  color: 'var(--text-primary)', 
+                  borderColor: 'var(--border)'
+                }}
+              >
+                <option value="dark">🌙 Dark Mode</option>
+                <option value="light">☀️ Light Mode</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-3 flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                Language
+              </label>
+              <select 
+                name="language" 
+                value={localPrefs.language} 
+                onChange={handleChange} 
+                className="w-full p-3 rounded-lg border transition-all duration-200"
+                style={{ 
+                  background: 'var(--input-bg)', 
+                  color: 'var(--text-primary)', 
+                  borderColor: 'var(--border)'
+                }}
+              >
+                <option value="en">🇺🇸 English</option>
+                <option value="ur">🇵🇰 اردو (Urdu)</option>
+                <option value="es">🇪🇸 Español (Spanish)</option>
+                <option value="fr">🇫🇷 Français (French)</option>
+                <option value="de">🇩🇪 Deutsch (German)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t" style={{ borderColor: 'var(--border)' }}>
+          <button 
+            type="submit" 
+            disabled={saving || !hasChanges}
+            className="flex-1 flex justify-center items-center gap-2 py-3 px-6 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+            style={{ 
+              backgroundColor: hasChanges ? 'var(--accent)' : 'var(--border)',
+              color: 'white'
+            }}
+          >
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving Changes...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                {hasChanges ? 'Save Changes' : 'No Changes'}
+              </>
+            )}
+          </button>
+          
+          {hasChanges && (
+            <button 
+              type="button" 
+              onClick={handleResetForm}
+              className="flex-1 py-3 px-6 rounded-lg font-semibold border transition-all duration-200 hover:scale-105"
+              style={{ 
+                backgroundColor: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                borderColor: 'var(--border)'
+              }}
+            >
+              Discard Changes
+            </button>
+          )}
+        </div>
       </form>
 
-      <button onClick={handleDeleteProfile} className="mt-6 w-full flex justify-center items-center gap-2 py-2 rounded bg-red-600 text-white">
-        <Trash2 /> Delete Profile
-      </button>
+      {/* Danger Zone */}
+      <div className="p-6 border-t" style={{ borderColor: 'var(--border)' }}>
+        <h4 className="text-lg font-semibold mb-4 text-red-500 flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5" />
+          Danger Zone
+        </h4>
+        
+        <div className="p-4 rounded-lg border-2 border-red-500/30 bg-red-500/10">
+          <p className="text-sm mb-4" style={{ color: 'var(--text-primary)' }}>
+            Once you delete your profile, there is no going back. All your data including workouts, progress, and goals will be permanently erased.
+          </p>
+          <button 
+            onClick={handleDeleteProfile}
+            className="flex items-center gap-2 py-2 px-4 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:bg-red-600"
+            style={{ 
+              backgroundColor: '#ef4444',
+              color: 'white'
+            }}
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete My Profile
+          </button>
+        </div>
+      </div>
     </motion.div>
   );
 };

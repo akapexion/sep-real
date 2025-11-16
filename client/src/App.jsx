@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import DashboardLayout from './Dashboard/components/DashboardLayout';
-
+import { PreferencesProvider } from './Dashboard/pages/PreferencesContext';
 import HomePage from './Dashboard/pages/HomePage';
 import WorkoutsPage from './Dashboard/pages/WorkoutsPage';
 import NutritionPage from './Dashboard/pages/NutritionPage';
@@ -99,6 +99,7 @@ const App = () => {
   };
 
   return (
+    <PreferencesProvider>
     <BrowserRouter>
       <Routes>
         {/* Authentication */}
@@ -137,6 +138,7 @@ const App = () => {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </PreferencesProvider>
   );
 };
 

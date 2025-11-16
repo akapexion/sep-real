@@ -1,12 +1,44 @@
+// models/reminder.js
 const mongoose = require('mongoose');
 
 const reminderSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'register', required: true },
-    title: { type: String, required: true },          // e.g. "Morning run"
-    date: { type: Date, required: true },            // full date-time
-    type: { type: String, enum: ['workout', 'meal', 'goal'], default: 'workout' },
-    isActive: { type: Boolean, default: true },
+    userId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'Register', 
+      required: true 
+    },
+    title: { 
+      type: String, 
+      required: true 
+    },
+    date: { 
+      type: Date, 
+      required: true 
+    },
+    type: { 
+      type: String, 
+      enum: ['workout', 'meal', 'goal', 'appointment', 'medication', 'other'], 
+      default: 'workout' 
+    },
+    category: {
+      type: String,
+      enum: ['reminder', 'alert'],
+      default: 'reminder'
+    },
+    priority: {
+      type: String,
+      enum: ['low', 'medium', 'high', 'none'],
+      default: 'none'
+    },
+    isActive: { 
+      type: Boolean, 
+      default: true 
+    },
+    notified: {
+      type: Boolean,
+      default: false
+    },
     notes: String,
   },
   { timestamps: true }

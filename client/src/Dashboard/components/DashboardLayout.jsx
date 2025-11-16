@@ -4,24 +4,42 @@ import { motion } from 'framer-motion';
 import { Outlet } from 'react-router-dom';
 import Navbar from '../pages/Navbar';
 import Sidebar from '../pages/Sidebar';
+import { usePreferencesContext } from '../pages/PreferencesContext';
 
 const DashboardLayout = ({ user, logout, updateUser }) => {
+  const { preferences, updatePreferences } = usePreferencesContext();
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initial = saved ? saved === 'dark' : prefersDark;
-    setIsDark(initial);
-    document.documentElement.setAttribute('data-theme', initial ? 'dark' : 'light');
-  }, []);
+    // Use preferences theme if available, otherwise use localStorage
+    if (preferences) {
+      const theme = preferences.theme === 'dark';
+      setIsDark(theme);
+      document.documentElement.setAttribute('data-theme', preferences.theme);
+    } else {
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const initial = saved ? saved === 'dark' : prefersDark;
+      setIsDark(initial);
+      document.documentElement.setAttribute('data-theme', initial ? 'dark' : 'light');
+    }
+  }, [preferences]);
 
   const toggleTheme = () => {
     const newTheme = !isDark;
     setIsDark(newTheme);
     const theme = newTheme ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
+    
+    // Update preferences in database
+    if (preferences) {
+      updatePreferences({
+        ...preferences,
+        theme: theme
+      });
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+    }
   };
 
   return (
@@ -37,10 +55,9 @@ const DashboardLayout = ({ user, logout, updateUser }) => {
         >
           <h1 className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>FitTrack</h1>
         </motion.header>
-<main className="flex-1 p-6 overflow-auto">
-  <Outlet context={{ user, updateUser }} />
-</main>
-
+        <main className="flex-1 p-6 overflow-auto">
+          <Outlet context={{ user, updateUser }} />
+        </main>
       </div>
     </div>
   );

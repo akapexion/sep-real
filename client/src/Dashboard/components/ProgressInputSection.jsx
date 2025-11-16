@@ -1,7 +1,11 @@
+// src/Dashboard/components/ProgressInputSection.jsx
 import React, { useState } from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
+import { usePreferencesContext } from "../pages/PreferencesContext";
+
 const ProgressInputSection = ({ onProgressAdded }) => {
+  const { preferences, getWeightUnit, getHeightUnit } = usePreferencesContext();
   const API_BASE_URL = 'http://localhost:3000';
   const [form, setForm] = useState({
     date: "",
@@ -11,16 +15,20 @@ const ProgressInputSection = ({ onProgressAdded }) => {
     runTime: "",
     liftWeight: "",
   });
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const userId = localStorage.getItem("userId");
+    const user = JSON.parse(localStorage.getItem("user") || '{}');
+    const userId = user._id;
     if (!userId) {
       toast.error("Please log in to save progress");
       return;
     }
+
     const payload = {
       userId,
       date: form.date,
@@ -34,11 +42,9 @@ const ProgressInputSection = ({ onProgressAdded }) => {
         liftWeight: form.liftWeight ? parseFloat(form.liftWeight) : null,
       },
     };
+
     try {
-      await axios.post(
-        `${API_BASE_URL}/progress`,
-        payload
-      );
+      await axios.post(`${API_BASE_URL}/progress`, payload);
       toast.success("Progress saved!");
       setForm({
         date: "",
@@ -54,6 +60,7 @@ const ProgressInputSection = ({ onProgressAdded }) => {
       console.error(err);
     }
   };
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -85,12 +92,12 @@ const ProgressInputSection = ({ onProgressAdded }) => {
         </div>
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
-            Weight (kg)
+            Weight ({getWeightUnit()})
           </label>
           <input
             type="number"
             name="weight"
-            placeholder="Weight (kg)"
+            placeholder={`Weight (${getWeightUnit()})`}
             step="0.1"
             value={form.weight}
             onChange={handleChange}
@@ -104,12 +111,12 @@ const ProgressInputSection = ({ onProgressAdded }) => {
         </div>
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
-            Chest (cm)
+            Chest ({getHeightUnit()})
           </label>
           <input
             type="number"
             name="chest"
-            placeholder="Chest (cm)"
+            placeholder={`Chest (${getHeightUnit()})`}
             step="0.1"
             value={form.chest}
             onChange={handleChange}
@@ -123,12 +130,12 @@ const ProgressInputSection = ({ onProgressAdded }) => {
         </div>
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
-            Waist (cm)
+            Waist ({getHeightUnit()})
           </label>
           <input
             type="number"
             name="waist"
-            placeholder="Waist (cm)"
+            placeholder={`Waist (${getHeightUnit()})`}
             step="0.1"
             value={form.waist}
             onChange={handleChange}
@@ -161,12 +168,12 @@ const ProgressInputSection = ({ onProgressAdded }) => {
         </div>
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
-            Lift Weight (kg)
+            Lift Weight ({getWeightUnit()})
           </label>
           <input
             type="number"
             name="liftWeight"
-            placeholder="Lift Weight (kg)"
+            placeholder={`Lift Weight (${getWeightUnit()})`}
             step="0.1"
             value={form.liftWeight}
             onChange={handleChange}
@@ -189,4 +196,5 @@ const ProgressInputSection = ({ onProgressAdded }) => {
     </form>
   );
 };
+
 export default ProgressInputSection;
