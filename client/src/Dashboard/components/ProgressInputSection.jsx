@@ -3,6 +3,28 @@ import React, { useState } from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { usePreferencesContext } from "../pages/PreferencesContext";
+import {check, date, z} from 'zod'
+
+const progSchema = z.object({
+  date:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  weight:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  chest:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  waist:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  runTime:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  liftWeight:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+})
 
 const ProgressInputSection = ({ onProgressAdded }) => {
   const { preferences, getWeightUnit, getHeightUnit } = usePreferencesContext();
@@ -15,6 +37,7 @@ const ProgressInputSection = ({ onProgressAdded }) => {
     runTime: "",
     liftWeight: "",
   });
+  const [error,setError]=useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -29,6 +52,23 @@ const ProgressInputSection = ({ onProgressAdded }) => {
       return;
     }
 
+    const result = progSchema.safeParse({liftWeight:form.liftWeight,weight:form.weight,chest:form.chest,waist:form.waist,runTime:form.runTime,date:form.date})
+ if(!result.success){
+      const formattedErrors = result.error.format();
+
+      setError({
+
+        liftWeight:formattedErrors.liftWeight?._errors[0] || "",
+        weight: formattedErrors.weight?._errors[0] || "",
+        chest: formattedErrors.chest?._errors[0] || "",
+        waist: formattedErrors.waist?._errors[0] || "",
+        date: formattedErrors.date?._errors[0] || "",
+        runTime: formattedErrors.runTime?._errors[0] || "",
+       
+      })
+      return;
+    }
+setError("")
     const payload = {
       userId,
       date: form.date,
@@ -66,7 +106,7 @@ const ProgressInputSection = ({ onProgressAdded }) => {
       onSubmit={handleSubmit}
       className="p-6 rounded-xl shadow-md space-y-5"
       style={{ backgroundColor: "var(--bg-secondary)" }}
-    >
+     noValidate>
       <Toaster />
       <h2 className="text-xl font-semibold" style={{ color: "var(--accent)" }}>
         Log New Progress
@@ -89,6 +129,7 @@ const ProgressInputSection = ({ onProgressAdded }) => {
               borderColor: "var(--border)",
             }}
           />
+           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.date}</p>
         </div>
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
@@ -108,6 +149,7 @@ const ProgressInputSection = ({ onProgressAdded }) => {
               borderColor: "var(--border)",
             }}
           />
+           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.weight}</p>
         </div>
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
@@ -127,6 +169,7 @@ const ProgressInputSection = ({ onProgressAdded }) => {
               borderColor: "var(--border)",
             }}
           />
+           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.chest}</p>
         </div>
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
@@ -146,6 +189,7 @@ const ProgressInputSection = ({ onProgressAdded }) => {
               borderColor: "var(--border)",
             }}
           />
+           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.waist}</p>
         </div>
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
@@ -165,6 +209,7 @@ const ProgressInputSection = ({ onProgressAdded }) => {
               borderColor: "var(--border)",
             }}
           />
+           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.runTime}</p>
         </div>
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
@@ -184,6 +229,7 @@ const ProgressInputSection = ({ onProgressAdded }) => {
               borderColor: "var(--border)",
             }}
           />
+           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.liftWeight}</p>
         </div>
       </div>
       <button
