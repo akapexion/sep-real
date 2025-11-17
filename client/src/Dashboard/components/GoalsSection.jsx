@@ -7,6 +7,7 @@ import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
 import { Trash2, Edit2, Plus, Loader2 } from "lucide-react";
 import { usePreferencesContext } from "../pages/PreferencesContext";
 import {z} from 'zod'
+import { useLanguage } from '../pages/UseLanguage'; // Add this import
 
 const API_BASE = "http://localhost:3000";
 
@@ -26,11 +27,12 @@ const goalSchema = z.object({
   target:z.any().refine((v) => v !== "" && v != null, {
     message: "Please enter detail"
   }),
-
 })
 
 export default function GoalsSection() {
   const { preferences, formatWeight } = usePreferencesContext();
+  const { t } = useLanguage(); // Add this line
+  
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -64,34 +66,32 @@ export default function GoalsSection() {
       const res = await axios.get(`${API_BASE}/goals?userId=${userId}`);
       setGoals(res.data);
     } catch (err) {
-      toast.error("Failed to load goals");
+      toast.error(t('failedToLoadGoals')); // Use translation
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, t]); // Add t to dependencies
 
   const saveGoal = async (e) => {
     e.preventDefault();
-    if (!userId) return toast.error("You must be logged in");
+    if (!userId) return toast.error(t('userNotLoggedIn')); // Use translation
 
     const result = goalSchema.safeParse({
       goalType,current,target,deadline,notes
     })
-  if(!result.success){
+    if(!result.success){
       const formattedErrors = result.error.format();
-
       setError({
-
         goalType:formattedErrors.goalType?._errors[0] || "",
         current: formattedErrors.current?._errors[0] || "",
         deadline: formattedErrors.deadline?._errors[0] || "",
         notes: formattedErrors.notes?._errors[0] || "",
         target: formattedErrors.target?._errors[0] || "",
-       
       })
       return;
     }
-setError("")
+    setError("")
+    
     const payload = {
       userId,
       goalType,
@@ -105,15 +105,15 @@ setError("")
     try {
       if (editingId) {
         await axios.post(`${API_BASE}/goals/${editingId}`, payload);
-        toast.success("Goal updated");
+        toast.success(t('goalUpdated')); // Use translation
       } else {
         await axios.post(`${API_BASE}/goals`, payload);
-        toast.success("Goal added");
+        toast.success(t('goalAdded')); // Use translation
       }
       resetForm();
       fetchGoals();
     } catch (err) {
-      toast.error(editingId ? "Update failed" : "Add failed");
+      toast.error(editingId ? t('updateFailed') : t('addFailed')); // Use translation
     } finally {
       setSaving(false);
     }
@@ -121,14 +121,14 @@ setError("")
 
   const deleteGoal = (id) => {
     showDeleteConfirm({
-      message: "Are you sure you want to delete this goal?",
+      message: t('deleteGoalConfirmation'), // Use translation
       onConfirm: async () => {
         try {
           await axios.delete(`${API_BASE}/goals/${id}`);
-          toast.success("Goal deleted successfully");
+          toast.success(t('deleteSuccessfully'));
           fetchGoals();
         } catch (error) {
-          toast.error("Unable to delete");
+          toast.error(t('unableToDelete'));
         }
       },
     });
@@ -191,19 +191,19 @@ setError("")
     const progress = calculateProgress(goal);
     
     if (progress >= 100) {
-      return isLossGoal(goal.goalType) ? "Goal Achieved! 🎉" : "Goal Achieved! 🎉";
+      return isLossGoal(goal.goalType) ? t('goalAchieved') : t('goalAchieved'); // Use translation
     }
     
     const daysRemaining = Math.ceil((new Date(goal.deadline) - new Date()) / (1000 * 60 * 60 * 24));
     
     if (daysRemaining < 0) {
-      return "Overdue";
+      return t('overdue'); // Use translation
     } else if (daysRemaining === 0) {
-      return "Due today";
+      return t('dueToday'); // Use translation
     } else if (daysRemaining === 1) {
-      return "1 day left";
+      return t('oneDayLeft'); // Use translation
     } else {
-      return `${daysRemaining} days left`;
+      return t('daysLeft', { days: daysRemaining }); // Use translation with parameter
     }
   };
 
@@ -227,7 +227,7 @@ setError("")
       style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
     >
       <h3 className="text-xl font-semibold mb-4" style={{ color: "var(--accent)" }}>
-        Fitness Goals
+        {t('fitnessGoals')} {/* Use translation */}
       </h3>
 
       <Toaster />
@@ -235,7 +235,7 @@ setError("")
       <form onSubmit={saveGoal} className="grid md:grid-cols-2 gap-4 mb-6" noValidate>
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
-            Goal Type
+            {t('goalType')} {/* Use translation */}
           </label>
           <select
             value={goalType}
@@ -254,12 +254,12 @@ setError("")
               </option>
             ))}
           </select>
-           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.goalType}</p>
+          <p className="mb-4 text-xs" style={{ color: "red" }}>{error.goalType}</p>
         </div>
 
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
-            Deadline
+            {t('deadline')} {/* Use translation */}
           </label>
           <input
             type="date"
@@ -273,16 +273,16 @@ setError("")
             }}
             required
           />
-           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.deadline}</p>
+          <p className="mb-4 text-xs" style={{ color: "red" }}>{error.deadline}</p>
         </div>
 
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
-            Target
+            {t('target')} {/* Use translation */}
           </label>
           <input
             type="number"
-            placeholder={isWeightRelated(goalType) ? `Target (${preferences?.units === 'imperial' ? 'lbs' : 'kg'})` : "Target"}
+            placeholder={isWeightRelated(goalType) ? `${t('target')} (${preferences?.units === 'imperial' ? t('lbs') : t('kg')})` : t('target')}
             value={target}
             onChange={(e) => setTarget(e.target.value)}
             className="p-2 rounded-md"
@@ -293,16 +293,16 @@ setError("")
             }}
             required
           />
-           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.target}</p>
+          <p className="mb-4 text-xs" style={{ color: "red" }}>{error.target}</p>
         </div>
 
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
-            Current
+            {t('current')} {/* Use translation */}
           </label>
           <input
             type="number"
-            placeholder={isWeightRelated(goalType) ? `Current (${preferences?.units === 'imperial' ? 'lbs' : 'kg'})` : "Current"}
+            placeholder={isWeightRelated(goalType) ? `${t('current')} (${preferences?.units === 'imperial' ? t('lbs') : t('kg')})` : t('current')}
             value={current}
             onChange={(e) => setCurrent(e.target.value)}
             className="p-2 rounded-md"
@@ -313,15 +313,15 @@ setError("")
             }}
             required
           />
-           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.current}</p>
+          <p className="mb-4 text-xs" style={{ color: "red" }}>{error.current}</p>
         </div>
 
         <div className="flex flex-col md:col-span-2">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
-            Notes
+            {t('notes')} {/* Use translation */}
           </label>
           <input
-            placeholder="Notes"
+            placeholder={t('notes')}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             className="p-2 rounded-md"
@@ -331,7 +331,7 @@ setError("")
               border: "1px solid var(--border)",
             }}
           />
-           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.notes}</p>
+          <p className="mb-4 text-xs" style={{ color: "red" }}>{error.notes}</p>
         </div>
 
         <div className="md:col-span-2 flex gap-2">
@@ -348,7 +348,7 @@ setError("")
             ) : (
               <Plus className="w-4 h-4" />
             )}
-            {saving ? "Saving…" : editingId ? "Update" : "Add"}
+            {saving ? t('saving') + "…" : editingId ? t('update') : t('add')} {/* Use translation */}
           </button>
 
           {editingId && (
@@ -358,7 +358,7 @@ setError("")
               className="px-4 py-2 rounded-md font-medium"
               style={{ backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)" }}
             >
-              Cancel
+              {t('cancel')} {/* Use translation */}
             </button>
           )}
         </div>
@@ -368,19 +368,21 @@ setError("")
         <table className="min-w-full divide-y" style={{ borderColor: "var(--border)" }}>
           <thead style={{ backgroundColor: "var(--bg-secondary)" }}>
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>Type</th>
-              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>Target</th>
-              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>Current</th>
-              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>Deadline</th>
-              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>Progress</th>
-              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>Status</th>
-              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>Actions</th>
+              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>{t('type')}</th>
+              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>{t('target')}</th>
+              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>{t('current')}</th>
+              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>{t('deadline')}</th>
+              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>{t('progress')}</th>
+              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>{t('status')}</th>
+              <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>{t('actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y" style={{ borderColor: "var(--border)" }}>
             {goals.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-4 text-center text-sm" style={{ color: "var(--text-muted)" }}>No goals set yet</td>
+                <td colSpan={7} className="px-6 py-4 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+                  {t('noGoalsSetYet')} {/* Use translation */}
+                </td>
               </tr>
             ) : (
               goals.map((goal) => {
@@ -415,7 +417,7 @@ setError("")
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ 
                       color: progress >= 100 ? "var(--success)" : 
-                            status === "Overdue" ? "var(--error)" : "var(--text-primary)" 
+                            status === t('overdue') ? "var(--error)" : "var(--text-primary)" 
                     }}>
                       {status}
                     </td>

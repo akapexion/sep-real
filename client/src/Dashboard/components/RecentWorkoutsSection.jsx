@@ -183,7 +183,6 @@ setError("")
       </h3>
 
       <form onSubmit={handleSubmit} className="" noValidate>
-        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>Exercise Name</label>
         <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
           {t('exerciseName')}
         </label>

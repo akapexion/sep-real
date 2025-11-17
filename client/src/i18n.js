@@ -271,10 +271,77 @@ carbs: "Carbs",
 fat: "Fat",
 weight: "Weight",
 
+
+
+failedToLoadGoals: "Failed to load goals",
+goalUpdated: "Goal updated",
+goalAdded: "Goal added",
+fitnessGoals: "Fitness Goals",
+noGoalsSetYet: "No goals set yet",
+goalAchieved: "Goal Achieved! 🎉",
+overdue: "Overdue",
+dueToday: "Due today",
+oneDayLeft: "1 day left",
+daysLeft: "{days} days left",
+deleteGoalConfirmation: "Are you sure you want to delete this goal?",
+
+
+logout: "Logout",
+analytics: "Analytics",
+
+
+
+// For Spanish (es)
+
+
+
+
+
+
+dashboard: "Dashboard",
+workouts: "Workouts",
+nutrition: "Nutrition",
+progress: "Progress",
+goals: "Goals",
+reminders: "Reminders",
+analytics: "Analytics",
+settings: "Settings",
+
     },
     
     ur: {
       // Common
+
+// For Urdu (ur)
+
+
+dashboard: "ڈیش بورڈ",
+workouts: "ورزشیں",
+nutrition: "غذائیت",
+progress: "ترقی",
+goals: "ہدف",
+reminders: "یاد دہانیاں",
+analytics: "تجزیات",
+settings: "ترتیبات",
+
+
+logout: "لاگ آؤٹ",
+analytics: "تجزیات",
+
+      failedToLoadGoals: "ہدف لوڈ کرنے میں ناکام",
+goalUpdated: "ہدف اپ ڈیٹ ہو گیا",
+goalAdded: "ہدف شامل ہو گیا",
+fitnessGoals: "فٹنس کے اہداف",
+noGoalsSetYet: "ابھی تک کوئی ہدف مقرر نہیں کیا گیا",
+goalAchieved: "ہدف حاصل ہو گیا! 🎉",
+overdue: "تاریخ گزر چکی",
+dueToday: "آج کی تاریخ",
+oneDayLeft: "1 دن باقی",
+daysLeft: "{days} دن باقی",
+deleteGoalConfirmation: "کیا آپ واقعی اس ہدف کو حذف کرنا چاہتے ہیں؟",
+
+
+
       save: "محفوظ کریں",
       cancel: "منسوخ کریں",
       delete: "حذف کریں",
@@ -541,6 +608,20 @@ weight: "وزن",
     },
     
     es: {
+
+
+
+      failedToLoadGoals: "Error al cargar metas",
+goalUpdated: "Meta actualizada",
+goalAdded: "Meta agregada",
+fitnessGoals: "Metas de Fitness",
+noGoalsSetYet: "Aún no se han establecido metas",
+goalAchieved: "¡Meta Lograda! 🎉",
+overdue: "Vencido",
+dueToday: "Vence hoy",
+oneDayLeft: "1 día restante",
+daysLeft: "{days} días restantes",
+deleteGoalConfirmation: "¿Estás seguro de que quieres eliminar esta meta?",
       // Common
       save: "Guardar",
       cancel: "Cancelar",
@@ -810,7 +891,17 @@ carbs: "Carbohidratos",
 fat: "Grasa",
 weight: "Peso",
 
+logout: "Cerrar Sesión",
+analytics: "Análisis",
 
+dashboard: "Panel",
+workouts: "Entrenamientos",
+nutrition: "Nutrición",
+progress: "Progreso",
+goals: "Metas",
+reminders: "Recordatorios",
+analytics: "Análisis",
+settings: "Configuración",
 
     }
   };

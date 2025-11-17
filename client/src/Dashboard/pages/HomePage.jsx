@@ -34,7 +34,6 @@ const HomePage = () => {
     try {
       setLoading(true);
       
-      // Fetch all data in parallel
       const [workoutsRes, goalsRes, nutritionRes, progressRes, notificationsRes] = await Promise.all([
         axios.get(`${API_BASE}/workouts?userId=${userId}`),
         axios.get(`${API_BASE}/goals?userId=${userId}`),
@@ -48,13 +47,11 @@ const HomePage = () => {
       const nutritionLogs = nutritionRes.data;
       const progressEntries = progressRes.data;
       
-      // Calculate stats
       const completedGoals = goals.filter(goal => {
         const progress = calculateGoalProgress(goal);
         return progress >= 100;
       }).length;
 
-      // Calculate streak (last 7 days with workouts)
       const last7Days = workouts.filter(workout => {
         const workoutDate = new Date(workout.date);
         const sevenDaysAgo = new Date();
@@ -64,7 +61,6 @@ const HomePage = () => {
       
       const uniqueDays = new Set(last7Days.map(w => new Date(w.date).toDateString())).size;
 
-      // Calculate calories burned (simplified formula)
       const caloriesBurned = workouts.reduce((sum, workout) => {
         const baseCalories = workout.sets * workout.reps * (workout.weights || 1) * 0.05;
         return sum + baseCalories;
@@ -141,11 +137,11 @@ const HomePage = () => {
           <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
             {value}
           </p>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-primary)' }}>
             {label}
           </p>
           {subtitle && (
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-primary)' }}>
               {subtitle}
             </p>
           )}
@@ -176,14 +172,13 @@ const HomePage = () => {
         animate={{ opacity: 1, y: 0 }}
         className="p-6 rounded-xl shadow-lg"
         style={{ 
-          background: 'linear-gradient(135deg, var(--accent), var(--accent-light))',
-          color: 'white'
+          backgroundColor: 'var(--accent)',
         }}
       >
-        <h1 className="text-2xl font-bold mb-2 text-black">
+        <h1 className="text-2xl font-bold mb-2 text-white">
           {t('welcomeBack')}, {user?.name || t('fitnessEnthusiast')}! 👋
         </h1>
-        <p className="opacity-90">
+        <p className="text-white opacity-90">
           {getStreakMessage()}
         </p>
       </motion.div>
@@ -251,10 +246,10 @@ const HomePage = () => {
           {recentActivity.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-4">📊</div>
-              <p className="text-lg mb-2" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-lg mb-2" style={{ color: 'var(--text-primary)' }}>
                 {t('noRecentActivity')}
               </p>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
                 {t('startLoggingPrompt')}
               </p>
             </div>
@@ -273,7 +268,7 @@ const HomePage = () => {
                 <p className="text-sm flex-1" style={{ color: 'var(--text-primary)' }}>
                   {activity.message}
                 </p>
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
                   {new Date(activity.date).toLocaleDateString()}
                 </span>
               </div>
@@ -314,7 +309,9 @@ const HomePage = () => {
             >
               <span className="text-2xl mb-2 block">{action.emoji}</span>
               <span className="text-sm font-medium block">{action.label}</span>
-              <span className="text-xs opacity-75 mt-1 block">{action.description}</span>
+              <span className="text-xs opacity-75 mt-1 block" style={{ color: 'var(--text-primary)' }}>
+                {action.description}
+              </span>
             </button>
           ))}
         </div>
@@ -333,7 +330,7 @@ const HomePage = () => {
         <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
           {t('fitnessMotivation')} 💫
         </h2>
-        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
           {getMotivationMessage()}
         </p>
       </motion.div>

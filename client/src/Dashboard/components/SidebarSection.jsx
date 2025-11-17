@@ -6,21 +6,24 @@ import {
   Calendar, BarChart3, Settings, LogOut, ChevronRight
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-
-const menu = [
-  { Icon: Home,        label: 'Dashboard',   path: '/dashboard' },
-  { Icon: Dumbbell,    label: 'Workouts',    path: '/dashboard/workouts' },
-  { Icon: Apple,       label: 'Nutrition',   path: '/dashboard/nutrition' },
-  { Icon: TrendingUp,  label: 'Progress',    path: '/dashboard/progress' },
-  { Icon: Target,      label: 'Goals',       path: '/dashboard/goals' },
-  { Icon: Calendar,    label: 'Reminders',    path: '/dashboard/reminders' },
-  { Icon: BarChart3,   label: 'Analytics',   path: '/dashboard/analytics' },
-  { Icon: Settings,    label: 'Settings',    path: '/dashboard/settings' },
-];
+import { useLanguage } from '../pages/UseLanguage'; // Add language hook
 
 const SidebarSection = ({ user, logout }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage(); // Use language hook
+
+  // Define menu with translations
+  const menu = [
+    { Icon: Home,        label: t('dashboard'),   path: '/dashboard' },
+    { Icon: Dumbbell,    label: t('workouts'),    path: '/dashboard/workouts' },
+    { Icon: Apple,       label: t('nutrition'),   path: '/dashboard/nutrition' },
+    { Icon: TrendingUp,  label: t('progress'),    path: '/dashboard/progress' },
+    { Icon: Target,      label: t('goals'),       path: '/dashboard/goals' },
+    { Icon: Calendar,    label: t('reminders'),   path: '/dashboard/reminders' },
+    { Icon: BarChart3,   label: t('analytics'),   path: '/dashboard/analytics' },
+    { Icon: Settings,    label: t('settings'),    path: '/dashboard/settings' },
+  ];
 
   const handleLogout = () => {
     logout();
@@ -88,7 +91,7 @@ const SidebarSection = ({ user, logout }) => {
           className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition"
         >
           <LogOut className="w-5 h-5" />
-          <span className="font-medium">Logout</span>
+          <span className="font-medium">{t('logout')}</span> {/* Use translation */}
         </motion.button>
       </div>
     </motion.aside>
