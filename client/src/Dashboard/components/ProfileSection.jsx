@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import toast, { Toaster } from "react-hot-toast";
+import { useLanguage } from '../pages/UseLanguage'; 
 
 const ProfileSection = () => {
   const [profile, setProfile] = useState({
@@ -19,13 +20,13 @@ const ProfileSection = () => {
   const userId = user._id;
   const API_BASE_URL = 'http://localhost:3000';
 
-  // ---------------------------
-  // Fetch Profile on Page Load
-  // ---------------------------
+  const { t } = useLanguage();
+
+
   useEffect(() => {
     const fetchProfile = async () => {
       if (!userId) {
-        toast.error('User not logged in');
+        toast.error(t('userNotLoggedIn'));
         setLoading(false);
         return;
       }
@@ -37,14 +38,14 @@ const ProfileSection = () => {
           res.data.image ? `${API_BASE_URL}/uploads/${res.data.image}` : null
         );
       } catch (err) {
-        toast.error('Failed to load profile');
+        toast.error(t('failedToLoadProfile'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchProfile();
-  }, [userId]);
+  }, [userId, t]);
 
   // ---------------------------
   // Handle Input Change
@@ -72,7 +73,7 @@ const ProfileSection = () => {
     e.preventDefault();
 
     if (!userId) {
-      toast.error('User not logged in');
+      toast.error(t('userNotLoggedIn'));
       return;
     }
 
@@ -99,9 +100,7 @@ const ProfileSection = () => {
         : null;
       setPreview(newImageURL);
 
-      // ---------------------------
-      // FIX: Update localStorage correctly
-      // ---------------------------
+      // Update localStorage correctly
       const updatedUser = {
         ...user,
         name: res.data.name,
@@ -111,7 +110,7 @@ const ProfileSection = () => {
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      // 🔥 IMPORTANT: Trigger event so NAVBAR updates without refresh
+      // Trigger event so NAVBAR updates without refresh
       window.dispatchEvent(new CustomEvent("profile-updated", {
         detail: updatedUser
       }));
@@ -119,17 +118,17 @@ const ProfileSection = () => {
       // Clear selected file after successful upload
       setSelectedFile(null);
 
-      toast.success('Profile updated successfully! 🎉');
+      toast.success(t('savedSuccessfully'));
     } catch (err) {
       console.error('Profile update error:', err);
-      toast.error('Failed to update profile');
+      toast.error(t('saveFailed'));
     }
   };
 
   if (loading)
     return (
       <div className="flex items-center justify-center py-12">
-        <p style={{ color: 'var(--text-muted)' }}>Loading profile...</p>
+        <p style={{ color: 'var(--text-muted)' }}>{t('loading')}</p>
       </div>
     );
 
@@ -148,7 +147,7 @@ const ProfileSection = () => {
       <Toaster position="top-right" />
 
       <h3 className="text-xl font-semibold mb-6" style={{ color: 'var(--accent)' }}>
-        User Profile
+        {t('profile')}
       </h3>
 
       {/* Profile Header */}
@@ -183,7 +182,7 @@ const ProfileSection = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-            Full Name
+            {t('fullName')}
           </label>
           <input
             type="text"
@@ -202,7 +201,7 @@ const ProfileSection = () => {
 
         <div>
           <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-            Email Address
+            {t('emailAddress')}
           </label>
           <input
             type="email"
@@ -221,7 +220,7 @@ const ProfileSection = () => {
 
         <div>
           <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-            Profile Picture
+            {t('profilePicture')}
           </label>
           <input
             type="file"
@@ -236,7 +235,7 @@ const ProfileSection = () => {
             }}
           />
           <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-            Choose a new profile picture (JPEG, PNG, etc.)
+            {t('chooseProfilePicture')}
           </p>
         </div>
 
@@ -248,7 +247,7 @@ const ProfileSection = () => {
             color: 'white',
           }}
         >
-          Update Profile
+          {t('updateProfile')}
         </button>
       </form>
     </motion.div>

@@ -6,9 +6,11 @@ import toast, { Toaster } from "react-hot-toast";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
 import { Trash2, Edit2, Plus, Loader2 } from "lucide-react";
 import { usePreferencesContext } from "../pages/PreferencesContext";
+import { useLanguage } from "../pages/UseLanguage";
 
 const RecentWorkoutsSection = () => {
   const { preferences, formatWeight, getWeightUnit } = usePreferencesContext();
+  const { t } = useLanguage();
   const [exerciseName, setExerciseName] = useState("");
   const [sets, setSets] = useState("");
   const [reps, setReps] = useState("");
@@ -31,7 +33,7 @@ const RecentWorkoutsSection = () => {
   const fetchWorkouts = async () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userId = user._id;
-    if (!userId) return toast.error("User not logged in");
+    if (!userId) return toast.error(t('userNotLoggedIn'));
 
     setLoading(true);
     try {
@@ -40,7 +42,7 @@ const RecentWorkoutsSection = () => {
       });
       setWorkouts(res.data);
     } catch (error) {
-      toast.error("Unable to fetch workouts");
+      toast.error(t('unableToFetchWorkouts'));
     } finally {
       setLoading(false);
     }
@@ -51,7 +53,7 @@ const RecentWorkoutsSection = () => {
 
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userId = user._id;
-    if (!userId) return toast.error("User not logged in");
+    if (!userId) return toast.error(t('userNotLoggedIn'));
 
     try {
       const body = {
@@ -68,16 +70,16 @@ const RecentWorkoutsSection = () => {
 
       if (editingId) {
         await axios.post(`${API_BASE_URL}/workouts/${editingId}`, body);
-        toast.success("Updated successfully");
+        toast.success(t('updateSuccessfully'));
       } else {
         await axios.post(`${API_BASE_URL}/workouts`, body);
-        toast.success("Inserted successfully");
+        toast.success(t('workoutAddedSuccessfully'));
       }
 
       resetForm();
       fetchWorkouts();
     } catch (error) {
-      toast.error("Unable to save");
+      toast.error(t('unableToSave'));
     }
   };
 
@@ -95,14 +97,14 @@ const RecentWorkoutsSection = () => {
 
   const handleDelete = (id) => {
     showDeleteConfirm({
-      message: "Are you sure you want to delete this workout?",
+      message: t('deleteWorkoutConfirmation'),
       onConfirm: async () => {
         try {
           await axios.delete(`${API_BASE_URL}/workouts/${id}`);
-          toast.success("Deleted successfully");
+          toast.success(t('deleteSuccessfully'));
           fetchWorkouts();
         } catch (error) {
-          toast.error("Unable to delete");
+          toast.error(t('unableToDelete'));
         }
       },
     });
@@ -130,11 +132,13 @@ const RecentWorkoutsSection = () => {
       <Toaster />
 
       <h3 className="text-xl font-semibold mb-6" style={{ color: "var(--accent)" }}>
-        {editingId ? "Edit Workout" : "Add Workout"}
+        {editingId ? t('editWorkout') : t('addWorkout')}
       </h3>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>Exercise Name</label>
+        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+          {t('exerciseName')}
+        </label>
         <input
           type="text"
           value={exerciseName}
@@ -146,7 +150,9 @@ const RecentWorkoutsSection = () => {
 
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>Sets</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+              {t('sets')}
+            </label>
             <input
               type="number"
               value={sets}
@@ -159,7 +165,9 @@ const RecentWorkoutsSection = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>Reps</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+              {t('reps')}
+            </label>
             <input
               type="number"
               value={reps}
@@ -172,7 +180,9 @@ const RecentWorkoutsSection = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>Weight ({getWeightUnit()})</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+              {t('weight')} ({getWeightUnit()})
+            </label>
             <input
               type="number"
               value={weights}
@@ -184,7 +194,9 @@ const RecentWorkoutsSection = () => {
           </div>
         </div>
 
-        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>Notes</label>
+        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+          {t('notes')}
+        </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -193,7 +205,9 @@ const RecentWorkoutsSection = () => {
           style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
         />
 
-        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>Category</label>
+        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+          {t('category')}
+        </label>
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
@@ -205,7 +219,9 @@ const RecentWorkoutsSection = () => {
           ))}
         </select>
 
-        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>Tags</label>
+        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+          {t('tags')}
+        </label>
         <input
           type="text"
           value={tags}
@@ -214,7 +230,9 @@ const RecentWorkoutsSection = () => {
           style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
         />
 
-        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>Date</label>
+        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+          {t('date')}
+        </label>
         <input
           type="date"
           value={date}
@@ -229,7 +247,7 @@ const RecentWorkoutsSection = () => {
           className="w-full py-3 mt-4 font-medium text-white rounded-lg"
           style={{ backgroundColor: "var(--accent)" }}
         >
-          {editingId ? "Update Workout" : "Save Workout"}
+          {editingId ? t('updateWorkout') : t('saveWorkout')}
         </button>
 
         {editingId && (
@@ -238,27 +256,39 @@ const RecentWorkoutsSection = () => {
             onClick={resetForm}
             className="w-full py-3 mt-2 font-medium text-white rounded-lg bg-gray-500"
           >
-            Cancel Edit
+            {t('cancelEdit')}
           </button>
         )}
       </form>
 
       <h3 className="text-xl font-semibold my-6" style={{ color: "var(--accent)" }}>
-        Recent Workouts
+        {t('recentWorkouts')}
       </h3>
 
       {loading ? (
-        <p className="text-center py-4" style={{ color: "var(--text-muted)" }}>Loading…</p>
+        <p className="text-center py-4" style={{ color: "var(--text-muted)" }}>
+          {t('loading')}…
+        </p>
       ) : workouts.length === 0 ? (
         <p className="text-center py-4" style={{ color: "var(--text-muted)" }}>
-          No workouts found.
+          {t('noWorkoutsFound')}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
           <table className="min-w-full divide-y divide-[var(--border)]">
             <thead className="bg-[var(--bg-card-hover)]">
               <tr>
-                {["Date","Exercise","Sets","Reps","Weight","Category","Tags","Notes","Actions"].map((h) => (
+                {[
+                  t('date'),
+                  t('exercise'),
+                  t('sets'),
+                  t('reps'),
+                  t('weight'),
+                  t('category'),
+                  t('tags'),
+                  t('notes'),
+                  t('actions')
+                ].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                     {h}
                   </th>
@@ -297,12 +327,14 @@ const RecentWorkoutsSection = () => {
                     <button
                       onClick={() => handleEdit(w)}
                       className="mr-3 font-medium transition-colors"
+                      title={t('edit')}
                     >
                       <Edit2 className="w-4 h-4" style={{ color: "var(--accent)" }} />
                     </button>
                     <button
                       onClick={() => handleDelete(w._id)}
                       className="font-medium transition-colors"
+                      title={t('delete')}
                     >
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </button>

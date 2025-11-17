@@ -8,6 +8,7 @@ import {
   Clock, AlertTriangle, Calendar, Utensils, Dumbbell, Target 
 } from "lucide-react";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
+import { useLanguage } from '../pages/UseLanguage';
 
 const API_BASE = "http://localhost:3000";   
 
@@ -29,6 +30,9 @@ export default function RemindersSection() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?._id;
 
+  // Use the language hook
+  const { t } = useLanguage();
+
   const resetForm = () => {
     setTitle(""); setDate(""); setTime(""); setType("workout"); 
     setCategory("reminder"); setPriority("medium"); setNotes(""); 
@@ -40,13 +44,15 @@ export default function RemindersSection() {
     try {
       const { data } = await axios.get(`${API_BASE}/reminders?userId=${userId}`);
       setReminders(data);
-    } catch { toast.error("Failed to load reminders"); }
+    } catch { 
+      toast.error(t('failedToLoadReminders')); 
+    }
     finally { setLoading(false); }
-  }, [userId]);
+  }, [userId, t]);
 
   const save = async (e) => {
     e.preventDefault();
-    if (!title || !date || !time) return toast.error("Fill required fields");
+    if (!title || !date || !time) return toast.error(t('fillRequiredFields'));
 
     const fullDateTime = `${date}T${time}:00`; 
 
@@ -65,10 +71,18 @@ export default function RemindersSection() {
     try {
       if (editingId) {
         await axios.post(`${API_BASE}/reminders/${editingId}`, payload);
-        toast.success(`${category === "alert" ? "Alert" : "Reminder"} updated`);
+        toast.success(
+          category === "alert" 
+            ? t('alertUpdated') 
+            : t('reminderUpdated')
+        );
       } else {
         await axios.post(`${API_BASE}/reminders`, payload);
-        toast.success(`${category === "alert" ? "Alert" : "Reminder"} created`);
+        toast.success(
+          category === "alert" 
+            ? t('alertCreated') 
+            : t('reminderCreated')
+        );
         
         scheduleNotification(payload);
       }
@@ -76,7 +90,7 @@ export default function RemindersSection() {
       fetchReminders();
     } catch (err) {
       console.error(err);
-      toast.error("Save failed");
+      toast.error(t('saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -103,24 +117,28 @@ export default function RemindersSection() {
       await axios.patch(`${API_BASE}/reminders/${id}`, { 
         isActive: !currentStatus 
       });
-      toast.success(`${!currentStatus ? 'Activated' : 'Deactivated'}`);
+      toast.success(
+        !currentStatus 
+          ? t('activated') 
+          : t('deactivated')
+      );
       fetchReminders();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update");
+      toast.error(t('updateFailed'));
     }
   };
 
   const del = (id) => {
     showDeleteConfirm({
-      message: "Are you sure you want to delete this?",
+      message: t('deleteReminderConfirmation'),
       onConfirm: async () => {
         try {
           await axios.delete(`${API_BASE}/reminders/${id}`);
-          toast.success("Deleted successfully");
+          toast.success(t('deleteSuccessfully'));
           fetchReminders(); 
         } catch (error) {
-          toast.error("Unable to delete");
+          toast.error(t('unableToDelete'));
         }
       },
     });
@@ -187,11 +205,11 @@ export default function RemindersSection() {
       setTimeout(() => {
         if (reminder.isActive) {
           const notificationTitle = reminder.category === "alert" 
-            ? `🚨 Alert: ${reminder.title}` 
-            : `⏰ Reminder: ${reminder.title}`;
+            ? `🚨 ${t('alert')}: ${reminder.title}` 
+            : `⏰ ${t('reminder')}: ${reminder.title}`;
 
           new Notification(notificationTitle, {
-            body: `${reminder.category === "alert" ? 'Important: ' : ''}${reminder.notes || `Time for your ${reminder.type}`}`,
+            body: `${reminder.category === "alert" ? t('important') + ': ' : ''}${reminder.notes || t('timeForActivity', { activity: t(reminder.type) })}`,
             icon: '/favicon.ico',
             tag: reminder._id
           });
@@ -207,13 +225,13 @@ export default function RemindersSection() {
       await axios.post(`${API_BASE}/notifications`, {
         userId: reminder.userId,
         type: reminder.category,
-        message: `${reminder.category === "alert" ? "Alert" : "Reminder"}: ${reminder.title}`,
+        message: `${reminder.category === "alert" ? t('alert') : t('reminder')}: ${reminder.title}`,
         isRead: false,
         date: new Date().toISOString(),
         priority: reminder.priority
       });
     } catch (err) {
-      console.error('Failed to create notification record:', err);
+      console.error(t('failedToCreateNotification'), err);
     }
   };
 
@@ -236,16 +254,16 @@ export default function RemindersSection() {
 
     const interval = setInterval(checkReminders, 30000);
     return () => clearInterval(interval);
-  }, [reminders]);
+  }, [reminders, t]);
 
   const showBrowserNotification = (reminder) => {
     if (Notification.permission === "granted") {
       const notificationTitle = reminder.category === "alert" 
-        ? `🚨 Alert: ${reminder.title}` 
-        : `⏰ Reminder: ${reminder.title}`;
+        ? `🚨 ${t('alert')}: ${reminder.title}` 
+        : `⏰ ${t('reminder')}: ${reminder.title}`;
 
       new Notification(notificationTitle, {
-        body: `${reminder.category === "alert" ? 'Important: ' : ''}${reminder.notes || `Time for your ${reminder.type}`}`,
+        body: `${reminder.category === "alert" ? t('important') + ': ' : ''}${reminder.notes || t('timeForActivity', { activity: t(reminder.type) })}`,
         icon: '/favicon.ico',
       });
 
@@ -278,11 +296,11 @@ export default function RemindersSection() {
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-semibold" style={{color:"var(--accent)"}}>
-          Reminders & Alerts
+          {t('remindersAndAlerts')}
         </h3>
         <div className="flex items-center space-x-2 text-sm" style={{color:"var(--text-muted)"}}>
           <Bell className="w-4 h-4" />
-          <span>Real-time notifications</span>
+          <span>{t('realTimeNotifications')}</span>
         </div>
       </div>
 
@@ -304,7 +322,8 @@ export default function RemindersSection() {
               color: activeTab === tab ? "white" : "var(--text-secondary)"
             }}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === "all" ? t('all') : 
+             tab === "reminders" ? t('reminders') : t('alerts')}
             {tab !== "all" && (
               <span className="ml-1 text-xs opacity-75">
                 ({reminders.filter(r => r.category === tab).length})
@@ -317,7 +336,7 @@ export default function RemindersSection() {
       {/* Reminder/Alert Form */}
       <form onSubmit={save} className="grid md:grid-cols-2 gap-3 mb-6">
         <input 
-          placeholder="Title *" 
+          placeholder={`${t('title')} *`}
           value={title} 
           onChange={e=>setTitle(e.target.value)}
           className="p-2 rounded" 
@@ -331,8 +350,8 @@ export default function RemindersSection() {
           className="p-2 rounded" 
           style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}}
         >
-          <option value="reminder">📅 Reminder</option>
-          <option value="alert">🚨 Alert</option>
+          <option value="reminder">📅 {t('reminder')}</option>
+          <option value="alert">🚨 {t('alert')}</option>
         </select>
         
         <input 
@@ -360,8 +379,10 @@ export default function RemindersSection() {
           className="p-2 rounded" 
           style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}}
         >
-          {["workout","meal","goal","appointment","medication","other"].map(t=>
-            <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+          {["workout","meal","goal","appointment","medication","other"].map(tp =>
+            <option key={tp} value={tp}>
+              {t(tp.charAt(0).toUpperCase() + tp.slice(1))}
+            </option>
           )}
         </select>
 
@@ -372,14 +393,14 @@ export default function RemindersSection() {
             className="p-2 rounded" 
             style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}}
           >
-            <option value="low">🟢 Low Priority</option>
-            <option value="medium">🟡 Medium Priority</option>
-            <option value="high">🔴 High Priority</option>
+            <option value="low">🟢 {t('lowPriority')}</option>
+            <option value="medium">🟡 {t('mediumPriority')}</option>
+            <option value="high">🔴 {t('highPriority')}</option>
           </select>
         )}
         
         <input 
-          placeholder="Notes (optional)" 
+          placeholder={`${t('notes')} (${t('optional')})`}
           value={notes} 
           onChange={e=>setNotes(e.target.value)}
           className="p-2 rounded md:col-span-2" 
@@ -395,7 +416,9 @@ export default function RemindersSection() {
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : 
              editingId ? <Edit2 className="w-4 h-4"/> : <Plus className="w-4 h-4"/>}
-            {saving ? "Saving…" : editingId ? "Update" : `Add ${category === "alert" ? "Alert" : "Reminder"}`}
+            {saving ? t('saving') + "…" : 
+             editingId ? t('update') : 
+             `${t('add')} ${category === "alert" ? t('alert') : t('reminder')}`}
           </button>
           {editingId && (
             <button 
@@ -404,7 +427,7 @@ export default function RemindersSection() {
               className="px-4 py-2 rounded font-medium"
               style={{background:"var(--bg-secondary)",color:"var(--text-primary)"}}
             >
-              Cancel
+              {t('cancel')}
             </button>
           )}
         </div>
@@ -415,18 +438,28 @@ export default function RemindersSection() {
         <table className="min-w-full divide-y" style={{borderColor:"var(--border)"}}>
           <thead style={{background:"var(--bg-secondary)"}}>
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>Item</th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>Date / Time</th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>Type</th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>Status</th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>Actions</th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>
+                {t('item')}
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>
+                {t('dateTime')}
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>
+                {t('type')}
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>
+                {t('status')}
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>
+                {t('actions')}
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y" style={{borderColor:"var(--border)"}}>
             {filteredReminders.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-6 text-center" style={{color:"var(--text-muted)"}}>
-                  No {activeTab === "all" ? "items" : activeTab} found.
+                  {t('noItemsFound', { type: activeTab === "all" ? t('items') : t(activeTab) })}
                 </td>
               </tr>
             ) : filteredReminders.map(r => (
@@ -441,7 +474,7 @@ export default function RemindersSection() {
                         {r.title}
                         {r.category === "alert" && (
                           <span className={`ml-2 px-2 py-1 rounded-full text-xs border ${getPriorityColor(r.priority)}`}>
-                            {r.priority}
+                            {t(r.priority + 'Priority')}
                           </span>
                         )}
                       </div>
@@ -451,7 +484,7 @@ export default function RemindersSection() {
                         </div>
                       )}
                       <div className={`text-xs mt-1 px-2 py-1 rounded-full inline-block ${getCategoryStyle(r.category)}`}>
-                        {r.category === "alert" ? "🚨 Alert" : "⏰ Reminder"}
+                        {r.category === "alert" ? `🚨 ${t('alert')}` : `⏰ ${t('reminder')}`}
                       </div>
                     </div>
                   </div>
@@ -468,7 +501,7 @@ export default function RemindersSection() {
                       border: '1px solid var(--accent)/30'
                     }}
                   >
-                    {r.type}
+                    {t(r.type)}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm">
@@ -482,7 +515,7 @@ export default function RemindersSection() {
                       <ToggleLeft className="w-6 h-6" style={{color: "var(--text-muted)"}} />
                     )}
                     <span style={{color: r.isActive ? "var(--accent)" : "var(--text-muted)"}}>
-                      {r.isActive ? "Active" : "Inactive"}
+                      {r.isActive ? t('active') : t('inactive')}
                     </span>
                   </button>
                 </td>
@@ -491,14 +524,14 @@ export default function RemindersSection() {
                     <button 
                       onClick={() => startEdit(r)} 
                       className="p-1 rounded hover:bg-[var(--bg-secondary)]"
-                      title="Edit"
+                      title={t('edit')}
                     >
                       <Edit2 className="w-4 h-4" style={{ color: "var(--accent)" }} />
                     </button>
                     <button 
                       onClick={() => del(r._id)} 
                       className="p-1 rounded hover:bg-red-500/10"
-                      title="Delete"
+                      title={t('delete')}
                     >
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </button>

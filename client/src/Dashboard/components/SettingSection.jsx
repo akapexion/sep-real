@@ -6,9 +6,11 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Save, Trash2, Bell, Globe, Smartphone, Shield, AlertTriangle } from 'lucide-react';
 import { usePreferencesContext } from '../pages/PreferencesContext';
+import { useLanguage } from '../pages/UseLanguage';
 
 const SettingSection = () => {
   const { preferences, updatePreferences, loading } = usePreferencesContext();
+  const { t } = useLanguage();
   const [saving, setSaving] = useState(false);
   const [localPrefs, setLocalPrefs] = useState(null);
   const navigate = useNavigate();
@@ -17,7 +19,7 @@ const SettingSection = () => {
   // Initialize local preferences when context loads
   useEffect(() => {
     if (preferences) {
-      setLocalPrefs(JSON.parse(JSON.stringify(preferences))); // Deep copy
+      setLocalPrefs(JSON.parse(JSON.stringify(preferences)));
     }
   }, [preferences]);
 
@@ -26,7 +28,7 @@ const SettingSection = () => {
     const [parent, child] = name.split('.');
     
     setLocalPrefs(prev => {
-      const newPrefs = JSON.parse(JSON.stringify(prev)); // Deep copy
+      const newPrefs = JSON.parse(JSON.stringify(prev));
       
       if (child) {
         if (!newPrefs[parent]) newPrefs[parent] = {};
@@ -46,9 +48,9 @@ const SettingSection = () => {
     setSaving(true);
     try {
       await updatePreferences(localPrefs);
-      toast.success('Settings saved successfully! 🎉');
+      toast.success(t('savedSuccessfully'));
     } catch (error) {
-      toast.error('Failed to save settings');
+      toast.error(t('saveFailed'));
       console.error('Save error:', error);
     } finally {
       setSaving(false);
@@ -57,29 +59,32 @@ const SettingSection = () => {
 
   const handleDeleteProfile = async () => {
     if (!window.confirm(
-      '⚠️ Are you absolutely sure?\n\nThis will permanently delete your profile, workout history, progress data, and all your information. This action cannot be undone!'
+      `${t('areYouSure')}\n\n${t('thisActionCannotBeUndone')}`
     )) return;
     
     try {
       await axios.delete(`http://localhost:3000/profile?userId=${user._id}`);
       localStorage.clear();
-      toast.success('Profile deleted successfully');
+      toast.success(t('deleteSuccessfully'));
       setTimeout(() => navigate('/login'), 1000);
     } catch (error) {
-      toast.error('Failed to delete profile');
+      toast.error(t('deleteFailed'));
       console.error('Delete error:', error);
     }
   };
 
   const handleResetForm = () => {
-    setLocalPrefs(JSON.parse(JSON.stringify(preferences))); // Deep copy
-    toast.info('Changes discarded');
+    setLocalPrefs(JSON.parse(JSON.stringify(preferences)));
+    toast.info(t('changesDiscarded'));
   };
 
   if (loading || !localPrefs) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--accent)" }} />
+        <span className="ml-2" style={{ color: "var(--text-primary)" }}>
+          {t('loading')}
+        </span>
       </div>
     );
   }
@@ -104,22 +109,22 @@ const SettingSection = () => {
           </div>
           <div>
             <h3 className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>
-              Preferences
+              {t('preferences')}
             </h3>
             <p style={{ color: 'var(--text-muted)' }} className="mt-1">
-              Manage your app settings and notification preferences
+              {t('manageYourAppSettings')}
             </p>
           </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 space-y-8">
-        {/* Notification Settings - SIMPLIFIED */}
+        {/* Notification Settings */}
         <div className="setting-group">
           <div className="flex items-center gap-2 mb-4">
             <Bell className="w-5 h-5" style={{ color: 'var(--accent)' }} />
             <h4 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Notifications
+              {t('notifications')}
             </h4>
           </div>
           
@@ -138,49 +143,32 @@ const SettingSection = () => {
                   onChange={handleChange} 
                   className="w-5 h-5 rounded focus:ring-2 focus:ring-offset-2"
                   style={{ 
-                    accentColor: 'var(--accent)',
-                    focusRingColor: 'var(--accent)'
+                    accentColor: 'var(--accent)'
                   }}
                 />
                 <Smartphone className="w-5 h-5" style={{ color: 'var(--accent)' }} />
               </div>
               <div>
                 <span className="font-medium text-lg" style={{ color: 'var(--text-primary)' }}>
-                  Push Notifications
+                  {t('pushNotifications')}
                 </span>
                 <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-                  Receive in-app alerts for workouts, goals, and reminders
+                  {t('receiveInAppAlerts')}
                 </p>
               </div>
             </label>
-          </div>
-          
-          {/* Notification Help */}
-          <div className="mt-4 p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border)' }}>
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: 'var(--accent)' }} />
-              <div>
-                <p className="font-medium" style={{ color: 'var(--text-primary)' }}>How notifications work:</p>
-                <ul className="text-sm mt-2 space-y-1" style={{ color: 'var(--text-muted)' }}>
-                  <li>• <strong>Workout Reminders:</strong> Get notified when it's time for your scheduled workouts</li>
-                  <li>• <strong>Goal Achievements:</strong> Celebrate when you reach your fitness milestones</li>
-                  <li>• <strong>Progress Updates:</strong> Stay motivated with regular progress notifications</li>
-                  <li>• <strong>Activity Alerts:</strong> Get notified about your workout completions</li>
-                </ul>
-              </div>
-            </div>
           </div>
         </div>
 
         {/* Units & Measurement */}
         <div className="setting-group">
           <h4 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-            Units & Measurement
+            {t('units')}
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-muted)' }}>
-                Measurement System
+                {t('measurementSystem')}
               </label>
               <select 
                 name="units" 
@@ -193,12 +181,9 @@ const SettingSection = () => {
                   borderColor: 'var(--border)'
                 }}
               >
-                <option value="metric">🇪🇺 Metric System (kg, cm)</option>
-                <option value="imperial">🇺🇸 Imperial System (lbs, in)</option>
+                <option value="metric">🇪🇺 {t('metricSystem')} ({t('kg')}, {t('cm')})</option>
+                <option value="imperial">🇺🇸 {t('imperialSystem')} ({t('lbs')}, {t('inches')})</option>
               </select>
-              <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-                Affects weight, height, and measurement displays across the app
-              </p>
             </div>
           </div>
         </div>
@@ -206,12 +191,12 @@ const SettingSection = () => {
         {/* Appearance */}
         <div className="setting-group">
           <h4 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-            Appearance
+            {t('appearance')}
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-muted)' }}>
-                Theme
+                {t('theme')}
               </label>
               <select 
                 name="theme" 
@@ -224,15 +209,15 @@ const SettingSection = () => {
                   borderColor: 'var(--border)'
                 }}
               >
-                <option value="dark">🌙 Dark Mode</option>
-                <option value="light">☀️ Light Mode</option>
+                <option value="dark">🌙 {t('darkMode')}</option>
+                <option value="light">☀️ {t('lightMode')}</option>
               </select>
             </div>
             
             <div>
               <label className="block text-sm font-medium mb-3 flex items-center gap-2">
                 <Globe className="w-4 h-4" />
-                Language
+                {t('language')}
               </label>
               <select 
                 name="language" 
@@ -269,12 +254,12 @@ const SettingSection = () => {
             {saving ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Saving Changes...
+                {t('saving')}...
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                {hasChanges ? 'Save Changes' : 'No Changes'}
+                {hasChanges ? t('save') : t('noChanges')}
               </>
             )}
           </button>
@@ -290,7 +275,7 @@ const SettingSection = () => {
                 borderColor: 'var(--border)'
               }}
             >
-              Discard Changes
+              {t('cancel')}
             </button>
           )}
         </div>
@@ -300,12 +285,12 @@ const SettingSection = () => {
       <div className="p-6 border-t" style={{ borderColor: 'var(--border)' }}>
         <h4 className="text-lg font-semibold mb-4 text-red-500 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5" />
-          Danger Zone
+          {t('dangerZone')}
         </h4>
         
         <div className="p-4 rounded-lg border-2 border-red-500/30 bg-red-500/10">
           <p className="text-sm mb-4" style={{ color: 'var(--text-primary)' }}>
-            Once you delete your profile, there is no going back. All your data including workouts, progress, and goals will be permanently erased.
+            {t('deleteProfileWarning')}
           </p>
           <button 
             onClick={handleDeleteProfile}
@@ -316,7 +301,7 @@ const SettingSection = () => {
             }}
           >
             <Trash2 className="w-4 h-4" />
-            Delete My Profile
+            {t('deleteMyProfile')}
           </button>
         </div>
       </div>

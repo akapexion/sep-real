@@ -4,6 +4,7 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { Trash2, Edit2, Plus, Loader2, Download, FileText } from "lucide-react";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
+import { useLanguage } from '../pages/UseLanguage'; // Import the language hook
 
 const API_BASE = "http://localhost:3000";
 
@@ -26,6 +27,9 @@ export default function NutritionLogsSection() {
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?._id;
+
+  // Use the language hook
+  const { t } = useLanguage();
 
   const calcTotals = (items) =>
     items.reduce(
@@ -63,15 +67,15 @@ export default function NutritionLogsSection() {
       }));
       setLogs(enriched);
     } catch (err) {
-      toast.error("Failed to load nutrition logs");
+      toast.error(t('failedToLoadNutritionLogs'));
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, t]);
 
   const saveLog = async (e) => {
     e.preventDefault();
-    if (!userId) return toast.error("You must be logged in");
+    if (!userId) return toast.error(t('userNotLoggedIn'));
 
     const foodItem = {
       name: foodName,
@@ -93,31 +97,30 @@ export default function NutritionLogsSection() {
     try {
       if (editingId) {
         await axios.post(`${API_BASE}/nutrition/${editingId}`, payload);
-        toast.success("Log updated");
+        toast.success(t('logUpdated'));
       } else {
         await axios.post(`${API_BASE}/nutrition`, payload);
-        toast.success("Log added");
+        toast.success(t('logAdded'));
       }
       resetForm();
       fetchLogs();
     } catch (err) {
-      toast.error(editingId ? "Update failed" : "Add failed");
+      toast.error(editingId ? t('updateFailed') : t('addFailed'));
     } finally {
       setSaving(false);
     }
   };
 
-
   const deleteLog = (id) => {
     showDeleteConfirm({
-      message: "Are you sure you want to delete this log?",
+      message: t('deleteLogConfirmation'),
       onConfirm: async () => {
         try {
           await axios.delete(`${API_BASE}/nutrition/${id}`);
-          toast.success("Log deleted successfully");
+          toast.success(t('logDeleted'));
           fetchLogs();
         } catch (err) {
-          toast.error("Delete failed");
+          toast.error(t('deleteFailed'));
         }
       },
     });
@@ -141,7 +144,7 @@ export default function NutritionLogsSection() {
     const content = printRef.current;
     const win = window.open("", "", "width=900,height=650");
     win.document.write(`
-      <html><head><title>Nutrition Report – ${new Date().toLocaleDateString()}</title>
+      <html><head><title>${t('nutritionReport')} – ${new Date().toLocaleDateString()}</title>
       <style>
         body{font-family:Arial,sans-serif;margin:2rem;}
         table{width:100%;border-collapse:collapse;margin-top:1rem;}
@@ -158,7 +161,10 @@ export default function NutritionLogsSection() {
 
   /* ------------------- EXPORT CSV ------------------- */
   const exportCSV = () => {
-    const header = ["Meal","Food","Qty","Cal","P","C","F","Date"];
+    const header = [
+      t('meal'), t('food'), t('quantity'), 
+      t('caloriesShort'), t('proteinsShort'), t('carbsShort'), t('fatsShort'), t('date')
+    ];
     const rows = logs.map(l => [
       l.mealType,
       l.foodItems.map(i=>i.name).join(" | "),
@@ -191,7 +197,6 @@ export default function NutritionLogsSection() {
     );
   }
 
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -202,27 +207,25 @@ export default function NutritionLogsSection() {
 
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-semibold" style={{ color: "var(--accent)" }}>
-          Nutrition Logs
+          {t('nutritionLogs')}
         </h3>
 
         <Toaster />
 
         <div className="flex gap-2">
-          <button onClick={exportPDF} title="Export PDF" className="p-2 rounded hover:bg-[var(--bg-secondary)]">
+          <button onClick={exportPDF} title={t('exportPDF')} className="p-2 rounded hover:bg-[var(--bg-secondary)]">
             <FileText className="w-5 h-5" style={{ color: "var(--accent)" }} />
           </button>
-          <button onClick={exportCSV} title="Export CSV" className="p-2 rounded hover:bg-[var(--bg-secondary)]">
+          <button onClick={exportCSV} title={t('exportCSV')} className="p-2 rounded hover:bg-[var(--bg-secondary)]">
             <Download className="w-5 h-5" style={{ color: "var(--accent)" }} />
           </button>
         </div>
       </div>
 
-      {/* FORM */}
-{/* FORM */}
 <form onSubmit={saveLog} className="grid md:grid-cols-2 gap-4 mb-6">
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
-    Meal Type
+    {t('mealType')}
     <select
       value={mealType}
       onChange={(e) => setMealType(e.target.value)}
@@ -234,14 +237,14 @@ export default function NutritionLogsSection() {
       }}
       required
     >
-      {["Breakfast", "Lunch", "Dinner", "Snacks", "Other"].map((t) => (
-        <option key={t} value={t}>{t}</option>
+      {["Breakfast", "Lunch", "Dinner", "Snacks", "Other"].map((meal) => (
+        <option key={meal} value={meal}>{t(meal)}</option>
       ))}
     </select>
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
-    Date
+    {t('date')}
     <input
       type="date"
       value={date}
@@ -257,9 +260,9 @@ export default function NutritionLogsSection() {
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
-    Food Name
+    {t('foodName')}
     <input
-      placeholder="Food name"
+      placeholder={t('foodNamePlaceholder')}
       value={foodName}
       onChange={(e) => setFoodName(e.target.value)}
       className="p-2 rounded-md"
@@ -273,9 +276,9 @@ export default function NutritionLogsSection() {
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
-    Quantity
+    {t('quantity')}
     <input
-      placeholder="Quantity (e.g. 150g)"
+      placeholder={t('quantityPlaceholder')}
       value={quantity}
       onChange={(e) => setQuantity(e.target.value)}
       className="p-2 rounded-md"
@@ -289,10 +292,10 @@ export default function NutritionLogsSection() {
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
-    Calories
+    {t('calories')}
     <input
       type="number"
-      placeholder="Calories"
+      placeholder={t('calories')}
       value={calories}
       onChange={(e) => setCalories(e.target.value)}
       className="p-2 rounded-md"
@@ -306,10 +309,10 @@ export default function NutritionLogsSection() {
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
-    Proteins (g)
+    {t('proteins')} (g)
     <input
       type="number"
-      placeholder="Proteins (g)"
+      placeholder={t('proteinsPlaceholder')}
       value={proteins}
       onChange={(e) => setProteins(e.target.value)}
       className="p-2 rounded-md"
@@ -323,10 +326,10 @@ export default function NutritionLogsSection() {
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
-    Carbs (g)
+    {t('carbs')} (g)
     <input
       type="number"
-      placeholder="Carbs (g)"
+      placeholder={t('carbsPlaceholder')}
       value={carbs}
       onChange={(e) => setCarbs(e.target.value)}
       className="p-2 rounded-md"
@@ -340,10 +343,10 @@ export default function NutritionLogsSection() {
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
-    Fats (g)
+    {t('fats')} (g)
     <input
       type="number"
-      placeholder="Fats (g)"
+      placeholder={t('fatsPlaceholder')}
       value={fats}
       onChange={(e) => setFats(e.target.value)}
       className="p-2 rounded-md"
@@ -370,7 +373,7 @@ export default function NutritionLogsSection() {
       ) : (
         <Plus className="w-4 h-4" />
       )}
-      {saving ? "Saving…" : editingId ? "Update" : "Add"}
+      {saving ? t('saving') + "…" : editingId ? t('update') : t('add')}
     </button>
 
     {editingId && (
@@ -380,12 +383,11 @@ export default function NutritionLogsSection() {
         className="px-4 py-2 rounded-md font-medium"
         style={{ backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)" }}
       >
-        Cancel
+        {t('cancel')}
       </button>
     )}
   </div>
 </form>
-
 
       {/* TABLE SECTION */}
       <div ref={printRef}>
@@ -393,7 +395,11 @@ export default function NutritionLogsSection() {
           <table className="min-w-full divide-y" style={{ borderColor: "var(--border)" }}>
             <thead style={{ backgroundColor: "var(--bg-secondary)" }}>
               <tr>
-                {["Meal","Food","Qty","Cal","P","C","F","Date","Actions"].map((h)=>(
+                {[
+                  t('meal'), t('food'), t('quantity'), 
+                  t('caloriesShort'), t('proteinsShort'), t('carbsShort'), t('fatsShort'), 
+                  t('date'), t('actions')
+                ].map((h)=>(
                   <th key={h} className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
                     {h}
                   </th>
@@ -405,7 +411,7 @@ export default function NutritionLogsSection() {
               {logs.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="px-4 py-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
-                    No logs yet – add your first meal!
+                    {t('noNutritionLogs')}
                   </td>
                 </tr>
               ) : (
@@ -429,7 +435,7 @@ export default function NutritionLogsSection() {
                         <button
                           onClick={() => startEdit(log)}
                           className="p-1 rounded hover:bg-[var(--bg-secondary)]"
-                          title="Edit"
+                          title={t('edit')}
                         >
                           <Edit2 className="w-4 h-4" style={{ color: "var(--accent)" }} />
                         </button>
@@ -437,7 +443,7 @@ export default function NutritionLogsSection() {
                         <button
                           onClick={() => deleteLog(log._id)}
                           className="p-1 rounded hover:bg-red-500/10"
-                          title="Delete"
+                          title={t('delete')}
                         >
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </button>
@@ -455,10 +461,10 @@ export default function NutritionLogsSection() {
         {logs.length > 0 && (
           <div className="mt-6 p-4 rounded bg-[var(--bg-secondary)]">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div><strong>Total Calories:</strong> {logs.reduce((s,l)=>s+l.totalCalories,0)}</div>
-              <div><strong>Proteins:</strong> {logs.reduce((s,l)=>s+l.totalProteins,0)}g</div>
-              <div><strong>Carbs:</strong> {logs.reduce((s,l)=>s+l.totalCarbs,0)}g</div>
-              <div><strong>Fats:</strong> {logs.reduce((s,l)=>s+l.totalFats,0)}g</div>
+              <div><strong>{t('totalCalories')}:</strong> {logs.reduce((s,l)=>s+l.totalCalories,0)}</div>
+              <div><strong>{t('proteins')}:</strong> {logs.reduce((s,l)=>s+l.totalProteins,0)}g</div>
+              <div><strong>{t('carbs')}:</strong> {logs.reduce((s,l)=>s+l.totalCarbs,0)}g</div>
+              <div><strong>{t('fats')}:</strong> {logs.reduce((s,l)=>s+l.totalFats,0)}g</div>
             </div>
           </div>
         )}

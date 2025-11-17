@@ -15,6 +15,8 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Download, FileText, Trash2, Edit2 } from "lucide-react";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
+import { useLanguage } from '../pages/UseLanguage'; // Import the language hook
+import { usePreferencesContext } from "../pages/PreferencesContext";
 
 ChartJS.register(
   CategoryScale,
@@ -28,6 +30,8 @@ ChartJS.register(
 
 const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
   const printRef = useRef();
+  const { getWeightUnit, getHeightUnit } = usePreferencesContext();
+  const { t } = useLanguage(); // Use the language hook
 
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -51,8 +55,9 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
   };
 
   const handleUpdate = async () => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) return toast.error("Login required");
+    const user = JSON.parse(localStorage.getItem("user") || '{}');
+    const userId = user._id;
+    if (!userId) return toast.error(t('pleaseLogin'));
 
     const payload = {
       userId,
@@ -70,25 +75,25 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
 
     try {
       await axios.post(`${API_BASE_URL}/progress/${editingId}`, payload);
-      toast.success("Progress updated!");
+      toast.success(t('progressUpdated'));
       setEditingId(null);
       onProgressUpdate?.();
     } catch (err) {
-      toast.error("Update failed");
+      toast.error(t('updateFailed'));
       console.error(err);
     }
   };
 
   const handleDelete = (id) => {
     showDeleteConfirm({
-      message: "Are you sure you want to delete this workout?",
+      message: t('deleteProgressConfirmation'),
       onConfirm: async () => {
         try {
           await axios.delete(`${API_BASE_URL}/progress/${id}`);
-          toast.success("Deleted successfully");
+          toast.success(t('deleteSuccessfully'));
           onProgressUpdate?.();
         } catch (error) {
-          toast.error("Unable to delete");
+          toast.error(t('unableToDelete'));
         }
       },
     });
@@ -101,7 +106,7 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
   const exportPDF = () => {
     const win = window.open("", "", "width=900,height=650");
     win.document.write(`
-      <html><head><title>Progress Report – ${new Date().toLocaleDateString()}</title>
+      <html><head><title>${t('progressReport')} – ${new Date().toLocaleDateString()}</title>
       <style>
         body{font-family:Arial,sans-serif;margin:2rem;}
         table{width:100%;border-collapse:collapse;margin-top:1rem;}
@@ -116,7 +121,14 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
   };
 
   const exportCSV = () => {
-    const header = ["Date","Weight(kg)","Chest(cm)","Waist(cm)","Run(min)","Lift(kg)"];
+    const header = [
+      t('date'),
+      `${t('weight')}(${getWeightUnit()})`,
+      `${t('chest')}(${getHeightUnit()})`,
+      `${t('waist')}(${getHeightUnit()})`,
+      `${t('runTime')}(${t('minutesShort')})`,
+      `${t('liftWeight')}(${getWeightUnit()})`
+    ];
     const rows = progressEntries.map(e => [
       new Date(e.date).toLocaleDateString(),
       e.weight ?? "",
@@ -146,7 +158,7 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
     labels,
     datasets: [
       {
-        label: "Weight (kg)",
+        label: `${t('weight')} (${getWeightUnit()})`,
         data: sortedProgress.map((entry) => entry.weight ?? null),
         borderColor: "#8884d8",
         backgroundColor: "#8884d8",
@@ -154,7 +166,7 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
         tension: 0.1,
       },
       {
-        label: "Chest (cm)",
+        label: `${t('chest')} (${getHeightUnit()})`,
         data: sortedProgress.map((entry) => entry.measurements?.chest ?? null),
         borderColor: "#82ca9d",
         backgroundColor: "#82ca9d",
@@ -162,7 +174,7 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
         tension: 0.1,
       },
       {
-        label: "Waist (cm)",
+        label: `${t('waist')} (${getHeightUnit()})`,
         data: sortedProgress.map((entry) => entry.measurements?.waist ?? null),
         borderColor: "#ffc658",
         backgroundColor: "#ffc658",
@@ -188,14 +200,14 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
         display: true,
         title: {
           display: true,
-          text: "Date",
+          text: t('date'),
         },
       },
       y: {
         display: true,
         title: {
           display: true,
-          text: "Value",
+          text: t('value'),
         },
       },
     },
@@ -210,13 +222,13 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
     >
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-bold" style={{ color: "var(--accent)" }}>
-          Progress Summary
+          {t('progressSummary')}
         </h3>
         <div className="flex gap-2">
-          <button onClick={exportPDF} title="Export PDF" className="p-2 rounded hover:bg-[var(--bg-secondary)]">
+          <button onClick={exportPDF} title={t('exportPDF')} className="p-2 rounded hover:bg-[var(--bg-secondary)]">
             <FileText className="w-5 h-5" style={{ color: "var(--accent)" }} />
           </button>
-          <button onClick={exportCSV} title="Export CSV" className="p-2 rounded hover:bg-[var(--bg-secondary)]">
+          <button onClick={exportCSV} title={t('exportCSV')} className="p-2 rounded hover:bg-[var(--bg-secondary)]">
             <Download className="w-5 h-5" style={{ color: "var(--accent)" }} />
           </button>
         </div>
@@ -227,7 +239,15 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
           <table className="min-w-full divide-y" style={{ borderColor: "var(--border)" }}>
             <thead style={{ backgroundColor: "var(--bg-secondary)" }}>
               <tr>
-                {["Date", "Weight", "Chest", "Waist", "Run Time", "Lift Weight", "Actions"].map(
+                {[
+                  t('date'), 
+                  t('weight'), 
+                  t('chest'), 
+                  t('waist'), 
+                  t('runTime'), 
+                  t('liftWeight'), 
+                  t('actions')
+                ].map(
                   (h) => (
                     <th
                       key={h}
@@ -244,7 +264,7 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
               {sortedProgress.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center" style={{ color: "var(--text-muted)" }}>
-                    No progress recorded yet.
+                    {t('noProgressRecorded')}
                   </td>
                 </tr>
               ) : (
@@ -273,7 +293,7 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
                             value={editForm.weight}
                             onChange={handleInputChange}
                             step="0.1"
-                            placeholder="kg"
+                            placeholder={getWeightUnit()}
                             className="w-full px-2 py-1 rounded border text-sm"
                             style={{
                               backgroundColor: "var(--input-bg)",
@@ -289,7 +309,7 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
                             value={editForm.chest}
                             onChange={handleInputChange}
                             step="0.1"
-                            placeholder="cm"
+                            placeholder={getHeightUnit()}
                             className="w-full px-2 py-1 rounded border text-sm"
                             style={{
                               backgroundColor: "var(--input-bg)",
@@ -305,7 +325,7 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
                             value={editForm.waist}
                             onChange={handleInputChange}
                             step="0.1"
-                            placeholder="cm"
+                            placeholder={getHeightUnit()}
                             className="w-full px-2 py-1 rounded border text-sm"
                             style={{
                               backgroundColor: "var(--input-bg)",
@@ -321,7 +341,7 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
                             value={editForm.runTime}
                             onChange={handleInputChange}
                             step="0.1"
-                            placeholder="min"
+                            placeholder={t('minutesShort')}
                             className="w-full px-2 py-1 rounded border text-sm"
                             style={{
                               backgroundColor: "var(--input-bg)",
@@ -337,7 +357,7 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
                             value={editForm.liftWeight}
                             onChange={handleInputChange}
                             step="0.1"
-                            placeholder="kg"
+                            placeholder={getWeightUnit()}
                             className="w-full px-2 py-1 rounded border text-sm"
                             style={{
                               backgroundColor: "var(--input-bg)",
@@ -353,13 +373,13 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
                               className="px-2 py-1 text-xs rounded text-white"
                               style={{ backgroundColor: "var(--accent)" }}
                             >
-                              Update
+                              {t('update')}
                             </button>
                             <button
                               onClick={handleCancel}
                               className="px-2 py-1 text-xs rounded bg-gray-500 text-white"
                             >
-                              Cancel
+                              {t('cancel')}
                             </button>
                           </div>
                         </td>
@@ -379,7 +399,6 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
                             <button
                               onClick={() => handleEdit(e)}
                               className="px-2 py-1 text-xs rounded text-white"
-                            
                             >
                               <Edit2 className="w-4 h-4" style={{ color: "var(--accent)" }} />
                             </button>
@@ -387,8 +406,7 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
                               onClick={() => handleDelete(e._id)}
                               className="px-2 py-1 text-xs rounded"
                             >
-                                                        <Trash2 className="w-4 h-4 text-red-500" />
-
+                              <Trash2 className="w-4 h-4 text-red-500" />
                             </button>
                           </div>
                         </td>
@@ -404,13 +422,13 @@ const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
         {sortedProgress.length > 1 ? (
           <div>
             <h4 className="text-lg font-semibold mb-4" style={{ color: "var(--accent)" }}>
-              Body Composition Over Time
+              {t('bodyCompositionOverTime')}
             </h4>
             <Line data={bodyChartData} options={chartOptions} />
           </div>
         ) : sortedProgress.length > 0 ? (
           <p className="text-center text-sm" style={{ color: "var(--text-muted)" }}>
-            Add more progress entries to see trends over time.
+            {t('addMoreProgressEntries')}
           </p>
         ) : null}
       </div>

@@ -13,11 +13,24 @@ export const usePreferencesContext = () => {
 };
 
 const normalizePreferences = (prefs) => {
-  if (!prefs) return null;
+  if (!prefs) {
+    // Return default preferences if none exist
+    return {
+      notifications: { push: true },
+      units: 'metric',
+      theme: 'dark',
+      language: 'en',
+      reminders: { workout: "07:00", meal: "12:00" }
+    };
+  }
   
   const normalized = { ...prefs };
   
-  if (normalized.notifications) {
+  // Ensure notifications object exists and has proper structure
+  if (!normalized.notifications) {
+    normalized.notifications = { push: true };
+  } else {
+    // Clean up old notification types
     if (normalized.notifications.email !== undefined) {
       delete normalized.notifications.email;
     }
@@ -31,6 +44,14 @@ const normalizePreferences = (prefs) => {
     }
   }
   
+  // Ensure other required fields have defaults
+  if (!normalized.units) normalized.units = 'metric';
+  if (!normalized.theme) normalized.theme = 'dark';
+  if (!normalized.language) normalized.language = 'en';
+  if (!normalized.reminders) {
+    normalized.reminders = { workout: "07:00", meal: "12:00" };
+  }
+  
   return normalized;
 };
 
@@ -38,29 +59,36 @@ export const PreferencesProvider = ({ children }) => {
   const [preferences, setPreferences] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadPreferences = async () => {
-      try {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        if (user._id) {
-          const response = await axios.get(`http://localhost:3000/preferences?userId=${user._id}`);
-          const normalizedPrefs = normalizePreferences(response.data);
-          setPreferences(normalizedPrefs);
-          applyTheme(normalizedPrefs.theme);
-          localStorage.setItem('userPreferences', JSON.stringify(normalizedPrefs));
-        }
-      } catch (error) {
-        console.error('Failed to load preferences:', error);
-        const stored = localStorage.getItem('userPreferences');
-        if (stored) {
-          const normalizedStored = normalizePreferences(JSON.parse(stored));
-          setPreferences(normalizedStored);
-        }
-      } finally {
-        setLoading(false);
+  const loadPreferences = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user._id) {
+        const response = await axios.get(`http://localhost:3000/preferences?userId=${user._id}`);
+        const normalizedPrefs = normalizePreferences(response.data);
+        setPreferences(normalizedPrefs);
+        localStorage.setItem('userPreferences', JSON.stringify(normalizedPrefs));
+      } else {
+        // No user logged in, set default preferences
+        const defaultPrefs = normalizePreferences(null);
+        setPreferences(defaultPrefs);
       }
-    };
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+      // Fallback to stored preferences or defaults
+      const stored = localStorage.getItem('userPreferences');
+      if (stored) {
+        const normalizedStored = normalizePreferences(JSON.parse(stored));
+        setPreferences(normalizedStored);
+      } else {
+        const defaultPrefs = normalizePreferences(null);
+        setPreferences(defaultPrefs);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadPreferences();
   }, []);
 
@@ -68,6 +96,10 @@ export const PreferencesProvider = ({ children }) => {
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       
+      if (!user._id) {
+        throw new Error('No user logged in');
+      }
+
       const cleanPreferences = normalizePreferences(newPreferences);
       
       const response = await axios.post('http://localhost:3000/preferences', {
@@ -77,11 +109,19 @@ export const PreferencesProvider = ({ children }) => {
       
       const normalizedResponse = normalizePreferences(response.data);
       setPreferences(normalizedResponse);
-      applyTheme(normalizedResponse.theme);
       localStorage.setItem('userPreferences', JSON.stringify(normalizedResponse));
       
+      // Update user object in localStorage with new preferences
+      const updatedUser = { ...user, preferences: normalizedResponse };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // Dispatch events for other components to listen to
       window.dispatchEvent(new CustomEvent('preferencesUpdated', {
         detail: normalizedResponse
+      }));
+      
+      window.dispatchEvent(new CustomEvent('languageChanged', {
+        detail: { language: normalizedResponse.language }
       }));
       
       return normalizedResponse;
@@ -91,61 +131,48 @@ export const PreferencesProvider = ({ children }) => {
     }
   };
 
-  const applyTheme = (theme) => {
-    document.documentElement.setAttribute('data-theme', theme);
-    
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.style.setProperty('--bg-primary', '#1a1a1a');
-      root.style.setProperty('--bg-secondary', '#2d2d2d');
-      root.style.setProperty('--bg-card', '#2d2d2d');
-      root.style.setProperty('--text-primary', '#ffffff');
-      root.style.setProperty('--text-secondary', '#a0a0a0');
-      root.style.setProperty('--border', '#404040');
-    } else {
-      root.style.setProperty('--bg-primary', '#ffffff');
-      root.style.setProperty('--bg-secondary', '#f8f9fa');
-      root.style.setProperty('--bg-card', '#ffffff');
-      root.style.setProperty('--text-primary', '#000000');
-      root.style.setProperty('--text-secondary', '#6c757d');
-      root.style.setProperty('--border', '#dee2e6');
-    }
-  };
-
   const convertWeight = (value, toUnit = null) => {
     if (value === null || value === undefined || value === '') return value;
+    
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return value;
     
     const targetUnit = toUnit || preferences?.units || 'metric';
     const currentUnit = preferences?.units || 'metric';
     
-    if (currentUnit === targetUnit) return parseFloat(value);
+    if (currentUnit === targetUnit) return numValue;
 
+    // Convert between metric (kg) and imperial (lbs)
     if (currentUnit === 'metric' && targetUnit === 'imperial') {
-      return parseFloat(value) * 2.20462;
+      return numValue * 2.20462; // kg to lbs
     }
     if (currentUnit === 'imperial' && targetUnit === 'metric') {
-      return parseFloat(value) / 2.20462;
+      return numValue / 2.20462; // lbs to kg
     }
     
-    return parseFloat(value);
+    return numValue;
   };
 
   const convertHeight = (value, toUnit = null) => {
     if (value === null || value === undefined || value === '') return value;
     
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return value;
+    
     const targetUnit = toUnit || preferences?.units || 'metric';
     const currentUnit = preferences?.units || 'metric';
     
-    if (currentUnit === targetUnit) return parseFloat(value);
+    if (currentUnit === targetUnit) return numValue;
 
+    // Convert between metric (cm) and imperial (inches)
     if (currentUnit === 'metric' && targetUnit === 'imperial') {
-      return parseFloat(value) / 2.54;
+      return numValue / 2.54; // cm to inches
     }
     if (currentUnit === 'imperial' && targetUnit === 'metric') {
-      return parseFloat(value) * 2.54;
+      return numValue * 2.54; // inches to cm
     }
     
-    return parseFloat(value);
+    return numValue;
   };
 
   const getWeightUnit = () => {
@@ -158,14 +185,24 @@ export const PreferencesProvider = ({ children }) => {
 
   const formatWeight = (value) => {
     if (value === null || value === undefined || value === '') return 'N/A';
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return 'N/A';
+    
     const converted = convertWeight(value);
     return `${converted.toFixed(1)} ${getWeightUnit()}`;
   };
 
   const formatHeight = (value) => {
     if (value === null || value === undefined || value === '') return 'N/A';
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return 'N/A';
+    
     const converted = convertHeight(value);
     return `${converted.toFixed(1)} ${getHeightUnit()}`;
+  };
+
+  const refreshPreferences = () => {
+    return loadPreferences();
   };
 
   const value = {
@@ -177,7 +214,8 @@ export const PreferencesProvider = ({ children }) => {
     getWeightUnit,
     getHeightUnit,
     formatWeight,
-    formatHeight
+    formatHeight,
+    refreshPreferences
   };
 
   return (

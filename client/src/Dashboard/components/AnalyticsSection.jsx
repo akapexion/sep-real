@@ -18,11 +18,11 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import ChartDataLabels from "chartjs-plugin-datalabels";
 import { Dumbbell33, Apple, TrendingUp, Loader2 } from "lucide-react";
+import { useLanguage } from '../../hooks/useLanguage';
 
 const API_BASE = "http://localhost:3000";
-const COLORS = ["#10b981", "#3b82f6", "#f59e0b"]; // green, blue, amber
+const COLORS = ["#10b981", "#3b82f6", "#f59e0b"];
 
 // Helper: group array by date string (YYYY‑MM‑DD)
 const groupByDate = (arr, dateKey, valueKey) => {
@@ -44,6 +44,7 @@ export default function AnalyticsSection() {
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?._id;
+  const { t, currentLang } = useLanguage(); // Get both t function and currentLang
 
   const fetchAll = useCallback(async () => {
     if (!userId) {
@@ -60,12 +61,12 @@ export default function AnalyticsSection() {
       setRawNutrition(n.data);
       setRawProgress(p.data);
     } catch (e) {
-      toast.error("Failed to load analytics");
+      toast.error(t('failedToLoadAnalytics'));
       console.error(e);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, t]);
 
   useEffect(() => {
     fetchAll();
@@ -116,11 +117,11 @@ export default function AnalyticsSection() {
       { protein: 0, carbs: 0, fat: 0 }
     );
     return [
-      { name: "Protein", value: Math.round(totals.protein) },
-      { name: "Carbs", value: Math.round(totals.carbs) },
-      { name: "Fat", value: Math.round(totals.fat) },
+      { name: t('protein'), value: Math.round(totals.protein) },
+      { name: t('carbs'), value: Math.round(totals.carbs) },
+      { name: t('fat'), value: Math.round(totals.fat) },
     ].filter((m) => m.value > 0);
-  }, [rawNutrition]);
+  }, [rawNutrition, t, currentLang]); // Add currentLang to dependencies
 
   /* -------------------------------------------------
      5. BODY‑WEIGHT TREND (line)
@@ -147,6 +148,30 @@ export default function AnalyticsSection() {
     margin: { top: 5, right: 30, left: 20, bottom: 5 },
   };
 
+  // Custom tooltip formatter
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div
+          className="p-3 rounded-lg shadow-lg border"
+          style={{
+            backgroundColor: "var(--bg-card)",
+            borderColor: "var(--border)",
+            color: "var(--text-primary)",
+          }}
+        >
+          <p className="font-medium">{`${t('date')}: ${label}`}</p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ color: entry.color }}>
+              {`${entry.name}: ${entry.value}`}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -155,24 +180,25 @@ export default function AnalyticsSection() {
       className="space-y-8"
     >
       {/* ---------- 1. Weight Lifted ---------- */}
-      <ChartCard title="Weight Lifted Over Time" icon={Dumbbell33}>
+      <ChartCard title={t('weightLiftedOverTime')} icon={Dumbbell33}>
         {weightLiftData.length ? (
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={weightLiftData} {...chartCommonProps}>
               <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" />
-              <XAxis dataKey="date" stroke="var(--text-muted)" tick={{ fontSize: 12 }} />
-              <YAxis stroke="var(--text-muted)" tick={{ fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                }}
-                labelStyle={{ color: "var(--text-primary)" }}
+              <XAxis 
+                dataKey="date" 
+                stroke="var(--text-muted)" 
+                tick={{ fontSize: 12 }} 
               />
+              <YAxis 
+                stroke="var(--text-muted)" 
+                tick={{ fontSize: 12 }} 
+              />
+              <Tooltip content={<CustomTooltip />} />
               <Line
                 type="monotone"
                 dataKey="value"
+                name={t('weightLifted')}
                 stroke="var(--accent)"
                 strokeWidth={3}
                 dot={{ fill: "var(--accent)", r: 5 }}
@@ -182,51 +208,60 @@ export default function AnalyticsSection() {
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <EmptyState>No weight‑lifting data yet</EmptyState>
+          <EmptyState>{t('noWeightLiftingData')}</EmptyState>
         )}
       </ChartCard>
 
       {/* ---------- 2. Workout Frequency ---------- */}
-      <ChartCard title="Workout Frequency (last 14 days)" icon={TrendingUp}>
+      <ChartCard title={t('workoutFrequency')} icon={TrendingUp}>
         {workoutFreq.length ? (
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={workoutFreq} {...chartCommonProps}>
               <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" />
-              <XAxis dataKey="date" stroke="var(--text-muted)" tick={{ fontSize: 12 }} />
-              <YAxis stroke="var(--text-muted)" tick={{ fontSize: 12 }} allowDecimals={false} />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                }}
+              <XAxis 
+                dataKey="date" 
+                stroke="var(--text-muted)" 
+                tick={{ fontSize: 12 }} 
               />
-              <Bar dataKey="count" fill="var(--accent)" radius={[6, 6, 0, 0]} />
+              <YAxis 
+                stroke="var(--text-muted)" 
+                tick={{ fontSize: 12 }} 
+                allowDecimals={false} 
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar 
+                dataKey="count" 
+                name={t('workouts')}
+                fill="var(--accent)" 
+                radius={[6, 6, 0, 0]} 
+              />
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <EmptyState>No workouts in the last 14 days</EmptyState>
+          <EmptyState>{t('noWorkoutsRecent')}</EmptyState>
         )}
       </ChartCard>
 
       {/* ---------- 3. Calorie Intake ---------- */}
-      <ChartCard title="Daily Calorie Intake (last 14 days)" icon={Apple}>
+      <ChartCard title={t('dailyCalorieIntake')} icon={Apple}>
         {calorieData.length ? (
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={calorieData} {...chartCommonProps}>
               <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" />
-              <XAxis dataKey="date" stroke="var(--text-muted)" tick={{ fontSize: 12 }} />
-              <YAxis stroke="var(--text-muted)" tick={{ fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                }}
+              <XAxis 
+                dataKey="date" 
+                stroke="var(--text-muted)" 
+                tick={{ fontSize: 12 }} 
               />
+              <YAxis 
+                stroke="var(--text-muted)" 
+                tick={{ fontSize: 12 }} 
+              />
+              <Tooltip content={<CustomTooltip />} />
               <Line
                 type="monotone"
                 dataKey="value"
+                name={t('calories')}
                 stroke="#f59e0b"
                 strokeWidth={3}
                 dot={{ fill: "#f59e0b", r: 5 }}
@@ -236,12 +271,12 @@ export default function AnalyticsSection() {
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <EmptyState>No nutrition logs yet</EmptyState>
+          <EmptyState>{t('noNutritionLogs')}</EmptyState>
         )}
       </ChartCard>
 
       {/* ---------- 4. Macro Split ---------- */}
-      <ChartCard title="Macronutrient Distribution" icon={Apple}>
+      <ChartCard title={t('macronutrientDistribution')} icon={Apple}>
         {macroTotals.length ? (
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -255,53 +290,48 @@ export default function AnalyticsSection() {
                 dataKey="value"
                 labelLine={false}
                 label={(entry) => `${entry.name}: ${entry.value}g`}
-                plugins={[ChartDataLabels]}
-                datalabels={{
-                  color: "#fff",
-                  font: { weight: "bold" },
-                  formatter: (value, ctx) => {
-                    const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                    const percent = ((value / total) * 100).toFixed(0);
-                    return `${percent}%`;
-                  },
-                }}
               >
                 {macroTotals.map((_, i) => (
                   <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip
+              <Tooltip 
+                formatter={(value, name) => [`${value}g`, name]}
                 contentStyle={{
                   background: "var(--bg-card)",
                   border: "1px solid var(--border)",
                   borderRadius: "8px",
+                  color: "var(--text-primary)",
                 }}
               />
+              <Legend />
             </PieChart>
           </ResponsiveContainer>
         ) : (
-          <EmptyState>No macro data yet</EmptyState>
+          <EmptyState>{t('noMacroData')}</EmptyState>
         )}
       </ChartCard>
 
       {/* ---------- 5. Body Weight Trend ---------- */}
-      <ChartCard title="Body‑Weight Progress" icon={TrendingUp}>
+      <ChartCard title={t('bodyWeightProgress')} icon={TrendingUp}>
         {bodyWeightData.length ? (
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={bodyWeightData} {...chartCommonProps}>
               <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" />
-              <XAxis dataKey="date" stroke="var(--text-muted)" tick={{ fontSize: 12 }} />
-              <YAxis stroke="var(--text-muted)" tick={{ fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                }}
+              <XAxis 
+                dataKey="date" 
+                stroke="var(--text-muted)" 
+                tick={{ fontSize: 12 }} 
               />
+              <YAxis 
+                stroke="var(--text-muted)" 
+                tick={{ fontSize: 12 }} 
+              />
+              <Tooltip content={<CustomTooltip />} />
               <Line
                 type="monotone"
                 dataKey="weight"
+                name={t('weight')}
                 stroke="#10b981"
                 strokeWidth={3}
                 dot={{ fill: "#10b981", r: 5 }}
@@ -311,7 +341,7 @@ export default function AnalyticsSection() {
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <EmptyState>No weight entries yet</EmptyState>
+          <EmptyState>{t('noWeightEntries')}</EmptyState>
         )}
       </ChartCard>
     </motion.div>

@@ -109,7 +109,6 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login Loginuser={loginUser} />} />
 
-        {/* ✅ Redirect root ("/") dynamically */}
         <Route
           path="/"
           element={
@@ -117,7 +116,6 @@ const App = () => {
           }
         />
 
-        {/* Protected Dashboard Routes */}
         <Route
           element={<ProtectedDashboard />}
         >
@@ -134,7 +132,6 @@ const App = () => {
           <Route path="/dashboard/reminders" element={<RemindersPage />} />
         </Route>
 
-        {/* Catch-all route (optional) */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
