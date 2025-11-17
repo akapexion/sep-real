@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { User, Mail, Lock, Phone, Calendar, Dumbbell, Check, ArrowRight } from "lucide-react";
-import Navbar from "../components/Navbar";
+
 import Footer from "../components/Footer";
 
 const JoinPage = () => {
@@ -92,7 +92,7 @@ const JoinPage = () => {
 
   return (
     <div className="min-h-screen bg-black text-white font-[Michroma]">
-      <Navbar />
+      
       
       {/* Hero Section */}
       <section className="relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 overflow-hidden">

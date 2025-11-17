@@ -14,6 +14,7 @@ const Notification = require("./models/notification");
 const Nutrition = require("./models/nutrition");
 const goals_model = require("./models/goals");
 const Reminder = require("./models/reminder");
+const Feedback_model = require("./models/feedback")
 
 const app = express();
 
@@ -714,6 +715,41 @@ app.delete("/reminders/:id", async (req, res) => {
     res.status(500).send({ message: "Server error" });
   }
 });
+
+app.post("/feedback", async (req, res) => {
+  try {
+    const { userId, name, email, message, rating } = req.body;
+
+    console.log("Received body:", req.body); // <-- IMPORTANT
+
+    const newGoal = new Feedback_model({
+      userId,
+      name,
+      email,
+      message,
+      rating
+    });
+
+    await newGoal.save();  // <-- FIXED
+
+    res.status(201).send({ message: "Feedback added", goal: newGoal });
+
+  } catch (error) {
+    console.log("SERVER ERROR:", error);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+app.get("/feedback", async (req, res) => {
+  try {
+    const feedback = await Feedback_model.find().sort({ createdAt: -1 }); // latest first
+    res.status(200).send({ feedback });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,8 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Dumbbell, Target, Users, Award, Heart, Zap } from "lucide-react";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+
 
 const AboutPage = () => {
   const stats = [
@@ -32,7 +31,7 @@ const AboutPage = () => {
 
   return (
     <div className="min-h-screen bg-black text-white font-[Michroma]">
-      <Navbar />
+     
       
       {/* Hero Section */}
       <section className="relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 overflow-hidden">
@@ -244,7 +243,7 @@ const AboutPage = () => {
         </div>
       </section>
 
-      <Footer />
+
     </div>
   );
 };

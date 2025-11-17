@@ -17,6 +17,10 @@ import Notification from './Dashboard/pages/Notification';
 import RemindersPage from './Dashboard/pages/RemindersPage';
 import Home from './pages/Home';
 import AppLayout from './AppLayout';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import JoinPage from './pages/JoinPage';
+import FeedbackForm from './Dashboard/components/FeedbackForm';
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -76,6 +80,9 @@ const App = () => {
         <Routes>
           <Route path="/" element={<AppLayout />}>
             <Route path="/" element={<Home />} />
+           <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/join" element={<JoinPage />} />
           </Route>
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login Loginuser={loginUser} />} />
@@ -101,6 +108,8 @@ const App = () => {
             <Route path="/dashboard/profile" element={<ProfilePage />} />
             <Route path="/dashboard/notifications" element={<Notification />} />
             <Route path="/dashboard/reminders" element={<RemindersPage />} />
+                  <Route path="/dashboard/feedbacks" element={<FeedbackForm />} />
+            
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

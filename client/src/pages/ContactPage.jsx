@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, MapPin, Phone, Send, MessageSquare, Clock } from "lucide-react";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+
+
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -56,7 +56,7 @@ const ContactPage = () => {
 
   return (
     <div className="min-h-screen bg-black text-white font-[Michroma]">
-      <Navbar />
+    
       
       {/* Hero Section */}
       <section className="relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 overflow-hidden">
@@ -259,7 +259,7 @@ const ContactPage = () => {
         </div>
       </section>
 
-      <Footer />
+
     </div>
   );
 };
