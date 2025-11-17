@@ -16,7 +16,6 @@ const SettingSection = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  // Initialize local preferences when context loads
   useEffect(() => {
     if (preferences) {
       setLocalPrefs(JSON.parse(JSON.stringify(preferences)));
@@ -101,7 +100,6 @@ const SettingSection = () => {
         borderColor: 'var(--border)'
       }}
     >
-      {/* Header */}
       <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-full" style={{ backgroundColor: 'var(--accent)/20' }}>
@@ -119,7 +117,6 @@ const SettingSection = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 space-y-8">
-        {/* Notification Settings */}
         <div className="setting-group">
           <div className="flex items-center gap-2 mb-4">
             <Bell className="w-5 h-5" style={{ color: 'var(--accent)' }} />
@@ -160,7 +157,6 @@ const SettingSection = () => {
           </div>
         </div>
 
-        {/* Units & Measurement */}
         <div className="setting-group">
           <h4 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
             {t('units')}
@@ -188,7 +184,6 @@ const SettingSection = () => {
           </div>
         </div>
 
-        {/* Appearance */}
         <div className="setting-group">
           <h4 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
             {t('appearance')}
@@ -240,7 +235,6 @@ const SettingSection = () => {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t" style={{ borderColor: 'var(--border)' }}>
           <button 
             type="submit" 
@@ -281,7 +275,6 @@ const SettingSection = () => {
         </div>
       </form>
 
-      {/* Danger Zone */}
       <div className="p-6 border-t" style={{ borderColor: 'var(--border)' }}>
         <h4 className="text-lg font-semibold mb-4 text-red-500 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5" />

@@ -15,7 +15,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Download, FileText, Trash2, Edit2 } from "lucide-react";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
-import { useLanguage } from '../pages/UseLanguage'; // Import the language hook
+import { useLanguage } from '../pages/UseLanguage';
 import { usePreferencesContext } from "../pages/PreferencesContext";
 
 ChartJS.register(
@@ -31,7 +31,7 @@ ChartJS.register(
 const ProgressSummarySection = ({ progressEntries = [], onProgressUpdate }) => {
   const printRef = useRef();
   const { getWeightUnit, getHeightUnit } = usePreferencesContext();
-  const { t } = useLanguage(); // Use the language hook
+  const { t } = useLanguage();
 
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});

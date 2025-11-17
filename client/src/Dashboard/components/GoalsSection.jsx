@@ -161,25 +161,21 @@ setError("")
     if (target === 0) return 0;
 
     if (isLossGoal(goalType)) {
-      // For weight loss: progress increases as current weight decreases
-      // Example: Start 80kg, Target 70kg -> Progress based on how close to 70kg
-      const startWeight = Math.max(current, target); // Assume starting from higher weight
+      const startWeight = Math.max(current, target);
       const totalToLose = startWeight - target;
       const alreadyLost = startWeight - current;
       
-      if (totalToLose <= 0) return 100; // Already at or below target
+      if (totalToLose <= 0) return 100;
       const progress = (alreadyLost / totalToLose) * 100;
-      return Math.min(Math.max(progress, 0), 100); // Clamp between 0-100
+      return Math.min(Math.max(progress, 0), 100);
     } else {
-      // For gain goals: progress increases as current increases toward target
-      // Example: Start 50kg, Target 60kg -> Progress based on how close to 60kg
-      const startValue = Math.min(current, target); // Assume starting from lower value
+      const startValue = Math.min(current, target);
       const totalToGain = target - startValue;
       const alreadyGained = current - startValue;
       
-      if (totalToGain <= 0) return 100; // Already at or above target
+      if (totalToGain <= 0) return 100;
       const progress = (alreadyGained / totalToGain) * 100;
-      return Math.min(Math.max(progress, 0), 100); // Clamp between 0-100
+      return Math.min(Math.max(progress, 0), 100);
     }
   };
 

@@ -5,7 +5,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { Trash2, Edit2, Plus, Loader2, Download, FileText } from "lucide-react";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
 import {z} from 'zod' 
-import { useLanguage } from '../pages/UseLanguage'; // Import the language hook
+import { useLanguage } from '../pages/UseLanguage';
 
 const API_BASE = "http://localhost:3000";
 
@@ -59,7 +59,6 @@ export default function NutritionLogsSection() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?._id;
 
-  // Use the language hook
   const { t } = useLanguage();
 
   const calcTotals = (items) =>
@@ -191,7 +190,6 @@ setError("")
     setFats(String(first.fats));
   };
 
-  /* ------------------- EXPORT PDF ------------------- */
   const exportPDF = () => {
     const content = printRef.current;
     const win = window.open("", "", "width=900,height=650");
@@ -211,7 +209,6 @@ setError("")
     setTimeout(() => win.print(), 500);
   };
 
-  /* ------------------- EXPORT CSV ------------------- */
   const exportCSV = () => {
     const header = [
       t('meal'), t('food'), t('quantity'), 
@@ -274,9 +271,7 @@ setError("")
         </div>
       </div>
 
-      {/* FORM */}
-{/* FORM */}
-<form onSubmit={saveLog} className="grid md:grid-cols-2 gap-4 mb-6 " noValidate>
+      <form onSubmit={saveLog} className="grid md:grid-cols-2 gap-4 mb-6 " noValidate>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
     {t('mealType')}
@@ -451,7 +446,6 @@ setError("")
   </div>
 </form>
 
-      {/* TABLE SECTION */}
       <div ref={printRef}>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y" style={{ borderColor: "var(--border)" }}>
@@ -519,7 +513,6 @@ setError("")
           </table>
         </div>
 
-        {/* TOTALS */}
         {logs.length > 0 && (
           <div className="mt-6 p-4 rounded bg-[var(--bg-secondary)]">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">

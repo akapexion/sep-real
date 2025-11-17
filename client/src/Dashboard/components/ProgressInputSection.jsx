@@ -25,11 +25,11 @@ const progSchema = z.object({
     message: "Please enter detail"
   }),
 })
-import { useLanguage } from '../pages/UseLanguage'; // Import the language hook
+import { useLanguage } from '../pages/UseLanguage';
 
 const ProgressInputSection = ({ onProgressAdded }) => {
   const { preferences, getWeightUnit, getHeightUnit } = usePreferencesContext();
-  const { t } = useLanguage(); // Use the language hook
+  const { t } = useLanguage();
   const API_BASE_URL = 'http://localhost:3000';
   const [form, setForm] = useState({
     date: "",

@@ -8,9 +8,6 @@ import { Trash2, Edit2, Plus, Loader2 } from "lucide-react";
 import { usePreferencesContext } from "../pages/PreferencesContext";
 import {z} from 'zod'
 
-
-
-
 const workoutSchema = z.object({
   exerciseName : z.any().refine((v) => v !== "" && v != null, {
     message: "Please enter detail"

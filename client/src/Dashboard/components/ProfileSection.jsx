@@ -57,17 +57,11 @@ const ProfileSection = () => {
     fetchProfile();
   }, [userId, t]);
 
-  // ---------------------------
-  // Handle Input Change
-  // ---------------------------
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ---------------------------
-  // Handle Image Preview
-  // ---------------------------
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -76,9 +70,6 @@ const ProfileSection = () => {
     }
   };
 
-  // ---------------------------
-  // Submit Form (Save Profile)
-  // ---------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -102,9 +93,6 @@ const ProfileSection = () => {
         }
     setError("")
 
-
-
-
     const formData = new FormData();
     formData.append('userId', userId);
     formData.append('name', profile.name);
@@ -119,31 +107,26 @@ const ProfileSection = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      // Update local state with response
       setProfile(res.data);
 
-      // Update preview with new image
       const newImageURL = res.data.image
         ? `${API_BASE_URL}/uploads/${res.data.image}`
         : null;
       setPreview(newImageURL);
 
-      // Update localStorage correctly
       const updatedUser = {
         ...user,
         name: res.data.name,
         email: res.data.email,
-        image: res.data.image, // Use 'image' field consistently
+        image: res.data.image,
       };
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      // Trigger event so NAVBAR updates without refresh
       window.dispatchEvent(new CustomEvent("profile-updated", {
         detail: updatedUser
       }));
 
-      // Clear selected file after successful upload
       setSelectedFile(null);
 
       toast.success(t('savedSuccessfully'));
@@ -178,7 +161,6 @@ const ProfileSection = () => {
         {t('profile')}
       </h3>
 
-      {/* Profile Header */}
       <div className="flex flex-col items-center space-y-4 mb-8">
         <div className="relative">
           {preview ? (
@@ -206,7 +188,6 @@ const ProfileSection = () => {
         </div>
       </div>
 
-      {/* Profile Form */}
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
         <div>
           <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>

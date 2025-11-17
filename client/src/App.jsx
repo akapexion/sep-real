@@ -15,7 +15,6 @@ import SettingsPage from './Dashboard/pages/SettingsPage';
 import ProfilePage from './Dashboard/pages/ProfilePage';
 import Notification from './Dashboard/pages/Notification';
 import RemindersPage from './Dashboard/pages/RemindersPage';
-import toast from 'react-hot-toast';
 import Home from './pages/Home';
 import AppLayout from './AppLayout';
 
@@ -23,61 +22,34 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-
   const updateUser = (newUser) => {
-  setUser(newUser);
-  localStorage.setItem("user", JSON.stringify(newUser));
-};
-
-  const SESSION_TIMEOUT = 30 * 60 * 1000; 
+    setUser(newUser);
+    localStorage.setItem("user", JSON.stringify(newUser));
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
-    const storedLoginTime = localStorage.getItem('loginTime');
-
-    if (storedUser && storedLoginTime) {
+    
+    if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        const timeElapsed = Date.now() - parseInt(storedLoginTime);
-
-        if (timeElapsed < SESSION_TIMEOUT) {
-          setUser(parsedUser);
-          const remainingTime = SESSION_TIMEOUT - timeElapsed;
-          startSessionTimeout(remainingTime);
-        } else {
-          handleLogout();
-        }
+        setUser(parsedUser);
       } catch (e) {
         console.error('Failed to parse user from localStorage', e);
-        handleLogout();
+        localStorage.removeItem('user');
       }
     }
     setLoading(false);
   }, []);
 
   const loginUser = (data) => {
-    const loginTimestamp = Date.now().toString();
     localStorage.setItem('user', JSON.stringify(data));
-    localStorage.setItem('loginTime', loginTimestamp);
     setUser(data);
-    startSessionTimeout(SESSION_TIMEOUT);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
-    localStorage.removeItem('loginTime');
-    localStorage.removeItem('userId');
     setUser(null);
-  };
-
-  const startSessionTimeout = (timeoutDuration) => {
-    if (window.sessionTimeout) {
-      clearTimeout(window.sessionTimeout);
-    }
-    window.sessionTimeout = setTimeout(() => {
-      handleLogout();
-      toast.error('Session expired. You have been logged out for security.');
-    }, timeoutDuration);
   };
 
   if (loading) {
@@ -100,41 +72,40 @@ const App = () => {
 
   return (
     <PreferencesProvider>
-    <BrowserRouter>
-      <Routes>
-        {/* Authentication */}
-        <Route path="/" element={<AppLayout />}>
-          <Route path="/" element={<Home />} />
-        </Route>
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login Loginuser={loginUser} />} />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<AppLayout />}>
+            <Route path="/" element={<Home />} />
+          </Route>
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login Loginuser={loginUser} />} />
 
-        <Route
-          path="/"
-          element={
-            user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
-          }
-        />
+          <Route
+            path="/"
+            element={
+              user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
+            }
+          />
 
-        <Route
-          element={<ProtectedDashboard />}
-        >
-          <Route path="/dashboard" element={<HomePage />} />
-          <Route path="/dashboard/workouts" element={<WorkoutsPage />} />
-          <Route path="/dashboard/nutrition" element={<NutritionPage />} />
-          <Route path="/dashboard/progress" element={<ProgressPage />} />
-          <Route path="/dashboard/goals" element={<GoalsPage />} />
-          <Route path="/dashboard/schedule" element={<SchedulePage />} />
-          <Route path="/dashboard/analytics" element={<AnalyticsPage />} />
-          <Route path="/dashboard/settings" element={<SettingsPage />} />
-          <Route path="/dashboard/profile" element={<ProfilePage />} />
-          <Route path="/dashboard/notifications" element={<Notification />} />
-          <Route path="/dashboard/reminders" element={<RemindersPage />} />
-        </Route>
+          <Route
+            element={<ProtectedDashboard />}
+          >
+            <Route path="/dashboard" element={<HomePage />} />
+            <Route path="/dashboard/workouts" element={<WorkoutsPage />} />
+            <Route path="/dashboard/nutrition" element={<NutritionPage />} />
+            <Route path="/dashboard/progress" element={<ProgressPage />} />
+            <Route path="/dashboard/goals" element={<GoalsPage />} />
+            <Route path="/dashboard/schedule" element={<SchedulePage />} />
+            <Route path="/dashboard/analytics" element={<AnalyticsPage />} />
+            <Route path="/dashboard/settings" element={<SettingsPage />} />
+            <Route path="/dashboard/profile" element={<ProfilePage />} />
+            <Route path="/dashboard/notifications" element={<Notification />} />
+            <Route path="/dashboard/reminders" element={<RemindersPage />} />
+          </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
     </PreferencesProvider>
   );
 };

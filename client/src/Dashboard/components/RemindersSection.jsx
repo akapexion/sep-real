@@ -43,14 +43,13 @@ export default function RemindersSection() {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [type, setType] = useState("workout");
-  const [category, setCategory] = useState("reminder"); // "reminder" or "alert"
-  const [priority, setPriority] = useState("medium"); // for alerts
+  const [category, setCategory] = useState("reminder");
+  const [priority, setPriority] = useState("medium");
   const [notes, setNotes] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?._id;
 
-  // Use the language hook
   const { t } = useLanguage();
 
   const resetForm = () => {
@@ -181,13 +180,11 @@ setError("")
     });
   };
 
-  // Filter reminders based on active tab
   const filteredReminders = reminders.filter(reminder => {
     if (activeTab === "all") return true;
     return reminder.category === activeTab;
   });
 
-  // Get icon based on type and category
   const getIcon = (item) => {
     if (item.category === "alert") {
       return <AlertTriangle className="w-4 h-4" />;
@@ -202,7 +199,6 @@ setError("")
     }
   };
 
-  // Get priority color
   const getPriorityColor = (priority) => {
     switch (priority) {
       case "high": return "text-red-500 bg-red-500/20 border-red-500/30";
@@ -212,7 +208,6 @@ setError("")
     }
   };
 
-  // Get category color and style
   const getCategoryStyle = (category) => {
     return category === "alert" 
       ? "text-red-500 bg-red-500/20 border-red-500/30"
@@ -343,7 +338,6 @@ setError("")
 
       <Toaster />
       
-      {/* Category Tabs */}
       <div className="flex space-x-1 mb-6 p-1 rounded-lg" style={{backgroundColor:"var(--bg-secondary)"}}>
         {["all", "reminders", "alerts"].map(tab => (
           <button
@@ -475,7 +469,6 @@ setError("")
         </div>
       </form>
 
-      {/* Reminders/Alerts List */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y" style={{borderColor:"var(--border)"}}>
           <thead style={{background:"var(--bg-secondary)"}}>

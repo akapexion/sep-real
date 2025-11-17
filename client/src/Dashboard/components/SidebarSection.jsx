@@ -32,14 +32,13 @@ const SidebarSection = ({ user, logout }) => {
       initial={{ width: 260 }}
       animate={{ width: 260 }}
       transition={{ type: 'tween', duration: 0.2 }}
-      className="sidebar flex-shrink-0 flex flex-col min-h-screen overflow-hidden"  // Changed to min-h-screen
+      className="sidebar flex-shrink-0 flex flex-col min-h-screen overflow-hidden"
       style={{
         width: 260,
         backgroundColor: 'var(--bg-card)',
         borderRight: '1px solid var(--border)',
       }}
     >
-      {/* ---- Logo Section ---- */}
       <div className="p-5 flex items-center space-x-3">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-black"
@@ -54,7 +53,6 @@ const SidebarSection = ({ user, logout }) => {
         </div>
       </div>
 
-      {/* ---- Menu Section ---- */}
       <nav className="px-3 space-y-1 flex-1 overflow-y-auto">
         {menu.map(({ Icon, label, path }) => {
           const active = location.pathname === path;
@@ -82,7 +80,6 @@ const SidebarSection = ({ user, logout }) => {
         })}
       </nav>
 
-      {/* ---- Logout Section ---- */}
       <div className="p-4 border-t" style={{ borderColor: 'var(--border)' }}>
         <motion.button
           whileHover={{ scale: 1.05 }}
