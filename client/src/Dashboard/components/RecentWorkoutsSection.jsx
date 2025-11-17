@@ -6,6 +6,37 @@ import toast, { Toaster } from "react-hot-toast";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
 import { Trash2, Edit2, Plus, Loader2 } from "lucide-react";
 import { usePreferencesContext } from "../pages/PreferencesContext";
+import {z} from 'zod'
+
+
+
+
+const workoutSchema = z.object({
+  exerciseName : z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  sets:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  reps:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail hjhjh"
+  }),
+  weights:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+notes:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+tags:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+date:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+category:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+})
 import { useLanguage } from "../pages/UseLanguage";
 
 const RecentWorkoutsSection = () => {
@@ -19,6 +50,7 @@ const RecentWorkoutsSection = () => {
   const [category, setCategory] = useState("Other");
   const [tags, setTags] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [error, setError] = useState("");
 
   const [workouts, setWorkouts] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -50,6 +82,24 @@ const RecentWorkoutsSection = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+       const result = workoutSchema.safeParse({exerciseName,reps,sets,weights,notes,tags,date,category})
+    if(!result.success){
+      const formattedErrors = result.error.format();
+
+      setError({
+
+        exerciseName:formattedErrors.exerciseName?._errors[0] || "",
+        tags: formattedErrors.tags?._errors[0] || "",
+        reps: formattedErrors.reps?._errors[0] || "",
+        sets: formattedErrors.sets?._errors[0] || "",
+        date: formattedErrors.date?._errors[0] || "",
+        category: formattedErrors.category?._errors[0] || "",
+        notes: formattedErrors.notes?._errors[0] || "",
+        weights: formattedErrors.weights?._errors[0] || "",
+      })
+      return;
+    }
+setError("")
 
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userId = user._id;
@@ -135,7 +185,8 @@ const RecentWorkoutsSection = () => {
         {editingId ? t('editWorkout') : t('addWorkout')}
       </h3>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="" noValidate>
+        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>Exercise Name</label>
         <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
           {t('exerciseName')}
         </label>
@@ -147,7 +198,7 @@ const RecentWorkoutsSection = () => {
           className="w-full px-4 py-2 rounded border"
           style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
         />
-
+<p className="mb-4 text-xs" style={{ color: "red" }}>{error.exerciseName}</p>
         <div className="grid grid-cols-3 gap-3">
           <div>
             <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
@@ -162,6 +213,7 @@ const RecentWorkoutsSection = () => {
               className="w-full px-4 py-2 rounded border"
               style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
             />
+             <p className="mb-4 text-xs" style={{ color: "red" }}>{error.sets}</p>
           </div>
 
           <div>
@@ -177,6 +229,7 @@ const RecentWorkoutsSection = () => {
               className="w-full px-4 py-2 rounded border"
               style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
             />
+              <p className="mb-4 text-xs" style={{ color: "red" }}>{error.reps}</p>
           </div>
 
           <div>
@@ -191,6 +244,7 @@ const RecentWorkoutsSection = () => {
               className="w-full px-4 py-2 rounded border"
               style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
             />
+                      <p className="mb-4 text-xs" style={{ color: "red" }}>{error.weights}</p>
           </div>
         </div>
 
@@ -204,6 +258,7 @@ const RecentWorkoutsSection = () => {
           className="w-full px-4 py-2 rounded border"
           style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
         />
+        <p className="mb-4 text-xs" style={{ color: "red" }}>{error.notes}</p>
 
         <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
           {t('category')}
@@ -218,6 +273,7 @@ const RecentWorkoutsSection = () => {
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
+        <p className="mb-4 text-xs" style={{ color: "red" }}>{error.category}</p>
 
         <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
           {t('tags')}
@@ -229,6 +285,7 @@ const RecentWorkoutsSection = () => {
           className="w-full px-4 py-2 rounded border"
           style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
         />
+        <p className="mb-4 text-xs" style={{ color: "red" }}>{error.tags}</p>
 
         <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
           {t('date')}
@@ -241,6 +298,7 @@ const RecentWorkoutsSection = () => {
           className="w-full px-4 py-2 rounded border"
           style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
         />
+             <p className="mb-4 text-xs" style={{ color: "red" }}>{error.date}</p>
 
         <button
           type="submit"

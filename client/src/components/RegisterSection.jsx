@@ -2,11 +2,29 @@ import React, { useState } from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
+import {z} from 'zod'
 
 const THEME = {
   accent: "#FDC700",
   bg: "#000000",
 };
+const userSchema = z.object({
+  name: z.string().min(3, "Username must be at least 3 characters").refine((val)=> /^[A-Z]/.test(val),{
+    message:"First character must be uppercase"
+  } ),
+  email:z.email("Invalid email format"),
+  password:z.string().min(8,"Password must be 8 characters").refine(
+      (val) => /[A-Z]/.test(val),
+      { message: "Password must contain at least one uppercase letter" }
+    )
+    .refine(
+      (val) => /[!@#$%^&*(),.?":{}|<>]/.test(val),
+      { message: "Password must contain at least one special character" }
+    ),
+    
+    profilePic:z.any().refine((file) => file != null, { message: "Image is required" })
+
+});
 
 export default function RegisterSectionFitness() {
   const navigate = useNavigate();
@@ -17,6 +35,7 @@ export default function RegisterSectionFitness() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [profilePic, setProfilePic] = useState(null);
+  const [error, setError] = useState("");
 
   const onPick = () => {
     document.getElementById("fitness-file")?.click();
@@ -38,11 +57,28 @@ export default function RegisterSectionFitness() {
 
   const registerUser = async (e) => {
     e.preventDefault();
+    const result = userSchema.safeParse({ name , email,password,profilePic});
+
+  if (!result.success) {
+  const formattedErrors = result.error.format();
+  
+  // Set errors individually
+  setError({
+    name: formattedErrors.name?._errors[0] || "",
+    email: formattedErrors.email?._errors[0] || "",
+     password: formattedErrors.password?._errors[0] || "",
+     profilePic: formattedErrors.profilePic?._errors[0] || "",
+  });
+
+  return; // function exit
+}
+setError("")
 
     if (password !== confirm) {
       toast.error("Passwords do not match!");
       return;
     }
+
 
     const formData = new FormData();
     formData.append("name", name);
@@ -143,6 +179,7 @@ export default function RegisterSectionFitness() {
                 }
               }}
             />
+             <p className="mb-4 text-xs" style={{ color: "red" }}>{error.profilePic}</p>
           </div>
         </div>
 
@@ -153,13 +190,14 @@ export default function RegisterSectionFitness() {
           >
             Join the Team
           </h3>
-          <form onSubmit={registerUser} className="space-y-3">
+          <form onSubmit={registerUser} className="" noValidate>
             <input
               placeholder="Full name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-black/60 border border-[#FDC700]/10 placeholder-[#aaaaaa] text-white outline-none"
             />
+              <p className="mb-4 text-xs" style={{ color: "red" }}>{error.name}</p>
             <input
               placeholder="Email"
               type="email"
@@ -167,6 +205,7 @@ export default function RegisterSectionFitness() {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-black/60 border border-[#FDC700]/10 placeholder-[#aaaaaa] text-white outline-none"
             />
+               <p className="mb-4 text-xs" style={{ color: "red" }}>{error.email}</p>
             <input
               placeholder="Create password"
               type="password"
@@ -174,6 +213,7 @@ export default function RegisterSectionFitness() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-black/60 border border-[#FDC700]/10 placeholder-[#aaaaaa] text-white outline-none"
             />
+             <p className="mb-4 text-xs" style={{ color: "red" }}>{error.password}</p>
             <input
               placeholder="Confirm password"
               type="password"

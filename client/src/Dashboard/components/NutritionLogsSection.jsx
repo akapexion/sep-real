@@ -4,9 +4,39 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { Trash2, Edit2, Plus, Loader2, Download, FileText } from "lucide-react";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
+import {z} from 'zod' 
 import { useLanguage } from '../pages/UseLanguage'; // Import the language hook
 
 const API_BASE = "http://localhost:3000";
+
+const nutrySchema =z.object({
+  mealType:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  
+  foodName:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  quantity:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  calories:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  proteins:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  carbs:z.any().refine((v) => v !== "" && v != null, {
+      message: "Please enter detail"
+    }),
+  fats:z.any().refine((v) => v !== "" && v != null, {
+      message: "Please enter detail"
+    }),
+  date:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+
+})
 
 export default function NutritionLogsSection() {
   const printRef = useRef();
@@ -15,6 +45,7 @@ export default function NutritionLogsSection() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [error,setError] = useState("");
 
   const [mealType, setMealType] = useState("Breakfast");
   const [foodName, setFoodName] = useState("");
@@ -75,6 +106,27 @@ export default function NutritionLogsSection() {
 
   const saveLog = async (e) => {
     e.preventDefault();
+    if (!userId) return toast.error("You must be logged in");
+
+
+        const result = nutrySchema.safeParse({mealType,quantity,foodName,calories,proteins,carbs,fats,date})
+    if(!result.success){
+      const formattedErrors = result.error.format();
+
+      setError({
+
+        mealType:formattedErrors.mealType?._errors[0] || "",
+        foodName: formattedErrors.foodName?._errors[0] || "",
+        quantity: formattedErrors.quantity?._errors[0] || "",
+        carbs: formattedErrors.carbs?._errors[0] || "",
+        date: formattedErrors.date?._errors[0] || "",
+        calories: formattedErrors.calories?._errors[0] || "",
+        fats: formattedErrors.fats?._errors[0] || "",
+        proteins: formattedErrors.proteins?._errors[0] || "",
+      })
+      return;
+    }
+setError("")
     if (!userId) return toast.error(t('userNotLoggedIn'));
 
     const foodItem = {
@@ -222,7 +274,9 @@ export default function NutritionLogsSection() {
         </div>
       </div>
 
-<form onSubmit={saveLog} className="grid md:grid-cols-2 gap-4 mb-6">
+      {/* FORM */}
+{/* FORM */}
+<form onSubmit={saveLog} className="grid md:grid-cols-2 gap-4 mb-6 " noValidate>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
     {t('mealType')}
@@ -235,12 +289,13 @@ export default function NutritionLogsSection() {
         color: "var(--text-primary)",
         border: "1px solid var(--border)",
       }}
-      required
+
     >
       {["Breakfast", "Lunch", "Dinner", "Snacks", "Other"].map((meal) => (
         <option key={meal} value={meal}>{t(meal)}</option>
       ))}
     </select>
+    <p className="mb-4 text-xs" style={{ color: "red" }}>{error.mealType}</p>
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
@@ -257,6 +312,7 @@ export default function NutritionLogsSection() {
       }}
       required
     />
+     <p className="mb-4 text-xs" style={{ color: "red" }}>{error.date}</p>
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
@@ -273,6 +329,7 @@ export default function NutritionLogsSection() {
       }}
       required
     />
+     <p className=" text-xs" style={{ color: "red" }}>{error.foodName}</p>
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
@@ -289,6 +346,7 @@ export default function NutritionLogsSection() {
       }}
       required
     />
+     <p className=" text-xs" style={{ color: "red" }}>{error.quantity}</p>
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
@@ -306,6 +364,7 @@ export default function NutritionLogsSection() {
       }}
       required
     />
+     <p className=" text-xs" style={{ color: "red" }}>{error.calories}</p>
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
@@ -323,6 +382,7 @@ export default function NutritionLogsSection() {
       }}
       required
     />
+     <p className=" text-xs" style={{ color: "red" }}>{error.proteins}</p>
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
@@ -340,6 +400,7 @@ export default function NutritionLogsSection() {
       }}
       required
     />
+     <p className=" text-xs" style={{ color: "red" }}>{error.carbs}</p>
   </label>
 
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
@@ -357,6 +418,7 @@ export default function NutritionLogsSection() {
       }}
       required
     />
+     <p className=" text-xs" style={{ color: "red" }}>{error.fats}</p>
   </label>
 
   <div className="md:col-span-2 flex gap-2">

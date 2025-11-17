@@ -8,16 +8,36 @@ import {
   Clock, AlertTriangle, Calendar, Utensils, Dumbbell, Target 
 } from "lucide-react";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
+import {z} from 'zod'
 import { useLanguage } from '../pages/UseLanguage';
 
 const API_BASE = "http://localhost:3000";   
+
+const reminderSchema=z.object({
+  category:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  type:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  time:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  date:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  title:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+})
 
 export default function RemindersSection() {
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [activeTab, setActiveTab] = useState("all"); // "all", "reminders", "alerts"
+  const [activeTab, setActiveTab] = useState("all"); 
+  const [error,setError] = useState("");
 
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
@@ -52,6 +72,23 @@ export default function RemindersSection() {
 
   const save = async (e) => {
     e.preventDefault();
+   
+    const result = reminderSchema.safeParse({title,date,time,category,type})
+    if(!result.success){
+      const formattedErrors = result.error.format();
+
+      setError({
+
+        title:formattedErrors.title?._errors[0] || "",
+        date: formattedErrors.date?._errors[0] || "",
+        time: formattedErrors.time?._errors[0] || "",
+        category: formattedErrors.category?._errors[0] || "",
+        type: formattedErrors.type?._errors[0] || "",
+       
+      })
+      return;
+    }
+setError("")
     if (!title || !date || !time) return toast.error(t('fillRequiredFields'));
 
     const fullDateTime = `${date}T${time}:00`; 
@@ -333,50 +370,53 @@ export default function RemindersSection() {
         ))}
       </div>
       
-      {/* Reminder/Alert Form */}
-      <form onSubmit={save} className="grid md:grid-cols-2 gap-3 mb-6">
-        <input 
+      <form onSubmit={save} className="grid md:grid-cols-2 gap-3 mb-6" noValidate>
+       <div> <input 
           placeholder={`${t('title')} *`}
           value={title} 
           onChange={e=>setTitle(e.target.value)}
-          className="p-2 rounded" 
+          className="p-2 rounded w-full" 
           style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}} 
           required
         />
-        
-        <select 
+        <p className="mb-4 text-xs" style={{ color: "red" }}>{error.title}</p></div>
+      <div>
+          <select 
           value={category} 
           onChange={e=>setCategory(e.target.value)}
-          className="p-2 rounded" 
+          className="p-2 rounded w-full" 
           style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}}
         >
           <option value="reminder">📅 {t('reminder')}</option>
           <option value="alert">🚨 {t('alert')}</option>
         </select>
-        
-        <input 
+        <p className="mb-4 text-xs" style={{ color: "red" }}>{error.category}</p>
+      </div>
+<div>       <input 
           type="date" 
           value={date} 
           onChange={e=>setDate(e.target.value)}
-          className="p-2 rounded" 
+          className="p-2 rounded w-full" 
           style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}} 
           required
         />
-        
-        <input
+        <p className="mb-4 text-xs" style={{ color: "red" }}>{error.date}</p></div>
+     <div>
+         <input
           type="time"
           value={time}
           onChange={(e) => setTime(e.target.value)}
           step="300"
-          className="p-2 rounded"
+          className="p-2 rounded w-full"
           style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}}
           required
         />
-        
-        <select 
+        <p className="mb-4 text-xs" style={{ color: "red" }}>{error.time}</p>
+     </div>
+     <div>   <select 
           value={type} 
           onChange={e=>setType(e.target.value)}
-          className="p-2 rounded" 
+          className="p-2 rounded w-full" 
           style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}}
         >
           {["workout","meal","goal","appointment","medication","other"].map(tp =>
@@ -385,18 +425,20 @@ export default function RemindersSection() {
             </option>
           )}
         </select>
-
+<p className="mb-4 text-xs" style={{ color: "red" }}>{error.type}</p></div>
         {category === "alert" && (
-          <select 
+        <div>
+            <select 
             value={priority} 
             onChange={e=>setPriority(e.target.value)}
-            className="p-2 rounded" 
+            className="p-2 rounded w-full" 
             style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}}
           >
             <option value="low">🟢 {t('lowPriority')}</option>
             <option value="medium">🟡 {t('mediumPriority')}</option>
             <option value="high">🔴 {t('highPriority')}</option>
           </select>
+        </div>
         )}
         
         <input 

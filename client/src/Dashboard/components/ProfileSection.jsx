@@ -3,6 +3,15 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import toast, { Toaster } from "react-hot-toast";
+import { z} from 'zod'
+
+const updProfile = z.object({
+  name: z.string().min(3, "Username must be at least 3 characters").refine((val)=> /^[A-Z]/.test(val),{
+    message:"First character must be uppercase"
+  } ),
+  email:z.email("Invalid email format"),
+})
+
 import { useLanguage } from '../pages/UseLanguage'; 
 
 const ProfileSection = () => {
@@ -15,6 +24,7 @@ const ProfileSection = () => {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [error , setError] = useState("");
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userId = user._id;
@@ -76,6 +86,24 @@ const ProfileSection = () => {
       toast.error(t('userNotLoggedIn'));
       return;
     }
+
+    const result = updProfile.safeParse({email:profile.email,name:profile.name})
+    if(!result.success){
+          const formattedErrors = result.error.format();
+    
+          setError({
+    
+            email:formattedErrors.email?._errors[0] || "",
+            name: formattedErrors.name?._errors[0] || "",
+          
+           
+          })
+          return;
+        }
+    setError("")
+
+
+
 
     const formData = new FormData();
     formData.append('userId', userId);
@@ -179,7 +207,7 @@ const ProfileSection = () => {
       </div>
 
       {/* Profile Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6" noValidate>
         <div>
           <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
             {t('fullName')}
@@ -197,6 +225,7 @@ const ProfileSection = () => {
             }}
             required
           />
+           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.name}</p>
         </div>
 
         <div>
@@ -216,6 +245,7 @@ const ProfileSection = () => {
             }}
             required
           />
+           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.email}</p>
         </div>
 
         <div>

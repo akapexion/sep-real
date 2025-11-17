@@ -6,8 +6,28 @@ import toast, { Toaster } from "react-hot-toast";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
 import { Trash2, Edit2, Plus, Loader2 } from "lucide-react";
 import { usePreferencesContext } from "../pages/PreferencesContext";
+import {z} from 'zod'
 
 const API_BASE = "http://localhost:3000";
+
+const goalSchema = z.object({
+  goalType:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  deadline:z.any().refine((v) => v !== "" && v != null, {
+      message: "Please enter detail"
+    }),
+  notes:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  current:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+  target:z.any().refine((v) => v !== "" && v != null, {
+    message: "Please enter detail"
+  }),
+
+})
 
 export default function GoalsSection() {
   const { preferences, formatWeight } = usePreferencesContext();
@@ -21,6 +41,7 @@ export default function GoalsSection() {
   const [current, setCurrent] = useState("");
   const [deadline, setDeadline] = useState(new Date().toISOString().split("T")[0]);
   const [notes, setNotes] = useState("");
+  const [error,setError] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?._id;
@@ -53,6 +74,24 @@ export default function GoalsSection() {
     e.preventDefault();
     if (!userId) return toast.error("You must be logged in");
 
+    const result = goalSchema.safeParse({
+      goalType,current,target,deadline,notes
+    })
+  if(!result.success){
+      const formattedErrors = result.error.format();
+
+      setError({
+
+        goalType:formattedErrors.goalType?._errors[0] || "",
+        current: formattedErrors.current?._errors[0] || "",
+        deadline: formattedErrors.deadline?._errors[0] || "",
+        notes: formattedErrors.notes?._errors[0] || "",
+        target: formattedErrors.target?._errors[0] || "",
+       
+      })
+      return;
+    }
+setError("")
     const payload = {
       userId,
       goalType,
@@ -197,7 +236,7 @@ export default function GoalsSection() {
 
       <Toaster />
 
-      <form onSubmit={saveGoal} className="grid md:grid-cols-2 gap-4 mb-6">
+      <form onSubmit={saveGoal} className="grid md:grid-cols-2 gap-4 mb-6" noValidate>
         <div className="flex flex-col">
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
             Goal Type
@@ -219,6 +258,7 @@ export default function GoalsSection() {
               </option>
             ))}
           </select>
+           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.goalType}</p>
         </div>
 
         <div className="flex flex-col">
@@ -237,6 +277,7 @@ export default function GoalsSection() {
             }}
             required
           />
+           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.deadline}</p>
         </div>
 
         <div className="flex flex-col">
@@ -256,6 +297,7 @@ export default function GoalsSection() {
             }}
             required
           />
+           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.target}</p>
         </div>
 
         <div className="flex flex-col">
@@ -275,6 +317,7 @@ export default function GoalsSection() {
             }}
             required
           />
+           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.current}</p>
         </div>
 
         <div className="flex flex-col md:col-span-2">
@@ -292,6 +335,7 @@ export default function GoalsSection() {
               border: "1px solid var(--border)",
             }}
           />
+           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.notes}</p>
         </div>
 
         <div className="md:col-span-2 flex gap-2">
