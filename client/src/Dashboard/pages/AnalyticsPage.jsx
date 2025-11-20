@@ -8,20 +8,16 @@ import {
   Line,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Dumbbell, Apple, TrendingUp, Loader2 } from "lucide-react";
+import { Dumbbell, Apple, TrendingUp, Loader2, Utensils } from "lucide-react";
 import { useLanguage } from '../pages/UseLanguage'; 
 
 const API_BASE = "http://localhost:3000";
-const COLORS = ["#10b981", "#3b82f6", "#f59e0b"];
 
 const groupByDate = (items, dateKey, valueKey) =>
   Object.entries(
@@ -92,24 +88,36 @@ export default function AnalyticsSection() {
     return groupByDate(filtered, "date", "totalCalories").slice(-14);
   }, [nutrition]);
 
-  const macroData = useMemo(() => {
-    const totals = nutrition.reduce(
-      (acc, n) => {
-        acc.protein += n.totalProteins || 0;
-        acc.carbs += n.totalCarbs || 0;
-        acc.fat += n.totalFats || 0;
-        return acc;
-      },
-      { protein: 0, carbs: 0, fat: 0 }
-    );
-    return [
-      { name: t('protein'), value: Math.round(totals.protein) }, 
-      { name: t('carbs'), value: Math.round(totals.carbs) }, 
-      { name: t('fat'), value: Math.round(totals.fat) }, 
-    ].filter((m) => m.value > 0);
+  // Nutrition Logs Data - Group by meal type
+  const nutritionLogsData = useMemo(() => {
+    const mealCounts = nutrition.reduce((acc, log) => {
+      const mealType = log.mealType || 'Other';
+      acc[mealType] = (acc[mealType] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(mealCounts)
+      .map(([mealType, count]) => ({ 
+        mealType: t(mealType.toLowerCase()) || mealType, 
+        count 
+      }))
+      .sort((a, b) => b.count - a.count);
   }, [nutrition, t]);
 
-  // 5. Body Weight Trend
+  // Daily Nutrition Logs Frequency
+  const dailyNutritionLogsData = useMemo(() => {
+    const freq = nutrition.reduce((acc, log) => {
+      const date = new Date(log.date).toISOString().split("T")[0];
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(freq)
+      .map(([date, count]) => ({ date, count }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-14);
+  }, [nutrition]);
+
   const bodyWeightData = useMemo(() => {
     return progress
       .filter((p) => p.weight && p.date)
@@ -154,6 +162,29 @@ export default function AnalyticsSection() {
     return null;
   };
 
+  const CustomBarTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div
+          className="p-3 rounded-lg shadow-lg border"
+          style={{
+            backgroundColor: "var(--bg-card)",
+            borderColor: "var(--border)",
+            color: "var(--text-primary)",
+          }}
+        >
+          <p className="font-medium">{`${t('mealType')}: ${label}`}</p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ color: entry.color }}>
+              {`${t('logs')}: ${entry.value}`}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -176,8 +207,9 @@ export default function AnalyticsSection() {
                 name={t('weightLifted')}
                 stroke="var(--accent)"
                 strokeWidth={3}
-                dot={{ fill: "var(--accent)", r: 5 }}
-                activeDot={{ r: 7 }}
+                dot={{ fill: "var(--accent)", r: 5, strokeWidth: 2, stroke: "var(--bg-card)" }}
+                activeDot={{ r: 7, stroke: "var(--accent)", strokeWidth: 2 }}
+                connectNulls={false}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -223,8 +255,9 @@ export default function AnalyticsSection() {
                 name={t('calories')}
                 stroke="#f59e0b"
                 strokeWidth={3}
-                dot={{ fill: "#f59e0b", r: 5 }}
-                activeDot={{ r: 7 }}
+                dot={{ fill: "#f59e0b", r: 5, strokeWidth: 2, stroke: "var(--bg-card)" }}
+                activeDot={{ r: 7, stroke: "#f59e0b", strokeWidth: 2 }}
+                connectNulls={false}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -233,39 +266,58 @@ export default function AnalyticsSection() {
         )}
       </ChartCard>
 
-      {/* Macro Split */}
-      <ChartCard title={t('macronutrientDistribution')} icon={Apple}>
-        {macroData.length ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={macroData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={4}
-                dataKey="value"
-                labelLine={false}
-                label={(entry) => `${entry.name}: ${entry.value}g`}
-              >
-                {macroData.map((_, i) => (
-                  <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value, name) => [`${value}g`, name]}
-                contentStyle={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                  color: "var(--text-primary)",
-                }}
+      {/* Nutrition Logs by Meal Type */}
+      <ChartCard title={t('nutritionLogsByMealType')} icon={Utensils}>
+        {nutritionLogsData.length ? (
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={nutritionLogsData} {...chartProps}>
+              <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" />
+              <XAxis 
+                dataKey="mealType" 
+                stroke="var(--text-muted)" 
+                tick={{ fontSize: 12 }} 
+                angle={-45}
+                textAnchor="end"
+                height={80}
               />
-            </PieChart>
+              <YAxis stroke="var(--text-muted)" tick={{ fontSize: 12 }} allowDecimals={false} />
+              <Tooltip content={<CustomBarTooltip />} />
+              <Bar 
+                dataKey="count" 
+                name={t('logs')}
+                fill="#10b981" 
+                radius={[6, 6, 0, 0]} 
+              />
+            </BarChart>
           </ResponsiveContainer>
         ) : (
-          <Empty>{t('noMacroData')}</Empty>
+          <Empty>{t('noNutritionLogs')}</Empty>
+        )}
+      </ChartCard>
+
+      {/* Daily Nutrition Logs Frequency */}
+      <ChartCard title={t('dailyNutritionLogs')} icon={Utensils}>
+        {dailyNutritionLogsData.length ? (
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={dailyNutritionLogsData} {...chartProps}>
+              <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" />
+              <XAxis dataKey="date" stroke="var(--text-muted)" tick={{ fontSize: 12 }} />
+              <YAxis stroke="var(--text-muted)" tick={{ fontSize: 12 }} allowDecimals={false} />
+              <Tooltip content={<CustomTooltip />} />
+              <Line
+                type="monotone"
+                dataKey="count"
+                name={t('nutritionLogs')}
+                stroke="#8b5cf6"
+                strokeWidth={3}
+                dot={{ fill: "#8b5cf6", r: 5, strokeWidth: 2, stroke: "var(--bg-card)" }}
+                activeDot={{ r: 7, stroke: "#8b5cf6", strokeWidth: 2 }}
+                connectNulls={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <Empty>{t('noNutritionLogs')}</Empty>
         )}
       </ChartCard>
 
@@ -284,8 +336,9 @@ export default function AnalyticsSection() {
                 name={t('weight')}
                 stroke="#10b981"
                 strokeWidth={3}
-                dot={{ fill: "#10b981", r: 5 }}
-                activeDot={{ r: 7 }}
+                dot={{ fill: "#10b981", r: 5, strokeWidth: 2, stroke: "var(--bg-card)" }}
+                activeDot={{ r: 7, stroke: "#10b981", strokeWidth: 2 }}
+                connectNulls={false}
               />
             </LineChart>
           </ResponsiveContainer>

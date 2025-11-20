@@ -1,7 +1,10 @@
 // src/Dashboard/pages/HomePage.jsx
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Award, Activity, Target, Calendar, BarChart3 } from 'lucide-react';
+import {
+  TrendingUp, Award, Activity, Target, Calendar, BarChart3,
+  PlusCircle, Utensils, Ruler, CheckCircle
+} from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../pages/UseLanguage';
@@ -25,15 +28,12 @@ const HomePage = () => {
   const userId = user?._id;
 
   useEffect(() => {
-    if (userId) {
-      fetchDashboardData();
-    }
+    if (userId) fetchDashboardData();
   }, [userId]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
       const [workoutsRes, goalsRes, nutritionRes, progressRes, notificationsRes] = await Promise.all([
         axios.get(`${API_BASE}/workouts?userId=${userId}`),
         axios.get(`${API_BASE}/goals?userId=${userId}`),
@@ -46,11 +46,8 @@ const HomePage = () => {
       const goals = goalsRes.data;
       const nutritionLogs = nutritionRes.data;
       const progressEntries = progressRes.data;
-      
-      const completedGoals = goals.filter(goal => {
-        const progress = calculateGoalProgress(goal);
-        return progress >= 100;
-      }).length;
+
+      const completedGoals = goals.filter(goal => calculateGoalProgress(goal) >= 100).length;
 
       const last7Days = workouts.filter(workout => {
         const workoutDate = new Date(workout.date);
@@ -58,7 +55,7 @@ const HomePage = () => {
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         return workoutDate >= sevenDaysAgo;
       });
-      
+
       const uniqueDays = new Set(last7Days.map(w => new Date(w.date).toDateString())).size;
 
       const caloriesBurned = workouts.reduce((sum, workout) => {
@@ -85,11 +82,9 @@ const HomePage = () => {
   };
 
   const calculateGoalProgress = (goal) => {
-    if (goal.current === 0 && goal.target === 0) return 0;
     if (goal.target === 0) return 0;
-    
     const isLossGoal = goal.goalType.toLowerCase().includes('loss');
-    
+
     if (isLossGoal) {
       const startWeight = Math.max(goal.current, goal.target);
       const totalToLose = startWeight - goal.target;
@@ -105,46 +100,21 @@ const HomePage = () => {
     }
   };
 
-  const getStreakMessage = () => {
-    if (stats.streak > 0) {
-      return t('streakMessage', { days: stats.streak });
-    }
-    return t('readyForWorkout');
-  };
-
-  const getMotivationMessage = () => {
-    if (stats.totalWorkouts === 0) {
-      return t('firstWorkoutMotivation');
-    } else if (stats.totalWorkouts < 5) {
-      return t('beginnerMotivation');
-    } else {
-      return t('experiencedMotivation');
-    }
-  };
+  const getStreakMessage = () => (stats.streak > 0 ? t('streakMessage', { days: stats.streak }) : t('readyForWorkout'));
+  const getMotivationMessage = () => (
+    stats.totalWorkouts === 0 ? t('firstWorkoutMotivation')
+      : stats.totalWorkouts < 5 ? t('beginnerMotivation') : t('experiencedMotivation')
+  );
 
   const StatCard = ({ icon: Icon, label, value, color, subtitle }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
       className="p-6 rounded-xl shadow-lg border"
-      style={{ 
-        backgroundColor: 'var(--bg-card)',
-        borderColor: 'var(--border)'
-      }}
-    >
+      style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-            {value}
-          </p>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-primary)' }}>
-            {label}
-          </p>
-          {subtitle && (
-            <p className="text-xs mt-1" style={{ color: 'var(--text-primary)' }}>
-              {subtitle}
-            </p>
-          )}
+          <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{value}</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-primary)' }}>{label}</p>
+          {subtitle && <p className="text-xs mt-1" style={{ color: 'var(--text-primary)' }}>{subtitle}</p>}
         </div>
         <div className="p-3 rounded-full" style={{ backgroundColor: `${color}20` }}>
           <Icon className="w-6 h-6" style={{ color }} />
@@ -157,157 +127,52 @@ const HomePage = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: 'var(--accent)' }}></div>
-        <span className="ml-2" style={{ color: 'var(--text-primary)' }}>
-          {t('loading')}
-        </span>
+        <span className="ml-2" style={{ color: 'var(--text-primary)' }}>{t('loading')}</span>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+
       {/* Welcome Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         className="p-6 rounded-xl shadow-lg"
-        style={{ 
-          backgroundColor: 'var(--accent)',
-        }}
-      >
+        style={{ backgroundColor: 'var(--accent)' }}>
         <h1 className="text-2xl font-bold mb-2 text-white">
-          {t('welcomeBack')}, {user?.name || t('fitnessEnthusiast')}! 👋
+          {t('welcomeBack')}, {user?.name || t('fitnessEnthusiast')}
         </h1>
-        <p className="text-white opacity-90">
-          {getStreakMessage()}
-        </p>
+        <p className="text-white opacity-90">{getStreakMessage()}</p>
       </motion.div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <StatCard
-          icon={Activity}
-          label={t('totalWorkouts')}
-          value={stats.totalWorkouts}
-          color="#3B82F6"
-          subtitle={t('allTime')}
-        />
-        <StatCard
-          icon={Target}
-          label={t('goalsAchieved')}
-          value={stats.completedGoals}
-          color="#10B981"
-          subtitle={t('greatWork')}
-        />
-        <StatCard
-          icon={TrendingUp}
-          label={t('currentStreak')}
-          value={`${stats.streak} ${t('days')}`}
-          color="#F59E0B"
-          subtitle={t('keepItUp')}
-        />
-        <StatCard
-          icon={Award}
-          label={t('caloriesBurned')}
-          value={stats.caloriesBurned.toLocaleString()}
-          color="#EF4444"
-          subtitle={t('estimatedTotal')}
-        />
-        <StatCard
-          icon={BarChart3}
-          label={t('nutritionLogs')}
-          value={stats.nutritionLogs}
-          color="#8B5CF6"
-          subtitle={t('mealsTracked')}
-        />
-        <StatCard
-          icon={Calendar}
-          label={t('progressEntries')}
-          value={stats.progressEntries}
-          color="#06B6D4"
-          subtitle={t('measurementsRecorded')}
-        />
+        <StatCard icon={Activity} label={t('totalWorkouts')} value={stats.totalWorkouts} color="#3B82F6" subtitle={t('allTime')} />
+        <StatCard icon={Target} label={t('goalsAchieved')} value={stats.completedGoals} color="#10B981" subtitle={t('greatWork')} />
+        <StatCard icon={TrendingUp} label={t('currentStreak')} value={`${stats.streak} ${t('days')}`} color="#F59E0B" subtitle={t('keepItUp')} />
+        <StatCard icon={Award} label={t('caloriesBurned')} value={stats.caloriesBurned.toLocaleString()} color="#EF4444" subtitle={t('estimatedTotal')} />
+        <StatCard icon={BarChart3} label={t('nutritionLogs')} value={stats.nutritionLogs} color="#8B5CF6" subtitle={t('mealsTracked')} />
+        <StatCard icon={Calendar} label={t('progressEntries')} value={stats.progressEntries} color="#06B6D4" subtitle={t('measurementsRecorded')} />
       </div>
 
-      {/* Recent Activity */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="p-6 rounded-xl shadow-lg"
-        style={{ 
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid var(--border)'
-        }}
-      >
-        <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-          {t('recentActivity')}
-        </h2>
-        <div className="space-y-3">
-          {recentActivity.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-4xl mb-4">📊</div>
-              <p className="text-lg mb-2" style={{ color: 'var(--text-primary)' }}>
-                {t('noRecentActivity')}
-              </p>
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                {t('startLoggingPrompt')}
-              </p>
-            </div>
-          ) : (
-            recentActivity.map((activity) => (
-              <div
-                key={activity._id}
-                className="flex items-center space-x-3 p-3 rounded-lg hover:bg-opacity-50 transition-colors"
-                style={{ backgroundColor: 'var(--bg-secondary)' }}
-              >
-                <div className={`w-2 h-2 rounded-full ${
-                  activity.type === 'goal' ? 'bg-green-500' :
-                  activity.type === 'reminder' ? 'bg-blue-500' :
-                  activity.type === 'activity' ? 'bg-purple-500' : 'bg-gray-500'
-                }`}></div>
-                <p className="text-sm flex-1" style={{ color: 'var(--text-primary)' }}>
-                  {activity.message}
-                </p>
-                <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                  {new Date(activity.date).toLocaleDateString()}
-                </span>
-              </div>
-            ))
-          )}
-        </div>
-      </motion.div>
-
       {/* Quick Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         className="p-6 rounded-xl shadow-lg"
-        style={{ 
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid var(--border)'
-        }}
-      >
+        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
           {t('quickActions')}
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: t('logWorkout'), path: '/dashboard/workouts', emoji: '💪', description: t('addNewExercise') },
-            { label: t('addNutrition'), path: '/dashboard/nutrition', emoji: '🍎', description: t('trackMeals') },
-            { label: t('trackProgress'), path: '/dashboard/progress', emoji: '📊', description: t('recordMeasurements') },
-            { label: t('setGoals'), path: '/dashboard/goals', emoji: '🎯', description: t('createTargets') }
+            { label: t('logWorkout'), path: '/dashboard/workouts', icon: PlusCircle, description: t('addNewExercise') },
+            { label: t('addNutrition'), path: '/dashboard/nutrition', icon: Utensils, description: t('trackMeals') },
+            { label: t('trackProgress'), path: '/dashboard/progress', icon: Ruler, description: t('recordMeasurements') },
+            { label: t('setGoals'), path: '/dashboard/goals', icon: CheckCircle, description: t('createTargets') }
           ].map((action, index) => (
-            <button
-              key={index}
-              onClick={() => window.location.href = action.path}
+            <button key={index} onClick={() => window.location.href = action.path}
               className="p-4 rounded-lg text-center transition-all hover:scale-105 hover:shadow-md"
-              style={{ 
-                backgroundColor: 'var(--bg-secondary)',
-                color: 'var(--text-primary)',
-                border: '1px solid var(--border)'
-              }}
-            >
-              <span className="text-2xl mb-2 block">{action.emoji}</span>
+              style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
+              <action.icon className="mx-auto w-7 h-7 mb-2" />
               <span className="text-sm font-medium block">{action.label}</span>
               <span className="text-xs opacity-75 mt-1 block" style={{ color: 'var(--text-primary)' }}>
                 {action.description}
@@ -317,23 +182,16 @@ const HomePage = () => {
         </div>
       </motion.div>
 
-      {/* Motivation Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+      {/* Motivation */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         className="p-6 rounded-xl shadow-lg text-center"
-        style={{ 
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid var(--border)'
-        }}
-      >
+        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-          {t('fitnessMotivation')} 💫
+          {t('fitnessMotivation')}
         </h2>
-        <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
-          {getMotivationMessage()}
-        </p>
+        <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{getMotivationMessage()}</p>
       </motion.div>
+
     </div>
   );
 };

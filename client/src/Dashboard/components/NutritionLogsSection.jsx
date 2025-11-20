@@ -260,15 +260,6 @@ setError("")
         </h3>
 
         <Toaster />
-
-        <div className="flex gap-2">
-          <button onClick={exportPDF} title={t('exportPDF')} className="p-2 rounded hover:bg-[var(--bg-secondary)]">
-            <FileText className="w-5 h-5" style={{ color: "var(--accent)" }} />
-          </button>
-          <button onClick={exportCSV} title={t('exportCSV')} className="p-2 rounded hover:bg-[var(--bg-secondary)]">
-            <Download className="w-5 h-5" style={{ color: "var(--accent)" }} />
-          </button>
-        </div>
       </div>
 
       <form onSubmit={saveLog} className="grid md:grid-cols-2 gap-4 mb-6 " noValidate>
@@ -447,6 +438,32 @@ setError("")
 </form>
 
       <div ref={printRef}>
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-medium" style={{ color: "var(--text-primary)" }}>
+            {t('nutritionHistory')}
+          </h4>
+          <div className="flex gap-2">
+            <button 
+              onClick={exportPDF} 
+              title={t('exportPDF')} 
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium"
+              style={{ backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)" }}
+            >
+              <FileText className="w-4 h-4" />
+              {t('exportPDF')}
+            </button>
+            <button 
+              onClick={exportCSV} 
+              title={t('exportCSV')} 
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium"
+              style={{ backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)" }}
+            >
+              <Download className="w-4 h-4" />
+              {t('exportCSV')}
+            </button>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y" style={{ borderColor: "var(--border)" }}>
             <thead style={{ backgroundColor: "var(--bg-secondary)" }}>
