@@ -71,7 +71,7 @@ const UINavbar = () => {
 
         {/* Desktop Links */}
         <div className="hidden lg:flex items-center space-x-6 xl:space-x-10">
-          {["Home", "About", "Contact", "Join Now"].map((name) => {
+          {["Home", "About", "Contact"].map((name) => {
             const isActive = activePage === name.toLowerCase();
             return (
               <Link
@@ -142,7 +142,7 @@ const UINavbar = () => {
             className="lg:hidden absolute top-full left-0 w-full bg-black/90 backdrop-blur-lg border-t border-yellow-500/20 z-10"
           >
             <div className="px-4 py-4 space-y-4 flex flex-col items-center">
-              {["Home", "About", "Contact", "Join Now"].map(
+              {["Home", "About", "Contact"].map(
                 (name) => (
                   <Link
                     key={name}

@@ -63,7 +63,7 @@ const Footer = () => {
 
         {/* Branding */}
         <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3 tracking-tight bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-          FitForge
+          FitTrack
         </h3>
         <p className="text-gray-400 mb-6 sm:mb-8 text-base sm:text-lg max-w-2xl mx-auto px-2">
           Forge your strength, transform your body — and push beyond your limits.  

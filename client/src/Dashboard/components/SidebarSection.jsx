@@ -23,6 +23,7 @@ const SidebarSection = ({ user, logout }) => {
     { Icon: Calendar,    label: t('reminders'),   path: '/dashboard/reminders' },
     { Icon: BarChart3,   label: t('analytics'),   path: '/dashboard/analytics' },
     { Icon: Settings,    label: t('settings'),    path: '/dashboard/settings' },
+    { Icon: Settings,    label: t('settings'),    path: '/dashboard/feedbacks' },
   ];
 
   const handleLogout = () => {
