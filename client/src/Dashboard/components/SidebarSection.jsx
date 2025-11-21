@@ -55,7 +55,6 @@ const SidebarSection = ({ user, logout }) => {
 
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'var(--accent)' }}>FitTrack</h1>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Level 12</p>
         </div>
       </div>
 
