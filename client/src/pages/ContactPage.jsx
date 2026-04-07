@@ -55,13 +55,22 @@ const ContactPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white font-[Michroma]">
+    <div 
+      className="min-h-screen text-white font-[Michroma] relative"
+      style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1594737625785-c0f4f5d6b95a?auto=format&fit=crop&w=1600&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed"
+      }}
+    >
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm pointer-events-none z-0"></div>
     
       
       {/* Hero Section */}
-      <section className="relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 overflow-hidden">
+      <section className="relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 overflow-hidden z-10">
         {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-black -z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-transparent -z-10"></div>
         <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 bg-cyan-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
         <div className="absolute bottom-20 right-1/4 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 bg-blue-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
         
@@ -93,8 +102,7 @@ const ContactPage = () => {
       </section>
 
       {/* Contact Info Cards */}
-      <section className="py-12 sm:py-16 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-[#1a0e00] to-black"></div>
+      <section className="py-12 sm:py-16 relative z-10">
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {contactInfo.map((info, index) => (
@@ -122,8 +130,7 @@ const ContactPage = () => {
       </section>
 
       {/* Contact Form Section */}
-      <section className="py-12 sm:py-16 md:py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-[#120900] to-black"></div>
+      <section className="py-12 sm:py-16 md:py-24 relative overflow-hidden z-10">
         {Array.from({ length: 8 }).map((_, i) => (
           <motion.div
             key={i}
@@ -239,8 +246,7 @@ const ContactPage = () => {
       </section>
 
       {/* Map Section Placeholder */}
-      <section className="py-12 sm:py-16 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-black to-[#1a0e00]"></div>
+      <section className="py-12 sm:py-16 relative z-10">
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}

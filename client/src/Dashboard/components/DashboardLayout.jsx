@@ -77,8 +77,8 @@ const DashboardLayout = ({ user, logout, updateUser }) => {
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       {showWeightModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="border p-8 rounded-2xl w-full max-w-md shadow-2xl text-center" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md">
+          <div className="p-8 w-full max-w-md text-center glass transform hover:scale-[1.02] transition-all duration-300">
             <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--accent)' }}>Welcome to FitTrack!</h2>
             <p className="mb-6 text-sm" style={{ color: 'var(--text-muted)' }}>We just need your current weight to personalize your dashboard.</p>
             <input
@@ -92,8 +92,8 @@ const DashboardLayout = ({ user, logout, updateUser }) => {
             <button
               onClick={handleSaveWeight}
               disabled={isSavingWeight}
-              className="w-full py-3 rounded-xl font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
-              style={{ backgroundColor: 'var(--accent)' }}
+              className="w-full py-3 rounded-xl font-bold text-black transition-all hover:scale-105 disabled:opacity-50"
+              style={{ background: 'var(--accent)', boxShadow: '0 0 15px var(--accent)' }}
             >
               {isSavingWeight ? "Saving..." : "Let's Go!"}
             </button>
@@ -109,7 +109,7 @@ const DashboardLayout = ({ user, logout, updateUser }) => {
           transition={{ duration: 0.4 }}
           className="dashboard-header px-6 py-4"
         >
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>FitTrack</h1>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>LIFT & PRESS</h1>
         </motion.header>
         <main className="flex-1 p-6 overflow-auto">
           <Outlet context={{ user, updateUser }} />

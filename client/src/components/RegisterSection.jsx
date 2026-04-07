@@ -122,18 +122,17 @@ export default function RegisterSectionFitness() {
     >
       <Toaster position="top-right" />
       <div
-        className="flex flex-col md:flex-row rounded-3xl shadow-2xl max-w-3xl w-full mx-4"
+        className="flex flex-col md:flex-row rounded-3xl max-w-3xl w-full mx-4 glass transform hover:scale-[1.01] transition-all duration-300"
         style={{
-          border: "1px solid rgba(255,215,0,0.04)",
-          backgroundColor: "#000000b0",
-          backdropFilter: "blur(2px)",
+          boxShadow: "0 20px 40px -10px rgba(0,0,0,0.5)",
+          border: "1px solid var(--glass-border)",
         }}
       >
         <div
-          className="w-full md:w-44 flex flex-col items-center justify-center relative border-b md:border-r md:border-b-0 border-blue-600/30 p-4 md:p-0"
+          className="w-full md:w-44 flex flex-col items-center justify-center relative border-b md:border-r md:border-b-0 p-4 md:p-0"
           style={{
-            background:
-              "linear-gradient(180deg, rgba(253,199,0,0.08), rgba(0,0,0,0.1))",
+            borderColor: "var(--border)",
+            background: "rgba(0,0,0,0.2)"
           }}
         >
           <div className="absolute inset-0 overflow-hidden rounded-3xl">
@@ -154,14 +153,21 @@ export default function RegisterSectionFitness() {
           </div>
           <div className="z-10 flex flex-col items-center justify-center text-center">
             <div
-              className="text-3xl text-blue-600 font-extrabold mb-1 drop-shadow"
+              className="text-3xl font-extrabold mb-2 drop-shadow-lg"
+              style={{ color: "var(--text-primary)" }}
             >
               Register
             </div>
             <button
               type="button"
               onClick={onPick}
-              className="mt-2 px-3 py-1 text-xs rounded-md bg-black/60 border border-blue-600 text-blue-600 hover:bg-[#2563eb]/10 transition"
+              className="mt-2 px-4 py-2 text-xs rounded-lg border font-bold transition-all duration-300 hover:scale-105"
+              style={{ 
+                background: "var(--bg-card)",
+                borderColor: "var(--accent)", 
+                color: "var(--accent)",
+                boxShadow: "0 0 10px rgba(0,0,0,0.5)"
+              }}
             >
               Upload Image
             </button>
@@ -182,53 +188,78 @@ export default function RegisterSectionFitness() {
           </div>
         </div>
 
-        <div className="p-6 flex-1 bg-black/40">
+        <div className="p-8 flex-1" style={{ background: "rgba(0,0,0,0.3)" }}>
           <h3
-            className="text-xl text-blue-600 font-bold mb-3"
+            className="text-2xl font-bold mb-6 text-center"
+            style={{ color: "var(--accent)" }}
           >
             Join the Team
           </h3>
-          <form onSubmit={registerUser} className="" noValidate>
-            <input
-              placeholder="Full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-black/60 border border-blue-600 placeholder-[#aaaaaa] text-white outline-none"
-            />
-            <p className="mb-4 text-xs" style={{ color: "red" }}>{error.name}</p>
-            <input
-              placeholder="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-black/60 border border-blue-900 placeholder-[#aaaaaa] text-white outline-none"
-            />
-            <p className="mb-4 text-xs" style={{ color: "red" }}>{error.email}</p>
-            <input
-              placeholder="Create password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-black/60 border border-blue-900 placeholder-[#aaaaaa] text-white outline-none"
-            />
-            <p className="mb-4 text-xs" style={{ color: "red" }}>{error.password}</p>
-            <input
-              placeholder="Confirm password"
-              type="password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-black/60 border border-blue-900 placeholder-[#aaaaaa] text-white outline-none"
-            />
+          <form onSubmit={registerUser} className="space-y-4" noValidate>
+            <div>
+              <input
+                placeholder="Full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-300"
+                style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
+                onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
+                onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+              />
+              <p className="mt-1 text-xs text-red-500">{error.name}</p>
+            </div>
+            
+            <div>
+              <input
+                placeholder="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-300"
+                style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
+                onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
+                onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+              />
+              <p className="mt-1 text-xs text-red-500">{error.email}</p>
+            </div>
+
+            <div>
+              <input
+                placeholder="Create password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-300"
+                style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
+                onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
+                onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+              />
+              <p className="mt-1 text-xs text-red-500">{error.password}</p>
+            </div>
+
+            <div>
+              <input
+                placeholder="Confirm password"
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-300"
+                style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
+                onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
+                onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+              />
+            </div>
+
             <button
               type="submit"
-              className="submit-button w-full py-3 rounded-xl font-bold mt-2 hover:cursor-pointer bg-gradient-to-r from-cyan-400 to-blue-600 text-black font-bold"
-
+              className="w-full py-3 rounded-xl font-bold mt-4 hover:cursor-pointer transition-all duration-300 hover:scale-105 text-white"
+              style={{ background: "var(--accent)", boxShadow: "0 0 15px var(--accent)" }}
             >
               Start Free
             </button>
           </form>
-          <p className="text-center text-white mt-2">
-            Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login</Link>
+          <p className="text-center mt-6" style={{ color: "var(--text-muted)" }}>
+            Already have an account? <Link to="/login" className="hover:underline font-bold" style={{ color: "var(--accent)" }}>Login</Link>
           </p>
         </div>
       </div>

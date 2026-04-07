@@ -29,12 +29,26 @@ const HomePage = () => {
   const userId = user?._id;
 
   useEffect(() => {
-    if (userId) fetchDashboardData();
+    if (userId) {
+      const cached = sessionStorage.getItem(`dashboardData_${userId}`);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          setStats(parsed.stats);
+          setRecentActivity(parsed.recentActivity);
+          setFeed(parsed.feed);
+          setLoading(false);
+        } catch (e) {
+          console.error("Cache parsing error", e);
+        }
+      }
+      fetchDashboardData(!!cached);
+    }
   }, [userId]);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (isCached = false) => {
     try {
-      setLoading(true);
+      if (!isCached) setLoading(true);
       const [workoutsRes, goalsRes, nutritionRes, progressRes, notificationsRes, feedRes] = await Promise.all([
         axios.get(`${API_BASE}/workouts?userId=${userId}`),
         axios.get(`${API_BASE}/goals?userId=${userId}`),
@@ -65,17 +79,48 @@ const HomePage = () => {
         return sum + baseCalories;
       }, 0);
 
-      setStats({
+      const newStats = {
         totalWorkouts: workouts.length,
         completedGoals,
         streak: uniqueDays,
         caloriesBurned: Math.round(caloriesBurned),
         nutritionLogs: nutritionLogs.length,
         progressEntries: progressEntries.length
-      });
+      };
 
-      setRecentActivity(notificationsRes.data.slice(0, 5));
-      setFeed(feedRes.data || []);
+      setStats(newStats);
+
+      const recentNotifs = notificationsRes.data.slice(0, 5);
+      setRecentActivity(recentNotifs);
+
+      const myGoals = goals.map(g => ({
+        _id: 'goal_' + g._id,
+        user: { name: user.name, image: user.image },
+        content: `Set a new goal: ${g.goalType} target ${g.target}`,
+        type: 'GOAL',
+        date: g.startDate || g.createdAt || new Date()
+      }));
+
+      const myProgress = progressEntries.map(p => ({
+        _id: 'prog_' + p._id,
+        user: { name: user.name, image: user.image },
+        content: `Logged progress: ${p.weight ? p.weight + (user.weightUnit || 'kg') : 'Measurement updated'}`,
+        type: 'PROGRESS',
+        date: p.date || p.createdAt || new Date()
+      }));
+
+      const combinedFeed = [...(feedRes.data || []), ...myGoals, ...myProgress]
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 10);
+
+      setFeed(combinedFeed);
+
+      sessionStorage.setItem(`dashboardData_${userId}`, JSON.stringify({
+        stats: newStats,
+        recentActivity: recentNotifs,
+        feed: combinedFeed
+      }));
+
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
       toast.error(t('failedToLoadDashboard'));
@@ -111,8 +156,7 @@ const HomePage = () => {
 
   const StatCard = ({ icon: Icon, label, value, color, subtitle }) => (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className="p-6 rounded-xl shadow-lg border"
-      style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+      className="p-6 card">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{value}</p>
@@ -140,12 +184,13 @@ const HomePage = () => {
 
       {/* Welcome Section */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        className="p-6 rounded-xl shadow-lg"
-        style={{ backgroundColor: 'var(--accent)' }}>
-        <h1 className="text-2xl font-bold mb-2 text-white">
+        className="p-6 card relative overflow-hidden"
+        style={{ borderLeft: '4px solid var(--accent)' }}>
+        <h1 className="text-2xl font-bold mb-2 z-10 relative">
           {t('welcomeBack')}, {user?.name || t('fitnessEnthusiast')}
         </h1>
-        <p className="text-white opacity-90">{getStreakMessage()}</p>
+        <p className="opacity-90 z-10 relative">{getStreakMessage()}</p>
+        <div className="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-transparent to-[var(--accent)] opacity-20 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
       </motion.div>
 
       {/* Stats Grid */}
@@ -160,8 +205,7 @@ const HomePage = () => {
 
       {/* Quick Actions */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        className="p-6 rounded-xl shadow-lg"
-        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        className="p-6 card">
         <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
           {t('quickActions')}
         </h2>
@@ -173,8 +217,7 @@ const HomePage = () => {
             { label: t('setGoals'), path: '/dashboard/goals', icon: CheckCircle, description: t('createTargets') }
           ].map((action, index) => (
             <button key={index} onClick={() => window.location.href = action.path}
-              className="p-4 rounded-lg text-center transition-all hover:scale-105 hover:shadow-md"
-              style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
+              className="p-4 rounded-xl text-center glass transition-all hover:scale-105 hover:-translate-y-1">
               <action.icon className="mx-auto w-7 h-7 mb-2" />
               <span className="text-sm font-medium block">{action.label}</span>
               <span className="text-xs opacity-75 mt-1 block" style={{ color: 'var(--text-primary)' }}>
@@ -187,8 +230,7 @@ const HomePage = () => {
 
       {/* Motivation */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        className="p-6 rounded-xl shadow-lg text-center"
-        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        className="p-6 card text-center">
         <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
           {t('fitnessMotivation')}
         </h2>
@@ -203,14 +245,14 @@ const HomePage = () => {
         </div>
         
         {feed.length === 0 ? (
-          <div className="p-8 text-center rounded-xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+          <div className="p-8 text-center card">
              <p style={{ color: 'var(--text-muted)' }}>Follow more users in the Community tab to see their active updates here!</p>
           </div>
         ) : (
           <div className="space-y-4">
             {feed.map(item => (
               <motion.div key={item._id} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
-                className="p-4 rounded-xl shadow-sm border flex items-start space-x-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] transition-colors border-[var(--border)]">
+                className="p-4 flex items-start space-x-4 card">
                 <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-gray-600">
                   {item.user?.image ? <img src={`${API_BASE}/uploads/${item.user.image}`} alt={item.user?.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex justify-center items-center font-bold text-white">{item.user?.name?.[0] || 'U'}</div>}
                 </div>

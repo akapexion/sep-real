@@ -82,15 +82,15 @@ export default function LoginSection({ Loginuser }) {
       <Toaster position="top-right" />
 
       <div
-        className="rounded-3xl shadow-2xl p-6 bg-black/40 max-w-md w-full mx-4"
+        className="rounded-3xl p-8 max-w-md w-full mx-4 glass transform hover:scale-[1.02] transition-all duration-300"
         style={{
-          border: "1px solid rgba(255,215,0,0.04)",
-          backgroundColor: "#000000b0",
-          backdropFilter: "blur(2px)",
+          boxShadow: "0 20px 40px -10px rgba(0,0,0,0.5)",
+          border: "1px solid var(--glass-border)",
         }}
       >
         <h3
-          className="text-xl text-blue-600 font-bold font-bold mb-3 text-center"
+          className="text-2xl font-bold mb-6 text-center"
+          style={{ color: "var(--accent)" }}
         >
           Welcome Back
         </h3>
@@ -113,18 +113,22 @@ export default function LoginSection({ Loginuser }) {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-3 rounded-xl bg-black/60 border border-blue-900 placeholder-[#aaaaaa] text-white outline-none"
           />
-          <p className="mb-4 text-xs" style={{ color: "red" }}>{error.password}</p>          <button
+          <p className="mb-4 text-xs text-red-500">{error.password}</p>
+          <button
             type="submit"
-            className="w-full py-3 rounded-xl font-bold mt-2 hover:cursor-pointer transition bg-gradient-to-r from-cyan-400 to-blue-600 text-black font-bold"
-
+            className="w-full py-3 rounded-xl font-bold mt-4 hover:cursor-pointer transition-all duration-300 hover:scale-105 text-black"
+            style={{ 
+              background: "var(--accent)",
+              boxShadow: "0 0 15px var(--accent)"
+            }}
           >
             Sign In
           </button>
         </form>
 
-        <p className="text-center text-white mt-2">
+        <p className="text-center mt-6" style={{ color: "var(--text-muted)" }}>
           Don't have an account?{" "}
-          <Link to="/register" className="text-blue-600 hover:underline">
+          <Link to="/register" className="hover:underline font-bold" style={{ color: "var(--accent)" }}>
             Register
           </Link>
         </p>

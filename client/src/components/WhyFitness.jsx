@@ -27,18 +27,11 @@ const WhyFitness = () => {
   ];
 
   return (
-    <section className="relative text-white py-24 font-[Michroma] bg-gradient-to-b from-[#1a0e00] via-[#120900] to-black overflow-hidden">
-      {/* Animated Orbs for Depth */}
-      <motion.div
-        className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(253,199,0,0.1),transparent_60%)]"
-        animate={{ opacity: [0.6, 0.8, 0.6] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(255,140,0,0.1),transparent_70%)]"
-        animate={{ opacity: [0.4, 0.6, 0.4] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      />
+    <section className="relative py-24 font-[Michroma] overflow-hidden transition-colors duration-300">
+      {/* Background Glow */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-black -z-10"></div>
+      <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-72 h-72 bg-cyan-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
+      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 w-80 h-80 bg-blue-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
  {/* ✨ Floating particles */}
       {Array.from({ length: 10 }).map((_, i) => (
         <motion.div

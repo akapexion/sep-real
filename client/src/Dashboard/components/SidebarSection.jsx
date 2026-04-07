@@ -15,15 +15,15 @@ const SidebarSection = ({ user, logout }) => {
 
   // Define menu with translations
   const menu = [
-    { Icon: Home,        label: t('dashboard'),   path: '/dashboard' },
-    { Icon: Dumbbell,    label: t('workouts'),    path: '/dashboard/workouts' },
-    { Icon: Apple,       label: t('nutrition'),   path: '/dashboard/nutrition' },
-    { Icon: TrendingUp,  label: t('progress'),    path: '/dashboard/progress' },
-    { Icon: Target,      label: t('goals'),       path: '/dashboard/goals' },
-    { Icon: Calendar,    label: t('reminders'),   path: '/dashboard/reminders' },
-    { Icon: BarChart3,   label: t('analytics'),   path: '/dashboard/analytics' },
-    { Icon: Settings,    label: t('settings'),    path: '/dashboard/settings' },
-    { Icon: Users,       label: 'Community',      path: '/dashboard/community' },
+    { Icon: Home, label: t('dashboard'), path: '/dashboard' },
+    { Icon: Dumbbell, label: t('workouts'), path: '/dashboard/workouts' },
+    { Icon: Apple, label: t('nutrition'), path: '/dashboard/nutrition' },
+    { Icon: TrendingUp, label: t('progress'), path: '/dashboard/progress' },
+    { Icon: Target, label: t('goals'), path: '/dashboard/goals' },
+    { Icon: Calendar, label: t('reminders'), path: '/dashboard/reminders' },
+    { Icon: BarChart3, label: t('analytics'), path: '/dashboard/analytics' },
+    { Icon: Settings, label: t('settings'), path: '/dashboard/settings' },
+    { Icon: Users, label: 'Community', path: '/dashboard/community' },
     { Icon: MessageSquare, label: 'Give Feedback', path: '/dashboard/feedbacks' },
   ];
 
@@ -47,16 +47,7 @@ const SidebarSection = ({ user, logout }) => {
       }}
     >
       <div className="p-5 flex items-center space-x-3">
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-black"
-          style={{ backgroundColor: 'var(--accent)' }}
-        >
-          FT
-        </div>
-
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--accent)' }}>FitTrack</h1>
-        </div>
+        <img src="../logo.png" width={150} alt="" />
       </div>
 
       <nav className="px-3 space-y-1 flex-1 overflow-y-auto">
@@ -68,11 +59,10 @@ const SidebarSection = ({ user, logout }) => {
               href={path}
               onClick={e => { e.preventDefault(); navigate(path); }}
               whileHover={{ x: 6 }}
-              className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl transition-all ${
-                active
-                  ? 'bg-[var(--accent)]/20 border'
-                  : 'hover:bg-[var(--bg-card-hover)]'
-              }`}
+              className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl transition-all ${active
+                ? 'bg-[var(--accent)]/20 border'
+                : 'hover:bg-[var(--bg-card-hover)]'
+                }`}
               style={{
                 color: active ? 'var(--accent)' : 'var(--text-muted)',
                 borderColor: active ? 'var(--accent)' : 'transparent',

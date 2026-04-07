@@ -355,8 +355,7 @@ const ChartCard = ({ title, icon: Icon, children }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.98 }}
     animate={{ opacity: 1, scale: 1 }}
-    className="p-5 rounded-xl shadow-lg"
-    style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
+    className="p-5 card"
   >
     <h3 className="flex items-center gap-2 text-lg font-semibold mb-3" style={{ color: "var(--accent)" }}>
       <Icon className="w-5 h-5" />

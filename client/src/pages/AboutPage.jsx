@@ -30,13 +30,22 @@ const AboutPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white font-[Michroma]">
+    <div 
+      className="min-h-screen text-white font-[Michroma] relative"
+      style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1594737625785-c0f4f5d6b95a?auto=format&fit=crop&w=1600&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed"
+      }}
+    >
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm pointer-events-none z-0"></div>
      
       
       {/* Hero Section */}
-      <section className="relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 overflow-hidden">
+      <section className="relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 overflow-hidden z-10">
         {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-black -z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-transparent -z-10"></div>
         <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 bg-cyan-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
         
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-10 text-center">
@@ -69,8 +78,7 @@ const AboutPage = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 sm:py-16 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-[#1a0e00] to-black"></div>
+      <section className="py-12 sm:py-16 relative z-10">
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
             {stats.map((stat, index) => (
@@ -96,8 +104,7 @@ const AboutPage = () => {
       </section>
 
       {/* Mission, Vision, Values */}
-      <section className="py-12 sm:py-16 md:py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-[#120900] to-black"></div>
+      <section className="py-12 sm:py-16 md:py-24 relative overflow-hidden z-10">
         {Array.from({ length: 8 }).map((_, i) => (
           <motion.div
             key={i}
@@ -157,8 +164,7 @@ const AboutPage = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 sm:py-16 md:py-24 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-black to-[#1a0e00]"></div>
+      <section className="py-12 sm:py-16 md:py-24 relative z-10">
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-10">
           <motion.h2
             initial={{ y: -30, opacity: 0 }}
@@ -217,8 +223,7 @@ const AboutPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 md:py-20 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1a0e00] to-black"></div>
+      <section className="py-12 sm:py-16 md:py-20 relative z-10">
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}

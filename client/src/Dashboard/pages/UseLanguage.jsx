@@ -1,5 +1,5 @@
 // src/hooks/useLanguage.js
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { t } from '../../i18n';
 
 export const useLanguage = () => {
@@ -23,7 +23,7 @@ export const useLanguage = () => {
     };
   }, []);
 
-  const translate = (key, params = {}) => {
+  const translate = useCallback((key, params = {}) => {
     let translated = t(key, currentLang);
     
     // Replace dynamic parameters like {days} with actual values
@@ -32,7 +32,7 @@ export const useLanguage = () => {
     });
     
     return translated;
-  };
+  }, [currentLang]);
 
   return { t: translate, currentLang };
 };

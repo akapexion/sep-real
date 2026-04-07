@@ -8,19 +8,11 @@ const Footer = () => {
   }, []);
 
   return (
-    <footer className="relative overflow-hidden bg-gradient-to-b from-[#1a0e00] via-[#120900] to-black text-white py-20 font-[Poppins]">
-      {/* 🌈 Animated gradient orbs */}
-      <motion.div
-        className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(253,199,0,0.08),transparent_70%)]"
-        animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-        style={{ backgroundSize: "200% 200%" }}
-      />
-      <motion.div
-        className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(255,140,0,0.15),transparent_75%)]"
-        animate={{ opacity: [0.4, 0.6, 0.4] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
+    <footer className="relative overflow-hidden py-20 font-[Poppins] transition-colors duration-300">
+      {/* Background Glow */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-black -z-10"></div>
+      <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-72 h-72 bg-cyan-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
+      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 w-80 h-80 bg-blue-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
 
       {/* ✨ Floating particles */}
       {Array.from({ length: 10 }).map((_, i) => (
@@ -67,14 +59,14 @@ const Footer = () => {
         </h3>
         <p className="text-gray-400 mb-6 sm:mb-8 text-base sm:text-lg max-w-2xl mx-auto px-2">
           Forge your strength, transform your body — and push beyond your limits.  
-          FitForge is your ultimate companion in fitness, focus, and endurance.
+          FitTrack is your ultimate companion in fitness, focus, and endurance.
         </p>
 
         {/* Contact Info */}
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8 text-gray-400 text-sm">
           <div className="flex items-center gap-2">
             <Mail className="w-4 h-4 text-cyan-400" />
-            <span>support@fitforge.com</span>
+            <span>support@fittrack.com</span>
           </div>
           <span className="hidden sm:inline text-gray-600">|</span>
           <div className="flex items-center gap-2">
@@ -95,7 +87,7 @@ const Footer = () => {
 
         {/* Copyright */}
         <p className="text-gray-500 text-sm">
-          &copy; {new Date().getFullYear()} FitForge. All rights reserved.
+          &copy; {new Date().getFullYear()} FitTrack. All rights reserved.
         </p>
       </motion.div>
 

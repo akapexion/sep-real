@@ -199,7 +199,7 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
     <motion.header
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="dashboard-header px-6 py-4 flex items-center justify-between"
+      className="dashboard-header px-6 py-4 flex items-center justify-between relative z-[60]"
     >
       <div className="flex items-center space-x-3">
         <form onSubmit={handleSearchSubmit} className="relative">
@@ -400,7 +400,7 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-50 py-2 border"
+              className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-[1000] py-2 border"
               style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}
             >
               <button

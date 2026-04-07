@@ -4,7 +4,7 @@ import { Dumbbell, ArrowRight } from "lucide-react";
 
 const HeroSection = () => {
   return (
-    <section className="min-h-screen bg-black text-white font-[Michroma] flex flex-col relative overflow-hidden">
+    <section className="min-h-screen font-[Michroma] flex flex-col relative overflow-hidden transition-colors duration-300">
       {/* Navbar */}
 
       {/* Background Glow */}
@@ -22,7 +22,7 @@ const HeroSection = () => {
           transition={{ duration: 1 }}
           className="flex flex-col items-center justify-center text-center lg:items-start lg:text-left"
         >
-          <div className="flex items-center justify-center lg:justify-start gap-3 mb-3 text-cyan-400">
+          <div className="flex items-center justify-center lg:justify-start gap-3 mb-3" style={{ color: "var(--accent)" }}>
             <Dumbbell className="w-6 h-6" />
             <p className="uppercase tracking-widest text-xs sm:text-sm">
               Track. Train. Transform.
@@ -31,35 +31,37 @@ const HeroSection = () => {
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[55px] font-bold leading-tight mb-6">
             Push Your{" "}
-            <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 text-transparent bg-clip-text">
+            <span className="font-extrabold drop-shadow-md" style={{ color: "var(--accent)" }}>
               Limits
             </span>{" "}
             — <br className="hidden lg:block" /> Transform Your Life.
           </h1>
 
-          <p className="text-gray-300 text-base sm:text-lg max-w-lg leading-relaxed">
+          <p className="text-base sm:text-lg max-w-lg leading-relaxed" style={{ color: "var(--text-secondary)" }}>
             Monitor your workouts, log your nutrition, and visualize your
-            progress. <span className="text-cyan-400">FitTrack</span> gives
+            progress. <span className="font-bold" style={{ color: "var(--accent)" }}>FitTrack</span> gives
             you the power to stay consistent and reach your goals.
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center lg:justify-start">
             <motion.button
               whileHover={{ scale: 1.05 }}
-              className="flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full text-black font-semibold hover:shadow-[0_0_25px_rgba(34,211,238,0.4)] transition-all w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-8 py-3 rounded-full text-black font-bold transition-all w-full sm:w-auto"
+              style={{ background: "var(--accent)", boxShadow: "0 0 20px var(--accent)" }}
             >
               Get Started <ArrowRight className="w-4 h-4" />
             </motion.button>
 
             <motion.button
               whileHover={{ scale: 1.05 }}
-              className="px-8 py-3 border border-cyan-500 text-cyan-400 rounded-full hover:bg-cyan-500/10 transition-all w-full sm:w-auto"
+              className="px-8 py-3 border rounded-full transition-all w-full sm:w-auto"
+              style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
             >
               Learn More
             </motion.button>
           </div>
 
-          <p className="mt-6 text-gray-400 text-xs sm:text-sm tracking-widest">
+          <p className="mt-6 text-xs sm:text-sm tracking-widest" style={{ color: "var(--text-muted)" }}>
             🚴 Track Workouts | 🥗 Log Meals | 📈 See Progress
           </p>
         </motion.div>
