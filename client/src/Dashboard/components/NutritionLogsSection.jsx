@@ -9,34 +9,42 @@ import { useLanguage } from '../pages/UseLanguage';
 
 const API_BASE = "http://localhost:3000";
 
-const nutrySchema =z.object({
-  mealType:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  
-  foodName:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  quantity:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  calories:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  proteins:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  carbs:z.any().refine((v) => v !== "" && v != null, {
-      message: "Please enter detail"
-    }),
-  fats:z.any().refine((v) => v !== "" && v != null, {
-      message: "Please enter detail"
-    }),
-  date:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
+const nutrySchema = z.object({
+  mealType: z.string().min(1, { message: "Meal type is required" }),
+  foodName: z.string().min(1, { message: "Food name is required" }),
+  quantity: z.string().min(1, { message: "Quantity is required" }),
+  calories: z.coerce.number().min(0, { message: "Cannot be negative" }),
+  proteins: z.coerce.number().min(0, { message: "Cannot be negative" }),
+  carbs: z.coerce.number().min(0, { message: "Cannot be negative" }),
+  fats: z.coerce.number().min(0, { message: "Cannot be negative" }),
+  date: z.string().min(1, { message: "Date is required" }),
+});
 
-})
+const foodDatabase = {
+  Breakfast: [
+    { name: "Oatmeal (1 cup)", calories: 154, proteins: 5, carbs: 27, fats: 3 },
+    { name: "Scrambled Eggs (2)", calories: 140, proteins: 12, carbs: 1, fats: 10 },
+    { name: "Greek Yogurt (1 cup)", calories: 100, proteins: 17, carbs: 6, fats: 0 }
+  ],
+  Lunch: [
+    { name: "Chicken Salad", calories: 350, proteins: 30, carbs: 10, fats: 20 },
+    { name: "Turkey Sandwich", calories: 400, proteins: 25, carbs: 45, fats: 12 },
+    { name: "Lentil Soup", calories: 230, proteins: 16, carbs: 40, fats: 2 }
+  ],
+  Dinner: [
+    { name: "Grilled Salmon", calories: 412, proteins: 40, carbs: 0, fats: 27 },
+    { name: "Chicken Breast & Rice", calories: 380, proteins: 35, carbs: 45, fats: 4 },
+    { name: "Steak and Sweet Potato", calories: 550, proteins: 45, carbs: 30, fats: 25 }
+  ],
+  Snacks: [
+    { name: "Apple", calories: 95, proteins: 0.5, carbs: 25, fats: 0.3 },
+    { name: "Almonds (1 oz)", calories: 164, proteins: 6, carbs: 6, fats: 14 },
+    { name: "Protein Shake", calories: 150, proteins: 25, carbs: 5, fats: 2 }
+  ],
+  Other: [
+    { name: "Custom Entry", calories: 0, proteins: 0, carbs: 0, fats: 0 }
+  ]
+};
 
 export default function NutritionLogsSection() {
   const printRef = useRef();
@@ -82,6 +90,36 @@ export default function NutritionLogsSection() {
     setFats("");
     setDate(new Date().toISOString().split("T")[0]);
     setEditingId(null);
+  };
+
+  const handleMealChange = (e) => {
+    const selectedMeal = e.target.value;
+    setMealType(selectedMeal);
+    setFoodName("");
+    setCalories("");
+    setProteins("");
+    setCarbs("");
+    setFats("");
+    setQuantity("");
+  };
+
+  const handleFoodNameChange = (e) => {
+    const selectedFoodName = e.target.value;
+    setFoodName(selectedFoodName);
+    
+    if (selectedFoodName === "Custom Entry" || selectedFoodName === "") {
+        return;
+    }
+    
+    const categoryItems = foodDatabase[mealType] || foodDatabase.Other || [];
+    const item = categoryItems.find(i => i.name === selectedFoodName);
+    if (item) {
+        setCalories(String(item.calories));
+        setProteins(String(item.proteins));
+        setCarbs(String(item.carbs));
+        setFats(String(item.fats));
+        if (!quantity) setQuantity("1 serving");
+    }
   };
 
   const fetchLogs = useCallback(async () => {
@@ -268,7 +306,7 @@ setError("")
     {t('mealType')}
     <select
       value={mealType}
-      onChange={(e) => setMealType(e.target.value)}
+      onChange={handleMealChange}
       className="p-2 rounded-md"
       style={{
         backgroundColor: "var(--input-bg)",
@@ -304,9 +342,10 @@ setError("")
   <label className="flex flex-col text-sm font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
     {t('foodName')}
     <input
+      list={`food-options-${mealType}`}
       placeholder={t('foodNamePlaceholder')}
       value={foodName}
-      onChange={(e) => setFoodName(e.target.value)}
+      onChange={handleFoodNameChange}
       className="p-2 rounded-md"
       style={{
         backgroundColor: "var(--input-bg)",
@@ -315,6 +354,11 @@ setError("")
       }}
       required
     />
+    <datalist id={`food-options-${mealType}`}>
+      {(foodDatabase[mealType] || []).map(item => (
+        <option key={item.name} value={item.name} />
+      ))}
+    </datalist>
      <p className=" text-xs" style={{ color: "red" }}>{error.foodName}</p>
   </label>
 

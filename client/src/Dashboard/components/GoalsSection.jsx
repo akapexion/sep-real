@@ -12,22 +12,18 @@ import { useLanguage } from '../pages/UseLanguage'; // Add this import
 const API_BASE = "http://localhost:3000";
 
 const goalSchema = z.object({
-  goalType:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  deadline:z.any().refine((v) => v !== "" && v != null, {
-      message: "Please enter detail"
-    }),
-  notes:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  current:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  target:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-})
+  goalType: z.string().min(1, { message: "Goal type is required" }),
+  deadline: z.string().min(1, { message: "Deadline is required" }).refine((v) => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const deadlineDate = new Date(v);
+    deadlineDate.setHours(0,0,0,0);
+    return !isNaN(deadlineDate.getTime()) && deadlineDate >= today;
+  }, { message: "Deadline cannot be in the past" }),
+  notes: z.string().optional(),
+  current: z.coerce.number().min(0, { message: "Current value cannot be negative" }),
+  target: z.coerce.number().min(0.1, { message: "Target value must be greater than 0" }),
+});
 
 export default function GoalsSection() {
   const { preferences, formatWeight } = usePreferencesContext();
@@ -264,6 +260,7 @@ export default function GoalsSection() {
           <input
             type="date"
             value={deadline}
+            min={new Date().toISOString().split("T")[0]}
             onChange={(e) => setDeadline(e.target.value)}
             className="p-2 rounded-md"
             style={{

@@ -22,7 +22,7 @@ app.use(express.json());
 app.use(cors());
 connectDb();
 
-cron.schedule('*/5 * * * *', async () => {
+cron.schedule('* * * * *', async () => {
   try {
     const now = new Date();
     const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -43,7 +43,6 @@ cron.schedule('*/5 * * * *', async () => {
 
     for (const user of users) {
       const isWorkout = user.preferences.reminders.workout === currentTime;
-      const isMeal = user.preferences.reminders.meal === currentTime;
 
       const message = isWorkout 
         ? "💪 Workout time! Let's get moving and crush those fitness goals!" 
@@ -57,8 +56,28 @@ cron.schedule('*/5 * * * *', async () => {
       
       console.log(`Push notification sent to user: ${user.name}`);
     }
+
+    // Process custom reminders from Reminder model
+    const dueReminders = await Reminder.find({
+      date: { $lte: now },
+      notified: false,
+      isActive: true
+    });
+
+    for (const reminder of dueReminders) {
+      await Notification.create({
+        userId: reminder.userId,
+        type: reminder.category || "reminder",
+        message: `⏰ Reminder: ${reminder.title}`,
+      });
+      
+      reminder.notified = true;
+      await reminder.save();
+      console.log(`Custom reminder sent for: ${reminder.title}`);
+    }
+
   } catch (error) {
-    console.error("5-minute reminder cron error:", error);
+    console.error("1-minute reminder cron error:", error);
   }
 });
 

@@ -9,31 +9,15 @@ import { usePreferencesContext } from "../pages/PreferencesContext";
 import {z} from 'zod'
 
 const workoutSchema = z.object({
-  exerciseName : z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  sets:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  reps:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail hjhjh"
-  }),
-  weights:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-notes:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-tags:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-date:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-category:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-})
+  exerciseName: z.string().min(1, { message: "Exercise name is required" }),
+  sets: z.coerce.number().min(1, { message: "Sets must be at least 1" }),
+  reps: z.coerce.number().min(1, { message: "Reps must be at least 1" }),
+  weights: z.coerce.number().min(0, { message: "Weights cannot be negative" }),
+  notes: z.string().optional(),
+  tags: z.string().optional(),
+  date: z.string().min(1, { message: "Date is required" }),
+  category: z.string().min(1, { message: "Category is required" }),
+});
 import { useLanguage } from "../pages/UseLanguage";
 
 const RecentWorkoutsSection = () => {
@@ -52,6 +36,12 @@ const RecentWorkoutsSection = () => {
   const [workouts, setWorkouts] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [filterTag, setFilterTag] = useState("");
+
+  const displayedWorkouts = workouts.filter((w) => {
+    if (!filterTag) return true;
+    return w.tags && w.tags.toLowerCase().includes(filterTag.toLowerCase());
+  });
 
   const API_BASE_URL = "http://localhost:3000";
 
@@ -315,9 +305,25 @@ setError("")
         )}
       </form>
 
-      <h3 className="text-xl font-semibold my-6" style={{ color: "var(--accent)" }}>
-        {t('recentWorkouts')}
-      </h3>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-8 mb-6">
+        <h3 className="text-xl font-semibold" style={{ color: "var(--accent)" }}>
+          {t('recentWorkouts')}
+        </h3>
+        
+        <div className="mt-2 sm:mt-0 flex items-center gap-2">
+          <label className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>
+            Filter by Tag:
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. cardio"
+            value={filterTag}
+            onChange={(e) => setFilterTag(e.target.value)}
+            className="px-3 py-1 rounded border text-sm"
+            style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
+          />
+        </div>
+      </div>
 
       {loading ? (
         <p className="text-center py-4" style={{ color: "var(--text-muted)" }}>
@@ -351,7 +357,7 @@ setError("")
             </thead>
 
             <tbody className="divide-y divide-[var(--border)]">
-              {workouts.map((w) => (
+              {displayedWorkouts.map((w) => (
                 <tr key={w._id} className="hover:bg-[var(--bg-card-hover)] transition-colors duration-150">
                   <td className="px-4 py-3 whitespace-nowrap text-sm" style={{ color: "var(--text-primary)" }}>
                     {new Date(w.date).toLocaleDateString()}
