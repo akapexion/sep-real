@@ -62,7 +62,7 @@ const HeroSection = () => {
           </div>
 
           <p className="mt-6 text-xs sm:text-sm tracking-widest" style={{ color: "var(--text-muted)" }}>
-            🚴 Track Workouts | 🥗 Log Meals | 📈 See Progress
+            Track Workouts | Log Meals | See Progress
           </p>
         </motion.div>
 
