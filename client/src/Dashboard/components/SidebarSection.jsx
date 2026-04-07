@@ -14,7 +14,7 @@ const SidebarSection = ({ user, logout }) => {
   const { t } = useLanguage(); // Use language hook
 
   // Define menu with translations
-  const menu = [
+  let menu = [
     { Icon: Home, label: t('dashboard'), path: '/dashboard' },
     { Icon: Dumbbell, label: t('workouts'), path: '/dashboard/workouts' },
     { Icon: Apple, label: t('nutrition'), path: '/dashboard/nutrition' },
@@ -24,8 +24,17 @@ const SidebarSection = ({ user, logout }) => {
     { Icon: BarChart3, label: t('analytics'), path: '/dashboard/analytics' },
     { Icon: Settings, label: t('settings'), path: '/dashboard/settings' },
     { Icon: Users, label: 'Community', path: '/dashboard/community' },
-    { Icon: MessageSquare, label: 'Give Feedback', path: '/dashboard/feedbacks' },
+    { Icon: MessageSquare, label: 'Give Feedback', path: '/dashboard/add-feedback' },
   ];
+
+  if (user?.role === "admin") {
+    menu = [
+      { Icon: Users, label: 'All Users', path: '/dashboard' },
+      { Icon: TrendingUp, label: 'Profile', path: '/dashboard/profile' },
+      { Icon: Settings, label: 'Settings', path: '/dashboard/settings' },
+      { Icon: MessageSquare, label: 'Feedbacks', path: '/dashboard/feedbacks' }
+    ];
+  }
 
   const handleLogout = () => {
     logout();

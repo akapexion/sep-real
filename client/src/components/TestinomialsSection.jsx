@@ -32,7 +32,7 @@ const TestimonialCard = ({ testimonial }) => {
     >
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
       <div className="relative z-10 flex flex-col justify-between h-full">
-        
+
         {/* Top Section */}
         <div>
           <div className="flex items-center gap-3 mb-4">
@@ -60,11 +60,10 @@ const TestimonialCard = ({ testimonial }) => {
             {Array.from({ length: 5 }).map((_, i) => (
               <Star
                 key={i}
-                className={`w-5 h-5 ${
-                  i < testimonial.rating.length
+                className={`w-5 h-5 ${i < testimonial.rating.length
                     ? "text-cyan-400 fill-yellow-400"
                     : "text-gray-600"
-                }`}
+                  }`}
               />
             ))}
           </div>
@@ -92,7 +91,6 @@ const TestimonialsSection = () => {
       setTestimonials(res.data.feedback);
     } catch (error) {
       console.log(error);
-      alert("Error fetching feedback");
     } finally {
       setLoading(false);
     }

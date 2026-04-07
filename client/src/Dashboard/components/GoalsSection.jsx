@@ -39,10 +39,16 @@ export default function GoalsSection() {
   const [current, setCurrent] = useState("");
   const [deadline, setDeadline] = useState(new Date().toISOString().split("T")[0]);
   const [notes, setNotes] = useState("");
-  const [error,setError] = useState("");
+  const [error, setError] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?._id;
+
+  useEffect(() => {
+    if (isWeightRelated(goalType) && user?.currentWeight) {
+      setCurrent(String(user.currentWeight));
+    }
+  }, [goalType]);
 
   const resetForm = () => {
     setGoalType("weight");
@@ -156,10 +162,11 @@ export default function GoalsSection() {
     setNotes(goal.notes || "");
   };
 
-  const isWeightRelated = (goalType) => {
-    return goalType.toLowerCase().includes('weight') || 
-           goalType.toLowerCase().includes('loss') || 
-           goalType.toLowerCase().includes('gain');
+  const isWeightRelated = (type) => {
+    if (!type) return false;
+    return type.toLowerCase().includes('weight') || 
+           type.toLowerCase().includes('loss') || 
+           type.toLowerCase().includes('gain');
   };
 
   const isLossGoal = (goalType) => {
@@ -319,12 +326,13 @@ export default function GoalsSection() {
             placeholder={isWeightRelated(goalType) ? `${t('current')} (${preferences?.units === 'imperial' ? t('lbs') : t('kg')})` : t('current')}
             value={current}
             onChange={(e) => setCurrent(e.target.value)}
-            className="p-2 rounded-md"
+            className="p-2 rounded-md font-semibold"
             style={{
-              backgroundColor: "var(--input-bg)",
-              color: "var(--text-primary)",
+              backgroundColor: isWeightRelated(goalType) && user?.currentWeight ? "rgba(255, 0, 0, 0.1)" : "var(--input-bg)",
+              color: isWeightRelated(goalType) && user?.currentWeight ? "red" : "var(--text-primary)",
               border: "1px solid var(--border)",
             }}
+            readOnly={isWeightRelated(goalType) && user?.currentWeight ? true : false}
             required
           />
           <p className="mb-4 text-xs" style={{ color: "red" }}>{error.current}</p>

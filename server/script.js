@@ -16,6 +16,31 @@ const goals_model = require("./models/goals");
 const Reminder = require("./models/reminder");
 const Feedback_model = require("./models/feedback")
 
+const jwt = require("jsonwebtoken");
+const JWT_SECRET = "fallback_secret_key_12345";
+
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).send({ message: "Access Denied" });
+
+  jwt.verify(token, JWT_SECRET, async (err, decodedUser) => {
+    if (err) return res.status(403).send({ message: "Invalid Token" });
+    
+    try {
+      // Check if the user exists and is still active
+      const dbUser = await reg_model.findById(decodedUser.userId);
+      if (!dbUser) return res.status(404).send({ message: "User not found" });
+      if (dbUser.isActive === false) return res.status(403).send({ message: "Account deactivated" });
+      
+      req.user = decodedUser;
+      next();
+    } catch (error) {
+      return res.status(500).send({ message: "Server error during authentication" });
+    }
+  });
+};
+
 const app = express();
 
 app.use(express.json());
@@ -44,8 +69,8 @@ cron.schedule('* * * * *', async () => {
     for (const user of users) {
       const isWorkout = user.preferences.reminders.workout === currentTime;
 
-      const message = isWorkout 
-        ? "💪 Workout time! Let's get moving and crush those fitness goals!" 
+      const message = isWorkout
+        ? "💪 Workout time! Let's get moving and crush those fitness goals!"
         : "🍎 Meal time! Fuel your body with healthy nutrition!";
 
       await Notification.create({
@@ -53,7 +78,7 @@ cron.schedule('* * * * *', async () => {
         type: "reminder",
         message,
       });
-      
+
       console.log(`Push notification sent to user: ${user.name}`);
     }
 
@@ -70,7 +95,7 @@ cron.schedule('* * * * *', async () => {
         type: reminder.category || "reminder",
         message: `⏰ Reminder: ${reminder.title}`,
       });
-      
+
       reminder.notified = true;
       await reminder.save();
       console.log(`Custom reminder sent for: ${reminder.title}`);
@@ -101,14 +126,14 @@ app.post("/register", upload.single("profilePic"), async (req, res) => {
     const hashPassword = await bcrypt.hash(password, 10);
     const profilePic = req.file ? req.file.filename : "";
 
-    await reg_model.create({
+    const newUser = await reg_model.create({
       name,
       email,
       password: hashPassword,
       image: profilePic,
     });
-
-    res.status(201).send({ message: "User registered successfully" });
+    const token = jwt.sign({ userId: newUser._id }, JWT_SECRET, { expiresIn: '7d' });
+    res.status(201).send({ message: "User registered successfully", token, registeredUser: newUser });
   } catch (error) {
     if (error.code === 11000) {
       res.status(400).send({ message: "Email already registered" });
@@ -124,9 +149,13 @@ app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     const registeredUser = await reg_model.findOne({ email: email });
     if (registeredUser) {
+      if (registeredUser.isActive === false) {
+        return res.status(200).send({ message: "Account deactivated" });
+      }
       const isMatch = await bcrypt.compare(password, registeredUser.password);
       if (isMatch) {
-        res.status(200).send({ message: "Logged in", registeredUser });
+        const token = jwt.sign({ userId: registeredUser._id }, JWT_SECRET, { expiresIn: '7d' });
+        res.status(200).send({ message: "Logged in", token, registeredUser });
       } else {
         res.status(200).send({ message: "Incorrect Password" });
       }
@@ -138,9 +167,10 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.post("/workouts", async (req, res) => {
+app.post("/workouts", authenticateToken, async (req, res) => {
   try {
-    const { userId, exerciseName, sets, reps, weights, notes, category, tags, date } = req.body;
+    const userId = req.user.userId;
+    const { exerciseName, sets, reps, weights, notes, category, tags, date } = req.body;
 
     const newWorkout = new workout_model({
       userId,
@@ -168,9 +198,9 @@ app.post("/workouts", async (req, res) => {
   }
 });
 
-app.get("/workouts", async (req, res) => {
+app.get("/workouts", authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.userId;
     if (!userId) return res.status(400).send({ message: "userId required" });
 
     const workouts = await workout_model.find({ userId }).sort({ date: -1 }).lean();
@@ -181,7 +211,7 @@ app.get("/workouts", async (req, res) => {
   }
 });
 
-app.post("/workouts/:id", async (req, res) => {
+app.post("/workouts/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { exerciseName, sets, reps, weights, notes, category, tags, date } = req.body;
@@ -214,7 +244,7 @@ app.post("/workouts/:id", async (req, res) => {
   }
 });
 
-app.delete("/workouts/:id", async (req, res) => {
+app.delete("/workouts/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await workout_model.findByIdAndDelete(id);
@@ -232,9 +262,10 @@ app.delete("/workouts/:id", async (req, res) => {
   }
 });
 
-app.post("/progress", async (req, res) => {
+app.post("/progress", authenticateToken, async (req, res) => {
   try {
-    const { userId, date, weight, measurements, performance } = req.body;
+    const userId = req.user.userId;
+    const { date, weight, measurements, performance } = req.body;
     const newProgress = new progress_model({
       userId,
       date: new Date(date),
@@ -263,7 +294,7 @@ app.post("/progress", async (req, res) => {
           });
         }
       }
-      
+
       if (goal.goalType === "measurements" && measurements) {
         if (measurements.waist && measurements.waist <= goal.target) {
           await Notification.create({
@@ -282,9 +313,9 @@ app.post("/progress", async (req, res) => {
   }
 });
 
-app.get("/progress", async (req, res) => {
+app.get("/progress", authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.userId;
     if (!userId) return res.status(400).send({ message: "userId required" });
 
     const entries = await progress_model.find({ userId }).sort({ date: 1 }).lean();
@@ -295,10 +326,11 @@ app.get("/progress", async (req, res) => {
   }
 });
 
-app.post("/progress/:id", async (req, res) => {
+app.post("/progress/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { userId, weight, measurements, performance } = req.body;
+    const userId = req.user.userId;
+    const { weight, measurements, performance } = req.body;
 
     const updatedProgress = await progress_model.findByIdAndUpdate(
       id,
@@ -340,7 +372,7 @@ app.post("/progress/:id", async (req, res) => {
   }
 });
 
-app.delete("/progress/:id", async (req, res) => {
+app.delete("/progress/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await progress_model.findByIdAndDelete(id);
@@ -351,9 +383,9 @@ app.delete("/progress/:id", async (req, res) => {
   }
 });
 
-app.get("/preferences", async (req, res) => {
+app.get("/preferences", authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.userId;
     if (!userId) return res.status(400).send({ message: "userId required" });
     const user = await reg_model.findById(userId).select("preferences");
     if (!user) return res.status(404).send({ message: "User not found" });
@@ -363,9 +395,10 @@ app.get("/preferences", async (req, res) => {
   }
 });
 
-app.post("/preferences", async (req, res) => {
+app.post("/preferences", authenticateToken, async (req, res) => {
   try {
-    const { userId, notifications, units, theme, language, reminders } = req.body;
+    const userId = req.user.userId;
+    const { notifications, units, theme, language, reminders } = req.body;
     if (!userId) return res.status(400).send({ message: "userId required" });
 
     const updated = await reg_model.findByIdAndUpdate(
@@ -392,9 +425,9 @@ app.post("/preferences", async (req, res) => {
   }
 });
 
-app.get("/profile", async (req, res) => {
+app.get("/profile", authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.userId;
     if (!userId) return res.status(400).send({ message: "userId required" });
     const user = await reg_model.findById(userId).select("name email image");
     if (!user) return res.status(404).send({ message: "User not found" });
@@ -404,17 +437,19 @@ app.get("/profile", async (req, res) => {
   }
 });
 
-app.post("/profile", upload.single("profilePic"), async (req, res) => {
+app.post("/profile", authenticateToken, upload.single("profilePic"), async (req, res) => {
   try {
-    const { userId, name, email } = req.body;
+    const userId = req.user.userId;
+    console.log(userId)
+    const { name, email } = req.body;
     const updateData = { name, email };
-    
+
     if (req.file) {
       updateData.image = req.file.filename;
     }
 
-    const updated = await reg_model.findByIdAndUpdate(userId, updateData, { 
-      new: true 
+    const updated = await reg_model.findByIdAndUpdate(userId, updateData, {
+      new: true
     }).select("name email image");
 
     res.send(updated);
@@ -423,9 +458,9 @@ app.post("/profile", upload.single("profilePic"), async (req, res) => {
   }
 });
 
-app.delete("/profile", async (req, res) => {
+app.delete("/profile", authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.userId;
     if (!userId) return res.status(400).send({ message: "userId required" });
 
     const user = await reg_model.findByIdAndDelete(userId);
@@ -443,9 +478,10 @@ app.delete("/profile", async (req, res) => {
   }
 });
 
-app.post("/nutrition", async (req, res) => {
+app.post("/nutrition", authenticateToken, async (req, res) => {
   try {
-    const { userId, mealType, foodItems, date, notes } = req.body;
+    const userId = req.user.userId;
+    const { mealType, foodItems, date, notes } = req.body;
     if (!userId || !mealType || !Array.isArray(foodItems) || foodItems.length === 0 || !date)
       return res.status(400).send({ message: "Invalid data" });
 
@@ -463,9 +499,9 @@ app.post("/nutrition", async (req, res) => {
   }
 });
 
-app.get("/nutrition", async (req, res) => {
+app.get("/nutrition", authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.userId;
     if (!userId) return res.status(400).send({ message: "userId required" });
 
     const logs = await Nutrition.find({ userId }).sort({ date: -1 }).lean();
@@ -483,7 +519,7 @@ app.get("/nutrition", async (req, res) => {
   }
 });
 
-app.post("/nutrition/:id", async (req, res) => {
+app.post("/nutrition/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { mealType, foodItems, date, notes } = req.body;
@@ -500,7 +536,7 @@ app.post("/nutrition/:id", async (req, res) => {
   }
 });
 
-app.delete("/nutrition/:id", async (req, res) => {
+app.delete("/nutrition/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await Nutrition.findByIdAndDelete(id);
@@ -512,9 +548,9 @@ app.delete("/nutrition/:id", async (req, res) => {
   }
 });
 
-app.get("/notifications", async (req, res) => {
+app.get("/notifications", authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.userId;
     if (!userId) return res.status(400).send({ message: "userId required" });
 
     const notifications = await Notification.find({ userId }).sort({ date: -1 }).lean();
@@ -525,9 +561,10 @@ app.get("/notifications", async (req, res) => {
   }
 });
 
-app.post("/notifications", async (req, res) => {
+app.post("/notifications", authenticateToken, async (req, res) => {
   try {
-    const { userId, type, message } = req.body;
+    const userId = req.user.userId;
+    const { type, message } = req.body;
     if (!userId || !type || !message)
       return res.status(400).send({ message: "userId, type, and message required" });
 
@@ -540,7 +577,7 @@ app.post("/notifications", async (req, res) => {
   }
 });
 
-app.post("/notifications/:id", async (req, res) => {
+app.post("/notifications/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const notif = await Notification.findByIdAndUpdate(id, { isRead: true }, { new: true });
@@ -552,7 +589,7 @@ app.post("/notifications/:id", async (req, res) => {
   }
 });
 
-app.delete("/notifications/:id", async (req, res) => {
+app.delete("/notifications/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await Notification.findByIdAndDelete(id);
@@ -564,9 +601,10 @@ app.delete("/notifications/:id", async (req, res) => {
   }
 });
 
-app.post("/goals", async (req, res) => {
+app.post("/goals", authenticateToken, async (req, res) => {
   try {
-    const { userId, goalType, target, current, deadline, notes } = req.body;
+    const userId = req.user.userId;
+    const { goalType, target, current, deadline, notes } = req.body;
     const newGoal = new goals_model({
       userId,
       goalType,
@@ -582,9 +620,9 @@ app.post("/goals", async (req, res) => {
   }
 });
 
-app.get("/goals", async (req, res) => {
+app.get("/goals", authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.userId;
     if (!userId) return res.status(400).send({ message: "userId required" });
 
     const goals = await goals_model.find({ userId }).sort({ deadline: 1 }).lean();
@@ -594,7 +632,7 @@ app.get("/goals", async (req, res) => {
   }
 });
 
-app.post("/goals/:id", async (req, res) => {
+app.post("/goals/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { goalType, target, current, deadline, notes } = req.body;
@@ -610,7 +648,7 @@ app.post("/goals/:id", async (req, res) => {
   }
 });
 
-app.delete("/goals/:id", async (req, res) => {
+app.delete("/goals/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await goals_model.findByIdAndDelete(id);
@@ -621,9 +659,10 @@ app.delete("/goals/:id", async (req, res) => {
   }
 });
 
-app.post("/reminders", async (req, res) => {
+app.post("/reminders", authenticateToken, async (req, res) => {
   try {
-    const { userId, title, date, type, category, priority, notes } = req.body;
+    const userId = req.user.userId;
+    const { title, date, type, category, priority, notes } = req.body;
     if (!userId || !title || !date) return res.status(400).send({ message: "Missing fields" });
 
     const reminder = await Reminder.create({
@@ -649,9 +688,9 @@ app.post("/reminders", async (req, res) => {
   }
 });
 
-app.get("/reminders", async (req, res) => {
+app.get("/reminders", authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.userId;
     if (!userId) return res.status(400).send({ message: "userId required" });
 
     const list = await Reminder.find({ userId }).sort({ date: -1 }).lean();
@@ -662,17 +701,17 @@ app.get("/reminders", async (req, res) => {
   }
 });
 
-app.post("/reminders/:id", async (req, res) => {
+app.post("/reminders/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, date, type, category, priority, notes, isActive } = req.body;
 
-    const updateData = { 
-      title, 
-      date: new Date(date), 
-      type, 
-      notes, 
-      isActive 
+    const updateData = {
+      title,
+      date: new Date(date),
+      type,
+      notes,
+      isActive
     };
 
     if (category) {
@@ -716,7 +755,7 @@ app.patch('/reminders/:id', async (req, res) => {
   }
 });
 
-app.delete("/reminders/:id", async (req, res) => {
+app.delete("/reminders/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await Reminder.findByIdAndDelete(id);
@@ -735,9 +774,10 @@ app.delete("/reminders/:id", async (req, res) => {
   }
 });
 
-app.post("/feedback", async (req, res) => {
+app.post("/feedback", authenticateToken, async (req, res) => {
   try {
-    const { userId, name, email, message, rating } = req.body;
+    const userId = req.user.userId;
+    const { name, email, message, rating } = req.body;
 
     console.log("Received body:", req.body); // <-- IMPORTANT
 
@@ -759,7 +799,7 @@ app.post("/feedback", async (req, res) => {
   }
 });
 
-app.get("/feedback", async (req, res) => {
+app.get("/feedback", authenticateToken, async (req, res) => {
   try {
     const feedback = await Feedback_model.find().sort({ createdAt: -1 }); // latest first
     res.status(200).send({ feedback });
@@ -772,15 +812,15 @@ app.get("/feedback", async (req, res) => {
 
 // =========== NEW SOCIAL & SEARCH ENDPOINTS ===========
 
-app.get("/users", async (req, res) => {
+app.get("/users", authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.userId;
     if (!userId) return res.status(400).send({ message: "userId required" });
-    
+
     const users = await reg_model.find({ _id: { $ne: userId } })
       .select("name email image followers following")
       .lean();
-      
+
     res.send(users);
   } catch (error) {
     console.error(error);
@@ -788,10 +828,10 @@ app.get("/users", async (req, res) => {
   }
 });
 
-app.post("/users/:id/follow", async (req, res) => {
+app.post("/users/:id/follow", authenticateToken, async (req, res) => {
   try {
-    const targetUserId = req.params.id; 
-    const { userId } = req.body; 
+    const targetUserId = req.params.id;
+    const userId = req.user.userId;
 
     const targetUser = await reg_model.findById(targetUserId);
     const currentUser = await reg_model.findById(userId);
@@ -811,7 +851,7 @@ app.post("/users/:id/follow", async (req, res) => {
       targetUser.followers.push(userId);
       await currentUser.save();
       await targetUser.save();
-      
+
       await Notification.create({
         userId: targetUserId,
         type: "alert",
@@ -826,9 +866,9 @@ app.post("/users/:id/follow", async (req, res) => {
   }
 });
 
-app.get("/feed", async (req, res) => {
+app.get("/feed", authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.userId;
     if (!userId) return res.status(400).send({ message: "userId required" });
 
     const user = await reg_model.findById(userId);
@@ -843,12 +883,12 @@ app.get("/feed", async (req, res) => {
 
     const nutrition = await Nutrition.find({ userId: { $in: followingIds } })
       .sort({ date: -1 }).limit(20).populate('userId', 'name image');
-      
+
     const goals = await goals_model.find({ userId: { $in: followingIds } })
       .sort({ createdAt: -1 }).limit(20).populate('userId', 'name image');
 
     let feed = [];
-    
+
     workouts.forEach(w => {
       feed.push({
         _id: w._id,
@@ -868,9 +908,9 @@ app.get("/feed", async (req, res) => {
         content: `Logged ${n.mealType}: ${n.foodItems.map(i => i.name).join(', ')}.`,
       });
     });
-    
+
     goals.forEach(g => {
-      if(g.createdAt) {
+      if (g.createdAt) {
         feed.push({
           _id: g._id,
           type: 'goal',
@@ -889,7 +929,7 @@ app.get("/feed", async (req, res) => {
   }
 });
 
-app.get("/search", async (req, res) => {
+app.get("/search", authenticateToken, async (req, res) => {
   try {
     const { q } = req.query;
     if (!q) return res.send({ workouts: [], nutrition: [], users: [] });
@@ -903,7 +943,7 @@ app.get("/search", async (req, res) => {
     const nutrition = await Nutrition.find({
       $or: [{ mealType: regex }, { 'foodItems.name': regex }, { notes: regex }]
     }).limit(20).populate('userId', 'name image');
-    
+
     const users = await reg_model.find({
       $or: [{ name: regex }, { email: regex }]
     }).select("name email image followers following").limit(20);
@@ -915,12 +955,13 @@ app.get("/search", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.post("/profile/weight", async (req, res) => {
+const PORT = 3000;
+app.post("/profile/weight", authenticateToken, async (req, res) => {
   try {
-    const { userId, currentWeight } = req.body;
+    const userId = req.user.userId;
+    const { currentWeight } = req.body;
     if (!userId || currentWeight === undefined) return res.status(400).send({ message: "userId and currentWeight required" });
-    
+
     // reg_model usage since register models map to reg_model globally here
     const updatedUser = await reg_model.findByIdAndUpdate(userId, { currentWeight }, { new: true });
     if (!updatedUser) return res.status(404).send({ message: "User not found" });
@@ -929,6 +970,32 @@ app.post("/profile/weight", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: "Server error" });
+  }
+});
+
+// Admin routes
+app.get("/admin/users", authenticateToken, async (req, res) => {
+  try {
+    const user = await reg_model.findById(req.user.userId);
+    if (!user || user.role !== "admin") return res.status(403).send({ message: "Forbidden" });
+    const users = await reg_model.find().select("-password");
+    res.send(users);
+  } catch (error) {
+    console.error("DEBUG 500:", error);
+    res.status(500).send({ message: "Server Error: " + error.message });
+  }
+});
+
+app.patch("/admin/users/:id/status", authenticateToken, async (req, res) => {
+  try {
+    const user = await reg_model.findById(req.user.userId);
+    if (!user || user.role !== "admin") return res.status(403).send({ message: "Forbidden" });
+
+    const { isActive } = req.body;
+    const updatedUser = await reg_model.findByIdAndUpdate(req.params.id, { isActive }, { new: true }).select("-password");
+    res.send(updatedUser);
+  } catch (error) {
+    res.status(500).send({ message: "Server Error" });
   }
 });
 

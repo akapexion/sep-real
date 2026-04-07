@@ -8,6 +8,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../pages/UseLanguage';
+import AdminPage from './AdminPage';
 
 const API_BASE = "http://localhost:3000";
 
@@ -29,7 +30,7 @@ const HomePage = () => {
   const userId = user?._id;
 
   useEffect(() => {
-    if (userId) {
+    if (userId && user?.role !== 'admin') {
       const cached = sessionStorage.getItem(`dashboardData_${userId}`);
       if (cached) {
         try {
@@ -169,6 +170,10 @@ const HomePage = () => {
       </div>
     </motion.div>
   );
+
+  if (user?.role === 'admin') {
+    return <AdminPage />;
+  }
 
   if (loading) {
     return (

@@ -16,9 +16,25 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
 
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
+  const searchRef = useRef(null);
+  const latestNotifId = useRef(null);
+
+  const modules = [
+    { name: 'Dashboard', path: '/dashboard' },
+    { name: 'Workouts', path: '/dashboard/workouts' },
+    { name: 'Nutrition', path: '/dashboard/nutrition' },
+    { name: 'Progress', path: '/dashboard/progress' },
+    { name: 'Goals', path: '/dashboard/goals' },
+    { name: 'Reminders', path: '/dashboard/reminders' },
+    { name: 'Analytics', path: '/dashboard/analytics' },
+    { name: 'Settings', path: '/dashboard/settings' },
+    { name: 'Community', path: '/dashboard/community' },
+  ];
+
   const userId = user?._id;
 
   useEffect(() => {
@@ -26,7 +42,6 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
       const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
       setProfilePic(storedUser.image || '');
     };
-
     loadProfilePic();
   }, []);
 
@@ -36,7 +51,7 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
 
       const interval = setInterval(() => {
         fetchNotifications();
-      }, 30000);
+      }, 3000);
 
       return () => clearInterval(interval);
     }
@@ -79,6 +94,9 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setShowProfileMenu(false);
       }
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSearchDropdown(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -90,10 +108,23 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
 
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/notifications?userId=${userId}`);
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_BASE_URL}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
       const sortedNotifications = res.data.sort((a, b) => new Date(b.date) - new Date(a.date));
-      setNotifications(sortedNotifications);
-      setUnreadCount(sortedNotifications.filter(n => !n.isRead).length);
+
+      // Only update state if a new notification has arrived
+      if (
+        sortedNotifications.length > 0 &&
+        sortedNotifications[0]._id !== latestNotifId.current
+      ) {
+        latestNotifId.current = sortedNotifications[0]._id;
+        setNotifications(sortedNotifications);
+        setUnreadCount(sortedNotifications.filter(n => !n.isRead).length);
+      }
+
     } catch (err) {
       console.error('Failed to fetch notifications:', err);
     } finally {
@@ -110,7 +141,11 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
 
   const markAsRead = async (notificationId) => {
     try {
-      await axios.post(`${API_BASE_URL}/notifications/${notificationId}`, { userId });
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_BASE_URL}/notifications/${notificationId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      latestNotifId.current = null; // reset so next fetch updates state
       await fetchNotifications();
       toast.success('Marked as read');
     } catch (err) {
@@ -122,7 +157,11 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
   const deleteNotification = async (notificationId) => {
     if (!window.confirm('Delete notification?')) return;
     try {
-      await axios.delete(`${API_BASE_URL}/notifications/${notificationId}?userId=${userId}`);
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_BASE_URL}/notifications/${notificationId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      latestNotifId.current = null; // reset so next fetch updates state
       toast.success('Deleted');
       await fetchNotifications();
     } catch (err) {
@@ -133,12 +172,16 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
 
   const markAllAsRead = async () => {
     try {
+      const token = localStorage.getItem('token');
       const unreadNotifications = notifications.filter(n => !n.isRead);
       await Promise.all(
         unreadNotifications.map(notif =>
-          axios.post(`${API_BASE_URL}/notifications/${notif._id}`, { userId })
+          axios.post(`${API_BASE_URL}/notifications/${notif._id}`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
         )
       );
+      latestNotifId.current = null; // reset so next fetch updates state
       await fetchNotifications();
       toast.success('All notifications marked as read');
     } catch (err) {
@@ -156,7 +199,12 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
+    setShowSearchDropdown(true);
   };
+
+  const filteredModules = modules.filter(m =>
+    m.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -202,19 +250,55 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
       className="dashboard-header px-6 py-4 flex items-center justify-between relative z-[60]"
     >
       <div className="flex items-center space-x-3">
-        <form onSubmit={handleSearchSubmit} className="relative">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
-            style={{ color: 'var(--text-muted)' }}
-          />
-          <input
-            type="text"
-            placeholder="Search workouts, meals..."
-            value={searchQuery}
-            onChange={handleSearch}
-            className="input pl-10 pr-4 py-2 rounded-full w-64 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 transition"
-          />
-        </form>
+        <div ref={searchRef} className="relative">
+          <form onSubmit={handleSearchSubmit}>
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
+              style={{ color: 'var(--text-muted)' }}
+            />
+            <input
+              type="text"
+              placeholder="Search modules..."
+              value={searchQuery}
+              onChange={handleSearch}
+              onFocus={() => setShowSearchDropdown(true)}
+              className="input pl-10 pr-4 py-2 rounded-full w-64 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 transition"
+              style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
+            />
+          </form>
+
+          {showSearchDropdown && searchQuery && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute left-0 mt-2 w-full rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto border"
+              style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}
+            >
+              {filteredModules.length > 0 ? (
+                filteredModules.map((mod) => (
+                  <button
+                    key={mod.name}
+                    className="w-full text-left px-4 py-2 text-sm transition"
+                    style={{ color: 'var(--text-primary)' }}
+                    onMouseOver={(e) => e.target.style.backgroundColor = 'var(--bg-card-hover)'}
+                    onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                    onClick={() => {
+                      setSearchQuery("");
+                      setShowSearchDropdown(false);
+                      navigate(mod.path);
+                    }}
+                  >
+                    Go to {mod.name}
+                  </button>
+                ))
+              ) : (
+                <div className="px-4 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>
+                  No modules found. Press enter to search data.
+                </div>
+              )}
+            </motion.div>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center space-x-4">
@@ -396,6 +480,7 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
               </p>
             </div>
           </motion.div>
+
           {showProfileMenu && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}

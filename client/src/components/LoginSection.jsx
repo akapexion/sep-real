@@ -50,6 +50,7 @@ export default function LoginSection({ Loginuser }) {
         localStorage.setItem("user", JSON.stringify(loggedInUser));
 
         localStorage.setItem("userId", loggedInUser._id);
+        localStorage.setItem("token", res.data.token);
 
         Loginuser(loggedInUser);
 

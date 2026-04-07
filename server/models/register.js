@@ -23,6 +23,8 @@ const registerSchema = new mongoose.Schema({
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Register" }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: "Register" }],
   currentWeight: { type: Number, default: null },
+  role: { type: String, default: "user", enum: ["user", "admin"] },
+  isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model("Register", registerSchema);

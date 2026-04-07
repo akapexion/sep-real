@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import axios from 'axios';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import DashboardLayout from './Dashboard/components/DashboardLayout';
@@ -23,10 +24,31 @@ import JoinPage from './pages/JoinPage';
 import FeedbackForm from './Dashboard/components/FeedbackForm';
 import SearchPage from './Dashboard/pages/SearchPage';
 import CommunityPage from './Dashboard/pages/CommunityPage';
+import AdminPage from './Dashboard/pages/AdminPage';
+import Feedbacks from './Dashboard/components/Feedbacks';
 
 const App = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Setup global Axios interceptor to kick out deactivated users
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 403 && error.response?.data?.message === "Account deactivated") {
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, []);
 
   const updateUser = (newUser) => {
     setUser(newUser);
@@ -110,10 +132,11 @@ const App = () => {
             <Route path="/dashboard/profile" element={<ProfilePage />} />
             <Route path="/dashboard/notifications" element={<Notification />} />
             <Route path="/dashboard/reminders" element={<RemindersPage />} />
-            <Route path="/dashboard/feedbacks" element={<FeedbackForm />} />
+            <Route path="/dashboard/add-feedback" element={<FeedbackForm />} />
+            <Route path="/dashboard/feedbacks" element={<Feedbacks />} />
             <Route path="/dashboard/search" element={<SearchPage />} />
             <Route path="/dashboard/community" element={<CommunityPage />} />
-            
+            <Route path="/dashboard/admin" element={<AdminPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

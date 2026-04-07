@@ -8,10 +8,19 @@ import { Trash2, Edit2, Plus, Loader2 } from "lucide-react";
 import { usePreferencesContext } from "../pages/PreferencesContext";
 import {z} from 'zod'
 
+const CATEGORY_TAGS = {
+  Strength: ['Hypertrophy', 'Powerlifting', 'Bodybuilding', 'Core', 'Endurance'],
+  Cardio: ['Running', 'Cycling', 'Swimming', 'Rowing', 'Endurance'],
+  Yoga: ['Flexibility', 'Vinyasa', 'Hatha', 'Restorative'],
+  HIIT: ['Intervals', 'Circuit', 'Tabata', 'Sprint'],
+  Mobility: ['Stretching', 'Recovery', 'Warm-up', 'Cool-down'],
+  Other: ['General', 'Rehab', 'Sports', 'Mixed']
+};
+
 const workoutSchema = z.object({
   exerciseName: z.string().min(1, { message: "Exercise name is required" }),
-  sets: z.coerce.number().min(1, { message: "Sets must be at least 1" }),
-  reps: z.coerce.number().min(1, { message: "Reps must be at least 1" }),
+  sets: z.coerce.number().min(1, { message: "Sets must be at least 1" }).max(5, { message: "Max 5 sets allowed" }),
+  reps: z.coerce.number().min(1, { message: "Reps must be at least 1" }).max(20, { message: "Max 20 reps allowed" }),
   weights: z.coerce.number().min(0, { message: "Weights cannot be negative" }),
   notes: z.string().optional(),
   tags: z.string().optional(),
@@ -29,7 +38,7 @@ const RecentWorkoutsSection = () => {
   const [weights, setWeights] = useState("");
   const [notes, setNotes] = useState("");
   const [category, setCategory] = useState("Other");
-  const [tags, setTags] = useState("");
+  const [tags, setTags] = useState(CATEGORY_TAGS["Other"][0]);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [error, setError] = useState("");
 
@@ -154,7 +163,7 @@ setError("")
     setWeights("");
     setNotes("");
     setCategory("Other");
-    setTags("");
+    setTags(CATEGORY_TAGS["Other"][0]);
     setDate(new Date().toISOString().split("T")[0]);
     setEditingId(null);
   };
@@ -195,6 +204,7 @@ setError("")
               value={sets}
               onChange={(e) => setSets(e.target.value)}
               min="1"
+              max="5"
               required
               className="w-full px-4 py-2 rounded border"
               style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
@@ -211,6 +221,7 @@ setError("")
               value={reps}
               onChange={(e) => setReps(e.target.value)}
               min="1"
+              max="20"
               required
               className="w-full px-4 py-2 rounded border"
               style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
@@ -251,7 +262,11 @@ setError("")
         </label>
         <select
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          onChange={(e) => {
+            const newCat = e.target.value;
+            setCategory(newCat);
+            setTags(CATEGORY_TAGS[newCat][0]);
+          }}
           className="w-full px-4 py-2 rounded border"
           style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
         >
@@ -264,13 +279,16 @@ setError("")
         <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
           {t('tags')}
         </label>
-        <input
-          type="text"
+        <select
           value={tags}
           onChange={(e) => setTags(e.target.value)}
           className="w-full px-4 py-2 rounded border"
           style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", borderColor: "var(--border)" }}
-        />
+        >
+          {CATEGORY_TAGS[category]?.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
         <p className="mb-4 text-xs" style={{ color: "red" }}>{error.tags}</p>
 
         <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>

@@ -1,20 +1,19 @@
-// src/components/FeedbackForm.jsx
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Star } from "lucide-react";
 import axios from "axios";
+import {toast} from "react-hot-toast";
 
 const API_BASE = "http://localhost:3000";
 
 export default function FeedbackForm() {
-  // ⭐ USER ID localStorage se lena
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?._id;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [rating, setRating] = useState("");
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState({});
@@ -23,7 +22,7 @@ export default function FeedbackForm() {
     const errors = {};
     if (!name) errors.name = "Please enter your name";
     if (!email) errors.email = "Please enter your email";
-    if (!rating) errors.rating = "Please give a rating";
+    if (rating === 0) errors.rating = "Please give a rating";
     if (!message) errors.message = "Please write your feedback";
 
     setError(errors);
@@ -46,19 +45,19 @@ export default function FeedbackForm() {
       userId, // ⭐ most important
       name,
       email,
-      rating,
+      rating: "⭐".repeat(rating),
       message,
     };
 
     try {
       await axios.post(`${API_BASE}/feedback`, payload);
 
-      alert("Feedback submitted!");
+      toast.success("Feedback submitted!");
 
       // Reset form
       setName("");
       setEmail("");
-      setRating("");
+      setRating(0);
       setMessage("");
     } catch (err) {
       console.log("Error in submitting:", err);
@@ -124,19 +123,20 @@ export default function FeedbackForm() {
             Rating
           </label>
 
-          <select
-            value={rating}
-            onChange={(e) => setRating(e.target.value)}
-            className="p-3 rounded-md transition-colors focus:ring-2 focus:ring-[var(--accent)]"
-            style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
-          >
-            <option value="">Select Rating</option>
-            {["⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"].map((stars, index) => (
-              <option key={index} value={stars} style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)" }}>
-                {stars}
-              </option>
+          <div className="flex items-center gap-2 py-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star
+                key={star}
+                className={`cursor-pointer transition-all duration-200 ${
+                  (hoverRating || rating) >= star ? "text-yellow-400 fill-yellow-400 scale-110" : "text-gray-500"
+                }`}
+                onMouseEnter={() => setHoverRating(star)}
+                onMouseLeave={() => setHoverRating(0)}
+                onClick={() => setRating(star)}
+                size={32}
+              />
             ))}
-          </select>
+          </div>
 
           <p className="mb-2 text-xs text-red-500">{error.rating}</p>
         </div>
