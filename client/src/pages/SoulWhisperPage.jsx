@@ -7,12 +7,12 @@ import Footer from "../components/Footer";
 const SoulWhisperPage = () => {
   const features = [
     {
-      icon: <Brain className="w-10 h-10 text-yellow-400" />,
+      icon: <Brain className="w-10 h-10 text-cyan-400" />,
       title: "Mindful Meditation",
       desc: "Connect with your inner self through guided meditation sessions designed to calm your mind and reduce stress.",
     },
     {
-      icon: <Heart className="w-10 h-10 text-orange-400" />,
+      icon: <Heart className="w-10 h-10 text-cyan-500" />,
       title: "Emotional Wellness",
       desc: "Track your emotional state and learn techniques to maintain mental balance and inner peace.",
     },
@@ -22,12 +22,12 @@ const SoulWhisperPage = () => {
       desc: "Improve your sleep quality with relaxing sounds and bedtime routines that help you unwind.",
     },
     {
-      icon: <Sun className="w-10 h-10 text-yellow-500" />,
+      icon: <Sun className="w-10 h-10 text-cyan-400" />,
       title: "Morning Rituals",
       desc: "Start your day with positive affirmations and energizing morning practices for a productive day.",
     },
     {
-      icon: <Sparkles className="w-10 h-10 text-yellow-400" />,
+      icon: <Sparkles className="w-10 h-10 text-cyan-400" />,
       title: "Energy Healing",
       desc: "Recharge your spiritual energy through breathing exercises and mindfulness techniques.",
     },
@@ -58,9 +58,9 @@ const SoulWhisperPage = () => {
       {/* Hero Section */}
       <section className="relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 overflow-hidden">
         {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-yellow-600/10 to-black -z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-black -z-10"></div>
         <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 bg-purple-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
-        <div className="absolute bottom-20 right-1/4 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 bg-yellow-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
+        <div className="absolute bottom-20 right-1/4 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 bg-cyan-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
         
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-10 text-center">
           <motion.div
@@ -68,7 +68,7 @@ const SoulWhisperPage = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="flex items-center justify-center gap-3 mb-4 text-yellow-400">
+            <div className="flex items-center justify-center gap-3 mb-4 text-cyan-400">
               <Sparkles className="w-6 h-6" />
               <p className="uppercase tracking-widest text-xs sm:text-sm">
                 Inner Peace & Wellness
@@ -76,7 +76,7 @@ const SoulWhisperPage = () => {
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
-              <span className="bg-gradient-to-r from-purple-400 via-yellow-400 to-orange-500 text-transparent bg-clip-text">
+              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-blue-500 text-transparent bg-clip-text">
                 SoulWhisper
               </span>
             </h1>
@@ -95,7 +95,7 @@ const SoulWhisperPage = () => {
         {Array.from({ length: 8 }).map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-[6px] h-[6px] rounded-full bg-gradient-to-r from-purple-400 to-yellow-400 blur-[2px]"
+            className="absolute w-[6px] h-[6px] rounded-full bg-gradient-to-r from-cyan-400 to-yellow-400 blur-[2px]"
             initial={{
               x: Math.random() * window.innerWidth,
               y: Math.random() * window.innerHeight,
@@ -119,7 +119,7 @@ const SoulWhisperPage = () => {
             whileInView={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-8 sm:mb-12 md:mb-16 text-center bg-gradient-to-r from-purple-400 via-yellow-400 to-orange-500 text-transparent bg-clip-text px-2"
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-8 sm:mb-12 md:mb-16 text-center bg-gradient-to-r from-cyan-400 via-blue-500 to-blue-500 text-transparent bg-clip-text px-2"
           >
             Wellness Programs
           </motion.h2>
@@ -138,7 +138,7 @@ const SoulWhisperPage = () => {
                 <div className="mb-6 flex justify-center">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-semibold mb-4 text-yellow-300 text-center">
+                <h3 className="text-xl font-semibold mb-4 text-cyan-400 text-center">
                   {feature.title}
                 </h3>
                 <p className="text-gray-300 text-sm leading-relaxed text-center">
@@ -159,7 +159,7 @@ const SoulWhisperPage = () => {
             whileInView={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-8 sm:mb-12 md:mb-16 text-center bg-gradient-to-r from-purple-400 via-yellow-400 to-orange-500 text-transparent bg-clip-text px-2"
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-8 sm:mb-12 md:mb-16 text-center bg-gradient-to-r from-cyan-400 via-blue-500 to-blue-500 text-transparent bg-clip-text px-2"
           >
             Special Programs
           </motion.h2>
@@ -173,14 +173,14 @@ const SoulWhisperPage = () => {
                 transition={{ duration: 0.7, delay: index * 0.2 }}
                 viewport={{ once: true }}
                 whileHover={{ scale: 1.03 }}
-                className="bg-gradient-to-br from-purple-500/10 to-yellow-500/10 border border-purple-400/30 rounded-2xl p-10 hover:shadow-[0_0_40px_rgba(168,85,247,0.5)] transition-all"
+                className="bg-gradient-to-br from-cyan-500/20 to-yellow-500/10 border border-purple-400/30 rounded-2xl p-10 hover:shadow-[0_0_40px_rgba(168,85,247,0.5)] transition-all"
               >
                 <div className="flex items-start gap-6">
                   <div className="text-purple-400 flex-shrink-0">
                     {program.icon}
                   </div>
                   <div>
-                    <h3 className="text-2xl font-semibold mb-3 text-yellow-300">
+                    <h3 className="text-2xl font-semibold mb-3 text-cyan-400">
                       {program.title}
                     </h3>
                     <p className="text-gray-300 leading-relaxed">
@@ -213,7 +213,7 @@ const SoulWhisperPage = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 text-sm sm:text-base bg-gradient-to-r from-purple-500 via-yellow-500 to-orange-600 rounded-full text-black font-semibold hover:shadow-[0_0_35px_rgba(168,85,247,0.7)] transition-all"
+              className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 text-sm sm:text-base bg-gradient-to-r from-cyan-400 via-blue-500 to-blue-500 rounded-full text-black font-semibold hover:shadow-[0_0_35px_rgba(168,85,247,0.7)] transition-all"
             >
               Start Your Wellness Journey
             </motion.button>

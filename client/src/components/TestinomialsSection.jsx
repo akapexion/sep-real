@@ -25,7 +25,7 @@ const TestimonialCard = ({ testimonial }) => {
 
   return (
     <motion.div
-      className="relative bg-gradient-to-br from-zinc-900 via-zinc-800 to-black rounded-2xl p-8 shadow-2xl border border-yellow-500/20 overflow-hidden w-full h-full"
+      className="relative bg-gradient-to-br from-zinc-900 via-zinc-800 to-black rounded-2xl p-8 shadow-2xl border border-cyan-500/30 overflow-hidden w-full h-full"
       style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -44,7 +44,7 @@ const TestimonialCard = ({ testimonial }) => {
             />
             <div>
               <h3 className="text-xl font-bold text-white">{testimonial.name}</h3>
-              <p className="text-sm text-yellow-400">{testimonial.email}</p>
+              <p className="text-sm text-cyan-400">{testimonial.email}</p>
             </div>
             <CheckCircle className="w-5 h-5 text-green-400 ml-auto" />
           </div>
@@ -62,13 +62,13 @@ const TestimonialCard = ({ testimonial }) => {
                 key={i}
                 className={`w-5 h-5 ${
                   i < testimonial.rating.length
-                    ? "text-yellow-400 fill-yellow-400"
+                    ? "text-cyan-400 fill-yellow-400"
                     : "text-gray-600"
                 }`}
               />
             ))}
           </div>
-          <div className="flex items-center gap-2 text-sm font-bold text-yellow-400">
+          <div className="flex items-center gap-2 text-sm font-bold text-cyan-400">
             <TrendingUp className="w-4 h-4" />
             Verified Feedback
           </div>
@@ -118,7 +118,7 @@ const TestimonialsSection = () => {
 
   if (loading)
     return (
-      <div className="text-center text-yellow-400 mt-10 text-xl">
+      <div className="text-center text-cyan-400 mt-10 text-xl">
         Loading feedback…
       </div>
     );
@@ -132,13 +132,13 @@ const TestimonialsSection = () => {
 
   return (
     <section className="relative w-full min-height-screen bg-black flex flex-col justify-center items-center px-6 py-20 font-[Michroma] overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-yellow-900/10 via-orange-900/10 to-red-900/10" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-yellow-500/10 blur-3xl rounded-full animate-pulse" />
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-indigo-500/10" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-cyan-500/10 blur-3xl rounded-full animate-pulse" />
 
       <motion.h2
         initial={{ opacity: 0, y: -30 }}
         whileInView={{ opacity: 1, y: 0 }}
-        className="text-5xl md:text-6xl font-bold text-center mb-16 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent z-10"
+        className="text-5xl md:text-6xl font-bold text-center mb-16 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent z-10"
       >
         Real Feedback
       </motion.h2>

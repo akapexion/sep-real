@@ -19,6 +19,7 @@ const ProfileSection = () => {
     name: '',
     email: '',
     image: '',
+    currentWeight: '',
   });
 
   const [preview, setPreview] = useState(null);
@@ -43,7 +44,10 @@ const ProfileSection = () => {
 
       try {
         const res = await axios.get(`${API_BASE_URL}/profile?userId=${userId}`);
-        setProfile(res.data);
+        setProfile({
+            ...res.data,
+            currentWeight: user.currentWeight || ''
+        });
         setPreview(
           res.data.image ? `${API_BASE_URL}/uploads/${res.data.image}` : null
         );
@@ -107,7 +111,14 @@ const ProfileSection = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      setProfile(res.data);
+      if (profile.currentWeight) {
+        await axios.post(`${API_BASE_URL}/profile/weight`, {
+            userId,
+            currentWeight: Number(profile.currentWeight)
+        });
+      }
+
+      setProfile({ ...res.data, currentWeight: profile.currentWeight });
 
       const newImageURL = res.data.image
         ? `${API_BASE_URL}/uploads/${res.data.image}`
@@ -119,6 +130,7 @@ const ProfileSection = () => {
         name: res.data.name,
         email: res.data.email,
         image: res.data.image,
+        currentWeight: profile.currentWeight ? Number(profile.currentWeight) : user.currentWeight
       };
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
@@ -227,6 +239,24 @@ const ProfileSection = () => {
             required
           />
            <p className="mb-4 text-xs" style={{ color: "red" }}>{error.email}</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+            Current Weight
+          </label>
+          <input
+            type="number"
+            name="currentWeight"
+            value={profile.currentWeight}
+            onChange={handleChange}
+            className="w-full p-3 rounded-lg transition-all focus:ring-2 focus:ring-[var(--accent)]"
+            style={{
+              backgroundColor: 'var(--input-bg)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
+            }}
+          />
         </div>
 
         <div>

@@ -26,7 +26,7 @@ const Footer = () => {
       {Array.from({ length: 10 }).map((_, i) => (
         <motion.div
           key={i}
-          className="absolute w-[6px] h-[6px] rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 blur-[2px]"
+          className="absolute w-[6px] h-[6px] rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 blur-[2px]"
           initial={{
             x: Math.random() * window.innerWidth,
             y: Math.random() * window.innerHeight,
@@ -54,7 +54,7 @@ const Footer = () => {
       >
         {/* Logo Pulse */}
         <motion.div
-          className="inline-flex items-center justify-center mb-6 sm:mb-8 p-4 sm:p-5 rounded-full bg-gradient-to-br from-yellow-400 to-orange-600 shadow-lg shadow-orange-500/30"
+          className="inline-flex items-center justify-center mb-6 sm:mb-8 p-4 sm:p-5 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/30"
           animate={{ scale: [1, 1.1, 1], rotate: [0, 3, -3, 0] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         >
@@ -62,7 +62,7 @@ const Footer = () => {
         </motion.div>
 
         {/* Branding */}
-        <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3 tracking-tight bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+        <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3 tracking-tight bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
           FitTrack
         </h3>
         <p className="text-gray-400 mb-6 sm:mb-8 text-base sm:text-lg max-w-2xl mx-auto px-2">
@@ -73,19 +73,19 @@ const Footer = () => {
         {/* Contact Info */}
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8 text-gray-400 text-sm">
           <div className="flex items-center gap-2">
-            <Mail className="w-4 h-4 text-yellow-400" />
+            <Mail className="w-4 h-4 text-cyan-400" />
             <span>support@fitforge.com</span>
           </div>
           <span className="hidden sm:inline text-gray-600">|</span>
           <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-orange-500" />
+            <MapPin className="w-4 h-4 text-cyan-500" />
             <span>Karachi, Pakistan</span>
           </div>
         </div>
 
         {/* Divider Glow */}
         <motion.div
-          className="mx-auto w-40 h-[2px] bg-gradient-to-r from-transparent via-yellow-400 to-transparent mb-8"
+          className="mx-auto w-40 h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent mb-8"
           initial={{ scaleX: 0 }}
           whileInView={{ scaleX: 1 }}
           transition={{ duration: 1.5, ease: "easeInOut" }}
@@ -101,7 +101,7 @@ const Footer = () => {
 
       {/* ⚡ Bottom glow bar */}
       <motion.div
-        className="absolute bottom-0 left-0 w-full h-[4px] bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400"
+        className="absolute bottom-0 left-0 w-full h-[4px] bg-gradient-to-r from-cyan-400 via-blue-500 to-yellow-400"
         initial={{ scaleX: 0 }}
         whileInView={{ scaleX: 1 }}
         transition={{ duration: 2, ease: "easeInOut" }}

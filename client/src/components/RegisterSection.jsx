@@ -2,27 +2,27 @@ import React, { useState } from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
-import {z} from 'zod'
+import { z } from 'zod'
 
 const THEME = {
-  accent: "#FDC700",
+  accent: "#2563eb",
   bg: "#000000",
 };
 const userSchema = z.object({
-  name: z.string().min(3, "Username must be at least 3 characters").refine((val)=> /^[A-Z]/.test(val),{
-    message:"First character must be uppercase"
-  } ),
-  email:z.email("Invalid email format"),
-  password:z.string().min(8,"Password must be 8 characters").refine(
-      (val) => /[A-Z]/.test(val),
-      { message: "Password must contain at least one uppercase letter" }
-    )
+  name: z.string().min(3, "Username must be at least 3 characters").refine((val) => /^[A-Z]/.test(val), {
+    message: "First character must be uppercase"
+  }),
+  email: z.email("Invalid email format"),
+  password: z.string().min(8, "Password must be 8 characters").refine(
+    (val) => /[A-Z]/.test(val),
+    { message: "Password must contain at least one uppercase letter" }
+  )
     .refine(
       (val) => /[!@#$%^&*(),.?":{}|<>]/.test(val),
       { message: "Password must contain at least one special character" }
     ),
-    
-    profilePic:z.any().refine((file) => file != null, { message: "Image is required" })
+
+  profilePic: z.any().refine((file) => file != null, { message: "Image is required" })
 
 });
 
@@ -57,22 +57,22 @@ export default function RegisterSectionFitness() {
 
   const registerUser = async (e) => {
     e.preventDefault();
-    const result = userSchema.safeParse({ name , email,password,profilePic});
+    const result = userSchema.safeParse({ name, email, password, profilePic });
 
-  if (!result.success) {
-  const formattedErrors = result.error.format();
-  
-  // Set errors individually
-  setError({
-    name: formattedErrors.name?._errors[0] || "",
-    email: formattedErrors.email?._errors[0] || "",
-     password: formattedErrors.password?._errors[0] || "",
-     profilePic: formattedErrors.profilePic?._errors[0] || "",
-  });
+    if (!result.success) {
+      const formattedErrors = result.error.format();
 
-  return; // function exit
-}
-setError("")
+      // Set errors individually
+      setError({
+        name: formattedErrors.name?._errors[0] || "",
+        email: formattedErrors.email?._errors[0] || "",
+        password: formattedErrors.password?._errors[0] || "",
+        profilePic: formattedErrors.profilePic?._errors[0] || "",
+      });
+
+      return; // function exit
+    }
+    setError("")
 
     if (password !== confirm) {
       toast.error("Passwords do not match!");
@@ -89,9 +89,9 @@ setError("")
 
 
     try {
-        const res = await axios.post("http://localhost:3000/register", formData, {
+      const res = await axios.post("http://localhost:3000/register", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-  });
+      });
 
       setName("");
       setEmail("");
@@ -130,7 +130,7 @@ setError("")
         }}
       >
         <div
-          className="w-full md:w-44 flex flex-col items-center justify-center relative border-b md:border-r md:border-b-0 border-[#FDC700]/10 p-4 md:p-0"
+          className="w-full md:w-44 flex flex-col items-center justify-center relative border-b md:border-r md:border-b-0 border-blue-600/30 p-4 md:p-0"
           style={{
             background:
               "linear-gradient(180deg, rgba(253,199,0,0.08), rgba(0,0,0,0.1))",
@@ -154,15 +154,14 @@ setError("")
           </div>
           <div className="z-10 flex flex-col items-center justify-center text-center">
             <div
-              style={{ color: THEME.accent }}
-              className="text-3xl font-extrabold mb-1 drop-shadow"
+              className="text-3xl text-blue-600 font-extrabold mb-1 drop-shadow"
             >
               Register
             </div>
             <button
               type="button"
               onClick={onPick}
-              className="mt-2 px-3 py-1 text-xs rounded-md bg-black/60 border border-[#FDC700]/20 text-[#FDC700] hover:bg-[#FDC700]/10 transition"
+              className="mt-2 px-3 py-1 text-xs rounded-md bg-black/60 border border-blue-600 text-blue-600 hover:bg-[#2563eb]/10 transition"
             >
               Upload Image
             </button>
@@ -179,14 +178,13 @@ setError("")
                 }
               }}
             />
-             <p className="mb-4 text-xs" style={{ color: "red" }}>{error.profilePic}</p>
+            <p className="mb-4 text-xs" style={{ color: "red" }}>{error.profilePic}</p>
           </div>
         </div>
 
         <div className="p-6 flex-1 bg-black/40">
           <h3
-            style={{ color: THEME.accent }}
-            className="text-xl font-bold mb-3"
+            className="text-xl text-blue-600 font-bold mb-3"
           >
             Join the Team
           </h3>
@@ -195,45 +193,42 @@ setError("")
               placeholder="Full name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-black/60 border border-[#FDC700]/10 placeholder-[#aaaaaa] text-white outline-none"
+              className="w-full px-4 py-3 rounded-xl bg-black/60 border border-blue-600 placeholder-[#aaaaaa] text-white outline-none"
             />
-              <p className="mb-4 text-xs" style={{ color: "red" }}>{error.name}</p>
+            <p className="mb-4 text-xs" style={{ color: "red" }}>{error.name}</p>
             <input
               placeholder="Email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-black/60 border border-[#FDC700]/10 placeholder-[#aaaaaa] text-white outline-none"
+              className="w-full px-4 py-3 rounded-xl bg-black/60 border border-blue-900 placeholder-[#aaaaaa] text-white outline-none"
             />
-               <p className="mb-4 text-xs" style={{ color: "red" }}>{error.email}</p>
+            <p className="mb-4 text-xs" style={{ color: "red" }}>{error.email}</p>
             <input
               placeholder="Create password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-black/60 border border-[#FDC700]/10 placeholder-[#aaaaaa] text-white outline-none"
+              className="w-full px-4 py-3 rounded-xl bg-black/60 border border-blue-900 placeholder-[#aaaaaa] text-white outline-none"
             />
-             <p className="mb-4 text-xs" style={{ color: "red" }}>{error.password}</p>
+            <p className="mb-4 text-xs" style={{ color: "red" }}>{error.password}</p>
             <input
               placeholder="Confirm password"
               type="password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-black/60 border border-[#FDC700]/10 placeholder-[#aaaaaa] text-white outline-none"
+              className="w-full px-4 py-3 rounded-xl bg-black/60 border border-blue-900 placeholder-[#aaaaaa] text-white outline-none"
             />
             <button
               type="submit"
-              className="submit-button w-full py-3 rounded-xl font-bold mt-2 hover:cursor-pointer"
-              style={{
-                background: THEME.accent,
-                color: "#000",
-              }}
+              className="submit-button w-full py-3 rounded-xl font-bold mt-2 hover:cursor-pointer bg-gradient-to-r from-cyan-400 to-blue-600 text-black font-bold"
+
             >
               Start Free
             </button>
           </form>
           <p className="text-center text-white mt-2">
-            Already have an account? <Link to="/login" className="text-[#FDC700] hover:underline">Login</Link>
+            Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login</Link>
           </p>
         </div>
       </div>

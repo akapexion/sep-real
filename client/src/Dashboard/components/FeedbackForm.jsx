@@ -74,11 +74,11 @@ export default function FeedbackForm() {
       animate={{ opacity: 1, y: 0 }}
       className="mt-6 p-6 rounded-lg shadow-md"
       style={{
-        backgroundColor: "#000", // black BG
-        border: "1px solid #333",
+        backgroundColor: "var(--bg-card)",
+        border: "1px solid var(--border)",
       }}
     >
-      <h3 className="text-xl font-semibold mb-4 text-orange-400">
+      <h3 className="text-xl font-semibold mb-4" style={{ color: "var(--accent)" }}>
         Feedback Form
       </h3>
 
@@ -89,13 +89,14 @@ export default function FeedbackForm() {
       >
         {/* NAME */}
         <div className="flex flex-col">
-          <label className="text-sm font-medium mb-1 text-gray-300">
+          <label className="text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
             Name
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="p-3 rounded-md bg-[#111] text-white border border-gray-600"
+            className="p-3 rounded-md transition-colors focus:ring-2 focus:ring-[var(--accent)]"
+            style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
             placeholder="Your name"
           />
           <p className="mb-2 text-xs text-red-500">{error.name}</p>
@@ -103,14 +104,15 @@ export default function FeedbackForm() {
 
         {/* EMAIL */}
         <div className="flex flex-col">
-          <label className="text-sm font-medium mb-1 text-gray-300">
+          <label className="text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
             Email
           </label>
           <input
             value={email}
             type="email"
             onChange={(e) => setEmail(e.target.value)}
-            className="p-3 rounded-md bg-[#111] text-white border border-gray-600"
+            className="p-3 rounded-md transition-colors focus:ring-2 focus:ring-[var(--accent)]"
+            style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
             placeholder="Your email"
           />
           <p className="mb-2 text-xs text-red-500">{error.email}</p>
@@ -118,18 +120,19 @@ export default function FeedbackForm() {
 
         {/* RATING */}
         <div className="flex flex-col">
-          <label className="text-sm font-medium mb-1 text-gray-300">
+          <label className="text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
             Rating
           </label>
 
           <select
             value={rating}
             onChange={(e) => setRating(e.target.value)}
-            className="p-3 rounded-md bg-[#111] text-white border border-gray-600"
+            className="p-3 rounded-md transition-colors focus:ring-2 focus:ring-[var(--accent)]"
+            style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
           >
             <option value="">Select Rating</option>
             {["⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"].map((stars, index) => (
-              <option key={index} value={stars} className="bg-black text-white">
+              <option key={index} value={stars} style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)" }}>
                 {stars}
               </option>
             ))}
@@ -140,14 +143,15 @@ export default function FeedbackForm() {
 
         {/* MESSAGE */}
         <div className="flex flex-col md:col-span-2">
-          <label className="text-sm font-medium mb-1 text-gray-300">
+          <label className="text-sm font-medium mb-1" style={{ color: "var(--text-muted)" }}>
             Feedback
           </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Write your feedback..."
-            className="p-3 rounded-md bg-[#111] text-white border border-gray-600 h-28"
+            className="p-3 rounded-md h-28 transition-colors focus:ring-2 focus:ring-[var(--accent)]"
+            style={{ backgroundColor: "var(--input-bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
           />
           <p className="mb-2 text-xs text-red-500">{error.message}</p>
         </div>
@@ -157,15 +161,15 @@ export default function FeedbackForm() {
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 rounded-md font-medium text-black w-full md:w-auto"
+            className="flex items-center gap-2 px-6 py-3 rounded-md font-medium text-white shadow-md hover:scale-105 transition-all w-full md:w-auto"
             style={{
-              background: "linear-gradient(to right, #facc15, #fb923c)",
+              backgroundColor: "var(--accent)",
             }}
           >
             {saving ? (
-              <Loader2 className="w-4 h-4 animate-spin text-black" />
+              <Loader2 className="w-4 h-4 animate-spin text-white" />
             ) : (
-              <Send className="w-4 h-4 text-black" />
+              <Send className="w-4 h-4 text-white" />
             )}
 
             {saving ? "Sending…" : "Submit Feedback"}

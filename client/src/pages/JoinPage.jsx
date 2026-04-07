@@ -97,9 +97,9 @@ const JoinPage = () => {
       {/* Hero Section */}
       <section className="relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 overflow-hidden">
         {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-600/10 via-orange-700/10 to-black -z-10"></div>
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 bg-yellow-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
-        <div className="absolute bottom-20 right-1/4 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 bg-orange-600/10 blur-3xl rounded-full animate-pulse -z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-black -z-10"></div>
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 bg-cyan-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
+        <div className="absolute bottom-20 right-1/4 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 bg-blue-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
         
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-10 text-center">
           <motion.div
@@ -107,7 +107,7 @@ const JoinPage = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="flex items-center justify-center gap-3 mb-4 text-yellow-400">
+            <div className="flex items-center justify-center gap-3 mb-4 text-cyan-400">
               <Dumbbell className="w-6 h-6" />
               <p className="uppercase tracking-widest text-xs sm:text-sm">
                 Start Your Journey
@@ -116,7 +116,7 @@ const JoinPage = () => {
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
               Join{" "}
-              <span className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-transparent bg-clip-text">
+              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 text-transparent bg-clip-text">
                 FitTrack
               </span>
             </h1>
@@ -140,9 +140,9 @@ const JoinPage = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="bg-gradient-to-b from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center"
+                className="bg-gradient-to-b from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center"
               >
-                <div className="text-yellow-400 mb-3 flex justify-center">
+                <div className="text-cyan-400 mb-3 flex justify-center">
                   {benefit.icon}
                 </div>
                 <p className="text-gray-300 text-xs sm:text-sm">{benefit.text}</p>
@@ -158,7 +158,7 @@ const JoinPage = () => {
         {Array.from({ length: 8 }).map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-[6px] h-[6px] rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 blur-[2px]"
+            className="absolute w-[6px] h-[6px] rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 blur-[2px]"
             initial={{
               x: Math.random() * window.innerWidth,
               y: Math.random() * window.innerHeight,
@@ -186,7 +186,7 @@ const JoinPage = () => {
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-center lg:text-left bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-transparent bg-clip-text">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-center lg:text-left bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 text-transparent bg-clip-text">
                 Choose Your Plan
               </h2>
               
@@ -197,14 +197,14 @@ const JoinPage = () => {
                     whileHover={{ scale: 1.02 }}
                     className={`relative cursor-pointer border-2 rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all ${
                       formData.plan === plan.id
-                        ? "border-yellow-500 bg-yellow-500/10 shadow-[0_0_30px_rgba(255,165,0,0.3)]"
-                        : "border-yellow-500/30 bg-white/5 hover:border-yellow-500/50"
+                        ? "border-cyan-500 bg-cyan-500/10 shadow-[0_0_30px_rgba(34,211,238,0.4)]"
+                        : "border-cyan-500/30 bg-white/5 hover:border-cyan-500/30"
                     }`}
                     onClick={() => setFormData({ ...formData, plan: plan.id })}
                   >
                     {plan.popular && (
                       <div className="absolute -top-3 left-4">
-                        <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-3 py-1 rounded-full text-xs font-semibold">
+                        <span className="bg-gradient-to-r from-cyan-400 to-blue-500 text-black px-3 py-1 rounded-full text-xs font-semibold">
                           Most Popular
                         </span>
                       </div>
@@ -212,11 +212,11 @@ const JoinPage = () => {
                     
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="text-xl sm:text-2xl font-bold text-yellow-300 mb-1">
+                        <h3 className="text-xl sm:text-2xl font-bold text-cyan-400 mb-1">
                           {plan.name}
                         </h3>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-transparent bg-clip-text">
+                          <span className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 text-transparent bg-clip-text">
                             {plan.price}
                           </span>
                           <span className="text-gray-400 text-sm">{plan.period}</span>
@@ -224,7 +224,7 @@ const JoinPage = () => {
                       </div>
                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                         formData.plan === plan.id
-                          ? "border-yellow-500 bg-yellow-500"
+                          ? "border-cyan-500 bg-cyan-500"
                           : "border-gray-500"
                       }`}>
                         {formData.plan === plan.id && (
@@ -236,7 +236,7 @@ const JoinPage = () => {
                     <ul className="space-y-2">
                       {plan.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-2 text-sm text-gray-300">
-                          <Check className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
                           <span>{feature}</span>
                         </li>
                       ))}
@@ -252,9 +252,9 @@ const JoinPage = () => {
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
-              className="bg-white/5 backdrop-blur-md border border-yellow-400/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10"
+              className="bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10"
             >
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-center bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-transparent bg-clip-text">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-center bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 text-transparent bg-clip-text">
                 Create Your Account
               </h2>
               
@@ -264,7 +264,7 @@ const JoinPage = () => {
                     Full Name
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-yellow-400" />
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-cyan-400" />
                     <input
                       type="text"
                       id="name"
@@ -272,7 +272,7 @@ const JoinPage = () => {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-yellow-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
+                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
                       placeholder="John Doe"
                     />
                   </div>
@@ -283,7 +283,7 @@ const JoinPage = () => {
                     Email Address
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-yellow-400" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-cyan-400" />
                     <input
                       type="email"
                       id="email"
@@ -291,7 +291,7 @@ const JoinPage = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-yellow-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
+                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
                       placeholder="john@example.com"
                     />
                   </div>
@@ -302,7 +302,7 @@ const JoinPage = () => {
                     Phone Number
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-yellow-400" />
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-cyan-400" />
                     <input
                       type="tel"
                       id="phone"
@@ -310,7 +310,7 @@ const JoinPage = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       required
-                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-yellow-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
+                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
                       placeholder="+92 300 1234567"
                     />
                   </div>
@@ -321,7 +321,7 @@ const JoinPage = () => {
                     Password
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-yellow-400" />
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-cyan-400" />
                     <input
                       type="password"
                       id="password"
@@ -329,7 +329,7 @@ const JoinPage = () => {
                       value={formData.password}
                       onChange={handleChange}
                       required
-                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-yellow-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
+                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
                       placeholder="••••••••"
                     />
                   </div>
@@ -340,7 +340,7 @@ const JoinPage = () => {
                     Confirm Password
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-yellow-400" />
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-cyan-400" />
                     <input
                       type="password"
                       id="confirmPassword"
@@ -348,7 +348,7 @@ const JoinPage = () => {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       required
-                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-yellow-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
+                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
                       placeholder="••••••••"
                     />
                   </div>
@@ -358,7 +358,7 @@ const JoinPage = () => {
                   type="submit"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base bg-gradient-to-r from-yellow-500 to-orange-600 rounded-full text-black font-semibold hover:shadow-[0_0_35px_rgba(255,165,0,0.7)] transition-all"
+                  className="w-full flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full text-black font-semibold hover:shadow-[0_0_35px_rgba(34,211,238,0.4)] transition-all"
                 >
                   Create Account <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </motion.button>

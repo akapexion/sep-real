@@ -21,6 +21,8 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import JoinPage from './pages/JoinPage';
 import FeedbackForm from './Dashboard/components/FeedbackForm';
+import SearchPage from './Dashboard/pages/SearchPage';
+import CommunityPage from './Dashboard/pages/CommunityPage';
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -108,7 +110,9 @@ const App = () => {
             <Route path="/dashboard/profile" element={<ProfilePage />} />
             <Route path="/dashboard/notifications" element={<Notification />} />
             <Route path="/dashboard/reminders" element={<RemindersPage />} />
-                  <Route path="/dashboard/feedbacks" element={<FeedbackForm />} />
+            <Route path="/dashboard/feedbacks" element={<FeedbackForm />} />
+            <Route path="/dashboard/search" element={<SearchPage />} />
+            <Route path="/dashboard/community" element={<CommunityPage />} />
             
           </Route>
 

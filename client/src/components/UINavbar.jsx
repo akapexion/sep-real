@@ -19,6 +19,8 @@ const UINavbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const isLoggedIn = !!localStorage.getItem("user");
+
   return (
     <motion.nav
       className="fixed top-0 z-50 w-full"
@@ -59,12 +61,12 @@ const UINavbar = () => {
             animate={{ scale: isScrolled ? 0.9 : 1 }}
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="flex items-center"
+            className="flex items-center gap-2"
           >
-            <img 
-              src="/logo.svg" 
-              alt="FitTrack Logo" 
-              className="h-8 sm:h-10 md:h-12 w-auto object-contain" 
+            <img
+              src="/logo.png"
+              alt="FitTrack Logo"
+              className="h-8 sm:h-10 md:h-12 w-auto object-contain"
             />
           </motion.div>
         </Link>
@@ -77,15 +79,14 @@ const UINavbar = () => {
               <Link
                 key={name}
                 to={`/${name === "Home" ? "" : name.toLowerCase()}`}
-                className={`relative font-medium text-sm xl:text-base text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 transition duration-300 ${
-                  isActive ? "font-extrabold" : "opacity-80"
-                }`}
+                className={`relative font-medium text-sm xl:text-base transition duration-300 ${isActive ? "text-cyan-400 font-extrabold" : "text-white opacity-80 hover:opacity-100 hover:text-cyan-300"
+                  }`}
               >
                 {name}
                 {isActive && (
                   <motion.span
                     layoutId="underline"
-                    className="absolute left-0 -bottom-1 w-full h-[2px] bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+                    className="absolute left-0 -bottom-1 w-full h-[2px] bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"
                   />
                 )}
               </Link>
@@ -101,10 +102,10 @@ const UINavbar = () => {
           className="hidden lg:block"
         >
           <Link
-            to="/dashboard"
-            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-semibold px-4 xl:px-5 py-2 text-sm xl:text-base rounded-full transition-all duration-300 shadow-md hover:shadow-yellow-500/30"
+            to={isLoggedIn ? "/dashboard" : "/login"}
+            className="bg-gradient-to-r from-cyan-400 to-blue-600 text-black font-bold px-4 xl:px-6 py-2.5 text-sm xl:text-base rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.4)] hover:shadow-[0_0_25px_rgba(34,211,238,0.6)] hover:scale-105"
           >
-            Dashboard
+            {isLoggedIn ? "Dashboard" : "Login"}
           </Link>
         </motion.div>
 
@@ -112,7 +113,7 @@ const UINavbar = () => {
         <div className="lg:hidden">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="text-yellow-400 transition"
+            className="text-cyan-400 transition"
           >
             <svg
               className="w-7 h-7"
@@ -139,7 +140,7 @@ const UINavbar = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="lg:hidden absolute top-full left-0 w-full bg-black/90 backdrop-blur-lg border-t border-yellow-500/20 z-10"
+            className="lg:hidden absolute top-full left-0 w-full bg-black/95 backdrop-blur-xl border-t border-cyan-500/20 z-10"
           >
             <div className="px-4 py-4 space-y-4 flex flex-col items-center">
               {["Home", "About", "Contact"].map(
@@ -148,22 +149,21 @@ const UINavbar = () => {
                     key={name}
                     to={`/${name === "Home" ? "" : name.toLowerCase()}`}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 transition ${
-                      activePage === name.toLowerCase()
-                        ? "font-extrabold"
-                        : "opacity-80"
-                    }`}
+                    className={`block transition ${activePage === name.toLowerCase()
+                      ? "text-cyan-400 font-extrabold"
+                      : "text-white opacity-80"
+                      }`}
                   >
                     {name}
                   </Link>
                 )
               )}
               <Link
-                to="/dashboard"
+                to={isLoggedIn ? "/dashboard" : "/login"}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="block bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-center py-2 rounded-full font-medium shadow-md hover:shadow-yellow-500/30 w-full"
+                className="block bg-gradient-to-r from-cyan-400 to-blue-600 text-black text-center py-3 rounded-full font-bold shadow-[0_0_15px_rgba(34,211,238,0.4)] w-full"
               >
-                Dashboard
+                {isLoggedIn ? "Dashboard" : "Log In"}
               </Link>
             </div>
           </motion.div>

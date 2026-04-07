@@ -22,7 +22,7 @@ const MissionVision = () => {
           initial={{ opacity: 0, y: -30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="text-4xl md:text-5xl font-bold mb-5 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-transparent bg-clip-text"
+          className="text-4xl md:text-5xl font-bold mb-5 bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 text-transparent bg-clip-text"
         >
           Our Mission & Vision
         </motion.h2>
@@ -36,10 +36,10 @@ const MissionVision = () => {
           {/* Mission Card */}
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="bg-white/10 backdrop-blur-md border border-yellow-400/20 rounded-3xl p-8 flex flex-col items-center text-center hover:bg-white/20 transition-all shadow-[0_0_30px_rgba(255,200,0,0.1)]"
+            className="bg-white/10 backdrop-blur-md border border-cyan-500/30 rounded-3xl p-8 flex flex-col items-center text-center hover:bg-white/20 transition-all shadow-[0_0_30px_rgba(255,200,0,0.1)]"
           >
-            <Target className="text-yellow-400 w-14 h-14 mb-4" />
-            <h3 className="text-2xl font-semibold mb-3 text-yellow-400">Our Mission</h3>
+            <Target className="text-cyan-400 w-14 h-14 mb-4" />
+            <h3 className="text-2xl font-semibold mb-3 text-cyan-400">Our Mission</h3>
             <p className="text-gray-300 text-sm">
               Empower every fitness enthusiast to track, improve, and achieve through a seamless digital experience driven by data and passion.
             </p>
@@ -48,10 +48,10 @@ const MissionVision = () => {
           {/* Vision Card */}
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="bg-white/10 backdrop-blur-md border border-orange-500/20 rounded-3xl p-8 flex flex-col items-center text-center hover:bg-white/20 transition-all shadow-[0_0_30px_rgba(255,150,0,0.1)]"
+            className="bg-white/10 backdrop-blur-md border border-cyan-500/30 rounded-3xl p-8 flex flex-col items-center text-center hover:bg-white/20 transition-all shadow-[0_0_30px_rgba(255,150,0,0.1)]"
           >
-            <Rocket className="text-orange-400 w-14 h-14 mb-4" />
-            <h3 className="text-2xl font-semibold mb-3 text-orange-400">Our Vision</h3>
+            <Rocket className="text-cyan-500 w-14 h-14 mb-4" />
+            <h3 className="text-2xl font-semibold mb-3 text-cyan-500">Our Vision</h3>
             <p className="text-gray-300 text-sm">
               To revolutionize health tracking globally by integrating motivation, technology, and analytics into one powerful fitness ecosystem.
             </p>
@@ -77,7 +77,7 @@ const MissionVision = () => {
             initial={{ opacity: 0, x: -80 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 1 }}
-            className="rounded-3xl overflow-hidden border-2 border-yellow-500/30 shadow-[0_0_40px_rgba(255,200,0,0.15)]"
+            className="rounded-3xl overflow-hidden border-2 border-cyan-500/30 shadow-[0_0_40px_rgba(255,200,0,0.15)]"
           >
             <img
               src="https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=1600&q=80"
@@ -93,17 +93,17 @@ const MissionVision = () => {
             transition={{ duration: 1 }}
             className="text-left space-y-6"
           >
-            <h3 className="text-3xl font-bold text-yellow-400">We Believe in Progress, Not Perfection</h3>
+            <h3 className="text-3xl font-bold text-cyan-400">We Believe in Progress, Not Perfection</h3>
             <p className="text-gray-300 leading-relaxed text-sm md:text-base">
               Every step counts. Whether it’s a 5-minute jog or a full workout session — consistency is what makes you stronger.  
               FitTrack is your daily motivation partner — tracking your effort, your nutrition, and your evolution.
             </p>
 
             <div className="flex flex-wrap gap-6 mt-8">
-              <div className="flex items-center gap-3 text-yellow-400">
+              <div className="flex items-center gap-3 text-cyan-400">
                 <Dumbbell className="w-6 h-6" /> <span>Smart Workout Tracking</span>
               </div>
-              <div className="flex items-center gap-3 text-orange-400">
+              <div className="flex items-center gap-3 text-cyan-500">
                 <Users className="w-6 h-6" /> <span>Community Support</span>
               </div>
               <div className="flex items-center gap-3 text-red-400">
@@ -115,8 +115,8 @@ const MissionVision = () => {
       </div>
 
       {/* Decorative Background Glows */}
-      <div className="absolute top-10 left-20 w-72 h-72 bg-yellow-400/10 blur-3xl rounded-full"></div>
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-orange-500/10 blur-3xl rounded-full"></div>
+      <div className="absolute top-10 left-20 w-72 h-72 bg-cyan-500/10 blur-3xl rounded-full"></div>
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-500/10 blur-3xl rounded-full"></div>
     </section>
   );
 };

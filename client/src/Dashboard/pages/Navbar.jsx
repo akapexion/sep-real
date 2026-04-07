@@ -2,8 +2,8 @@
 import React from 'react';
 import NavbarSection from '../components/NavbarSection';
 
-const Navbar = ({ user, toggleTheme, isDark }) => (
-  <NavbarSection user={user} toggleTheme={toggleTheme} isDark={isDark} />
+const Navbar = ({ logout, user, toggleTheme, isDark }) => (
+  <NavbarSection logout={logout} user={user} toggleTheme={toggleTheme} isDark={isDark} />
 );
 
 export default Navbar;

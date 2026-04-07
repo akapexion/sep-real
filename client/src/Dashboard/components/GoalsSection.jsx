@@ -106,6 +106,23 @@ export default function GoalsSection() {
         await axios.post(`${API_BASE}/goals`, payload);
         toast.success(t('goalAdded')); // Use translation
       }
+
+      if (isWeightRelated(goalType)) {
+        const fakeGoalObj = { goalType, current: Number(current), target: Number(target) };
+        if (calculateProgress(fakeGoalObj) >= 100) {
+          try {
+            const wRes = await axios.post(`${API_BASE}/profile/weight`, {
+              userId,
+              currentWeight: Number(current)
+            });
+            const updatedUser = { ...user, currentWeight: wRes.data.currentWeight };
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            window.dispatchEvent(new CustomEvent("profile-updated", { detail: updatedUser }));
+            toast.success("Goal Achieved! Current weight auto-updated.");
+          } catch(e) { console.error("Auto weight update failed", e); }
+        }
+      }
+
       resetForm();
       fetchGoals();
     } catch (err) {

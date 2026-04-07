@@ -4,8 +4,10 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { Trash2, Edit2, Plus, Loader2, Download, FileText } from "lucide-react";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
-import {z} from 'zod' 
+import { z } from 'zod';
 import { useLanguage } from '../pages/UseLanguage';
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const API_BASE = "http://localhost:3000";
 
@@ -228,23 +230,27 @@ setError("")
     setFats(String(first.fats));
   };
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
     const content = printRef.current;
-    const win = window.open("", "", "width=900,height=650");
-    win.document.write(`
-      <html><head><title>${t('nutritionReport')} – ${new Date().toLocaleDateString()}</title>
-      <style>
-        body{font-family:Arial,sans-serif;margin:2rem;}
-        table{width:100%;border-collapse:collapse;margin-top:1rem;}
-        th,td{border:1px solid #ddd;padding:8px;text-align:left;}
-        th{background:#f4f4f4;}
-        .totals{font-weight:bold;margin-top:1rem;}
-      </style></head><body>`);
-    win.document.write(content.innerHTML);
-    win.document.write(`</body></html>`);
-    win.document.close();
-    win.focus();
-    setTimeout(() => win.print(), 500);
+    if (!content) return;
+
+    try {
+      const toastId = toast.loading('Generating PDF...');
+      const canvas = await html2canvas(content, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, "PNG", 0, 10, pdfWidth, pdfHeight);
+      pdf.save(`Nutrition_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+      
+      toast.dismiss(toastId);
+      toast.success('PDF Exported Successfully!');
+    } catch (err) {
+      toast.error('Failed to generate PDF');
+    }
   };
 
   const exportCSV = () => {

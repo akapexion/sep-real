@@ -7,17 +7,17 @@ import Footer from "../components/Footer";
 const GymKeyPage = () => {
   const features = [
     {
-      icon: <Key className="w-10 h-10 text-yellow-400" />,
+      icon: <Key className="w-10 h-10 text-cyan-400" />,
       title: "Digital Gym Access",
       desc: "Unlock any partner gym with your digital key. No physical cards needed - just your phone.",
     },
     {
-      icon: <MapPin className="w-10 h-10 text-orange-400" />,
+      icon: <MapPin className="w-10 h-10 text-cyan-500" />,
       title: "Find Nearby Gyms",
       desc: "Discover thousands of gyms in your area. Filter by equipment, amenities, and ratings.",
     },
     {
-      icon: <Clock className="w-10 h-10 text-yellow-400" />,
+      icon: <Clock className="w-10 h-10 text-cyan-400" />,
       title: "24/7 Access",
       desc: "Access partner gyms anytime, anywhere. Work out on your schedule, not theirs.",
     },
@@ -27,12 +27,12 @@ const GymKeyPage = () => {
       desc: "Your data is protected with bank-level encryption. Your privacy is our priority.",
     },
     {
-      icon: <Users className="w-10 h-10 text-orange-400" />,
+      icon: <Users className="w-10 h-10 text-cyan-500" />,
       title: "Community Access",
       desc: "Connect with other members, share workout tips, and find workout buddies.",
     },
     {
-      icon: <Star className="w-10 h-10 text-yellow-400" />,
+      icon: <Star className="w-10 h-10 text-cyan-400" />,
       title: "Premium Facilities",
       desc: "Access to premium gyms with state-of-the-art equipment and world-class amenities.",
     },
@@ -86,9 +86,9 @@ const GymKeyPage = () => {
       {/* Hero Section */}
       <section className="relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 overflow-hidden">
         {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-600/10 via-orange-700/10 to-black -z-10"></div>
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 bg-yellow-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
-        <div className="absolute bottom-20 right-1/4 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 bg-orange-600/10 blur-3xl rounded-full animate-pulse -z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-black -z-10"></div>
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 bg-cyan-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
+        <div className="absolute bottom-20 right-1/4 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 bg-blue-500/10 blur-3xl rounded-full animate-pulse -z-10"></div>
         
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-10 text-center">
           <motion.div
@@ -96,7 +96,7 @@ const GymKeyPage = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="flex items-center justify-center gap-3 mb-4 text-yellow-400">
+            <div className="flex items-center justify-center gap-3 mb-4 text-cyan-400">
               <Key className="w-6 h-6" />
               <p className="uppercase tracking-widest text-xs sm:text-sm">
                 Your Key to Fitness
@@ -104,7 +104,7 @@ const GymKeyPage = () => {
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
-              <span className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-transparent bg-clip-text">
+              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 text-transparent bg-clip-text">
                 GymKey
               </span>
             </h1>
@@ -123,7 +123,7 @@ const GymKeyPage = () => {
         {Array.from({ length: 8 }).map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-[6px] h-[6px] rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 blur-[2px]"
+            className="absolute w-[6px] h-[6px] rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 blur-[2px]"
             initial={{
               x: Math.random() * window.innerWidth,
               y: Math.random() * window.innerHeight,
@@ -147,7 +147,7 @@ const GymKeyPage = () => {
             whileInView={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-8 sm:mb-12 md:mb-16 text-center bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-transparent bg-clip-text px-2"
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-8 sm:mb-12 md:mb-16 text-center bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 text-transparent bg-clip-text px-2"
           >
             Why Choose GymKey?
           </motion.h2>
@@ -161,12 +161,12 @@ const GymKeyPage = () => {
                 transition={{ duration: 0.7, delay: index * 0.1 }}
                 viewport={{ once: true }}
                 whileHover={{ scale: 1.05 }}
-                className="bg-white/10 backdrop-blur-md border border-yellow-400/20 rounded-2xl p-8 hover:bg-white/20 hover:shadow-[0_0_30px_rgba(255,165,0,0.4)] transition-all"
+                className="bg-white/10 backdrop-blur-md border border-cyan-500/30 rounded-2xl p-8 hover:bg-white/20 hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] transition-all"
               >
                 <div className="mb-6 flex justify-center">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-semibold mb-4 text-yellow-300 text-center">
+                <h3 className="text-xl font-semibold mb-4 text-cyan-400 text-center">
                   {feature.title}
                 </h3>
                 <p className="text-gray-300 text-sm leading-relaxed text-center">
@@ -187,7 +187,7 @@ const GymKeyPage = () => {
             whileInView={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-8 sm:mb-12 md:mb-16 text-center bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-transparent bg-clip-text px-2"
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-8 sm:mb-12 md:mb-16 text-center bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 text-transparent bg-clip-text px-2"
           >
             Choose Your Plan
           </motion.h2>
@@ -203,22 +203,22 @@ const GymKeyPage = () => {
                 whileHover={{ scale: 1.05 }}
                 className={`relative rounded-2xl p-8 transition-all ${
                   plan.popular
-                    ? "bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/50 shadow-[0_0_40px_rgba(255,165,0,0.3)]"
-                    : "bg-white/5 backdrop-blur-md border border-yellow-400/20"
+                    ? "bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border-2 border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.4)]"
+                    : "bg-white/5 backdrop-blur-md border border-cyan-500/30"
                 }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-4 py-1 rounded-full text-sm font-semibold">
+                    <span className="bg-gradient-to-r from-cyan-400 to-blue-500 text-black px-4 py-1 rounded-full text-sm font-semibold">
                       Most Popular
                     </span>
                   </div>
                 )}
                 
                 <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold mb-2 text-yellow-300">{plan.name}</h3>
+                  <h3 className="text-2xl font-bold mb-2 text-cyan-400">{plan.name}</h3>
                   <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-transparent bg-clip-text">
+                    <span className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 text-transparent bg-clip-text">
                       {plan.price}
                     </span>
                     <span className="text-gray-400">{plan.period}</span>
@@ -228,7 +228,7 @@ const GymKeyPage = () => {
                 <ul className="space-y-4 mb-8">
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-3">
-                      <Zap className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                      <Zap className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
                       <span className="text-gray-300 text-sm">{feature}</span>
                     </li>
                   ))}
@@ -239,8 +239,8 @@ const GymKeyPage = () => {
                   whileTap={{ scale: 0.95 }}
                   className={`w-full py-3 rounded-full font-semibold transition-all ${
                     plan.popular
-                      ? "bg-gradient-to-r from-yellow-500 to-orange-600 text-black hover:shadow-[0_0_25px_rgba(255,165,0,0.6)]"
-                      : "bg-white/10 border border-yellow-400/30 text-yellow-400 hover:bg-white/20"
+                      ? "bg-gradient-to-r from-cyan-400 to-blue-500 text-black hover:shadow-[0_0_25px_rgba(34,211,238,0.4)]"
+                      : "bg-white/10 border border-cyan-500/30 text-cyan-400 hover:bg-white/20"
                   }`}
                 >
                   Get Started
@@ -268,9 +268,9 @@ const GymKeyPage = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="bg-gradient-to-b from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-2xl p-6 text-center"
+                className="bg-gradient-to-b from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-2xl p-6 text-center"
               >
-                <h3 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-transparent bg-clip-text">
+                <h3 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-transparent bg-clip-text">
                   {stat.number}
                 </h3>
                 <p className="text-gray-300 text-sm">{stat.label}</p>
@@ -299,7 +299,7 @@ const GymKeyPage = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 text-sm sm:text-base bg-gradient-to-r from-yellow-500 to-orange-600 rounded-full text-black font-semibold hover:shadow-[0_0_35px_rgba(255,165,0,0.7)] transition-all"
+              className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 text-sm sm:text-base bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full text-black font-semibold hover:shadow-[0_0_35px_rgba(34,211,238,0.4)] transition-all"
             >
               Get Your GymKey Now
             </motion.button>

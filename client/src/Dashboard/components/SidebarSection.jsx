@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Home, Dumbbell, Apple, TrendingUp, Target,
-  Calendar, BarChart3, Settings, LogOut, ChevronRight
+  Calendar, BarChart3, Settings, LogOut, ChevronRight, Users, MessageSquare
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../pages/UseLanguage'; // Add language hook
@@ -23,7 +23,8 @@ const SidebarSection = ({ user, logout }) => {
     { Icon: Calendar,    label: t('reminders'),   path: '/dashboard/reminders' },
     { Icon: BarChart3,   label: t('analytics'),   path: '/dashboard/analytics' },
     { Icon: Settings,    label: t('settings'),    path: '/dashboard/settings' },
-    { Icon: Settings,    label: t('settings'),    path: '/dashboard/feedbacks' },
+    { Icon: Users,       label: 'Community',      path: '/dashboard/community' },
+    { Icon: MessageSquare, label: 'Give Feedback', path: '/dashboard/feedbacks' },
   ];
 
   const handleLogout = () => {
@@ -86,15 +87,6 @@ const SidebarSection = ({ user, logout }) => {
       </nav>
 
       <div className="p-4 border-t" style={{ borderColor: 'var(--border)' }}>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleLogout}
-          className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition"
-        >
-          <LogOut className="w-5 h-5" />
-          <span className="font-medium">{t('logout')}</span> {/* Use translation */}
-        </motion.button>
       </div>
     </motion.aside>
   );

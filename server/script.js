@@ -770,5 +770,166 @@ app.get("/feedback", async (req, res) => {
 });
 
 
+// =========== NEW SOCIAL & SEARCH ENDPOINTS ===========
+
+app.get("/users", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).send({ message: "userId required" });
+    
+    const users = await reg_model.find({ _id: { $ne: userId } })
+      .select("name email image followers following")
+      .lean();
+      
+    res.send(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+app.post("/users/:id/follow", async (req, res) => {
+  try {
+    const targetUserId = req.params.id; 
+    const { userId } = req.body; 
+
+    const targetUser = await reg_model.findById(targetUserId);
+    const currentUser = await reg_model.findById(userId);
+
+    if (!targetUser || !currentUser) return res.status(404).send({ message: "User not found" });
+
+    const isFollowing = currentUser.following.includes(targetUserId);
+
+    if (isFollowing) {
+      currentUser.following.pull(targetUserId);
+      targetUser.followers.pull(userId);
+      await currentUser.save();
+      await targetUser.save();
+      res.send({ message: "Unfollowed successfully", isFollowing: false });
+    } else {
+      currentUser.following.push(targetUserId);
+      targetUser.followers.push(userId);
+      await currentUser.save();
+      await targetUser.save();
+      
+      await Notification.create({
+        userId: targetUserId,
+        type: "alert",
+        message: `${currentUser.name} started following you!`,
+      });
+
+      res.send({ message: "Followed successfully", isFollowing: true });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+app.get("/feed", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).send({ message: "userId required" });
+
+    const user = await reg_model.findById(userId);
+    if (!user) return res.status(404).send({ message: "User not found" });
+
+    const followingIds = user.following;
+
+    if (!followingIds || followingIds.length === 0) return res.send([]);
+
+    const workouts = await workout_model.find({ userId: { $in: followingIds } })
+      .sort({ date: -1 }).limit(20).populate('userId', 'name image');
+
+    const nutrition = await Nutrition.find({ userId: { $in: followingIds } })
+      .sort({ date: -1 }).limit(20).populate('userId', 'name image');
+      
+    const goals = await goals_model.find({ userId: { $in: followingIds } })
+      .sort({ createdAt: -1 }).limit(20).populate('userId', 'name image');
+
+    let feed = [];
+    
+    workouts.forEach(w => {
+      feed.push({
+        _id: w._id,
+        type: 'workout',
+        user: w.userId,
+        date: w.date,
+        content: `Completed a ${w.category} workout: ${w.exerciseName} (${w.sets} sets x ${w.reps} reps).`,
+      });
+    });
+
+    nutrition.forEach(n => {
+      feed.push({
+        _id: n._id,
+        type: 'nutrition',
+        user: n.userId,
+        date: n.date,
+        content: `Logged ${n.mealType}: ${n.foodItems.map(i => i.name).join(', ')}.`,
+      });
+    });
+    
+    goals.forEach(g => {
+      if(g.createdAt) {
+        feed.push({
+          _id: g._id,
+          type: 'goal',
+          user: g.userId,
+          date: g.createdAt,
+          content: `Set a new goal for ${g.goalType}: ${g.target}.`,
+        });
+      }
+    });
+
+    feed.sort((a, b) => new Date(b.date) - new Date(a.date));
+    res.send(feed.slice(0, 30));
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+app.get("/search", async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.send({ workouts: [], nutrition: [], users: [] });
+
+    const regex = new RegExp(q, 'i');
+
+    const workouts = await workout_model.find({
+      $or: [{ exerciseName: regex }, { category: regex }, { tags: regex }, { notes: regex }]
+    }).limit(20).populate('userId', 'name image');
+
+    const nutrition = await Nutrition.find({
+      $or: [{ mealType: regex }, { 'foodItems.name': regex }, { notes: regex }]
+    }).limit(20).populate('userId', 'name image');
+    
+    const users = await reg_model.find({
+      $or: [{ name: regex }, { email: regex }]
+    }).select("name email image followers following").limit(20);
+
+    res.send({ workouts, nutrition, users });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
+app.post("/profile/weight", async (req, res) => {
+  try {
+    const { userId, currentWeight } = req.body;
+    if (!userId || currentWeight === undefined) return res.status(400).send({ message: "userId and currentWeight required" });
+    
+    // reg_model usage since register models map to reg_model globally here
+    const updatedUser = await reg_model.findByIdAndUpdate(userId, { currentWeight }, { new: true });
+    if (!updatedUser) return res.status(404).send({ message: "User not found" });
+
+    res.send({ message: "Weight updated successfully", currentWeight: updatedUser.currentWeight });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

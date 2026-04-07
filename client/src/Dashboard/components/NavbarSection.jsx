@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Search, Sun, Moon, ChevronRight, CheckCircle, Trash2, Target } from 'lucide-react';
+import { Bell, Search, Sun, Moon, ChevronRight, CheckCircle, Trash2, Target, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const NavbarSection = ({ user, toggleTheme, isDark }) => {
+const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
   const navigate = useNavigate();
   const API_BASE_URL = 'http://localhost:3000';
 
@@ -15,8 +15,10 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const notificationRef = useRef(null);
+  const profileRef = useRef(null);
   const userId = user?._id;
 
   useEffect(() => {
@@ -24,18 +26,18 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
       const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
       setProfilePic(storedUser.image || '');
     };
-    
+
     loadProfilePic();
   }, []);
 
   useEffect(() => {
     if (userId) {
       fetchNotifications();
-      
+
       const interval = setInterval(() => {
         fetchNotifications();
       }, 30000);
-      
+
       return () => clearInterval(interval);
     }
   }, [userId]);
@@ -52,7 +54,7 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
 
     window.addEventListener("profile-updated", handleProfileUpdated);
     window.addEventListener("new-notification", handleNewNotification);
-    
+
     const handleStorageChange = (e) => {
       if (e.key === "user") {
         const storedUser = JSON.parse(e.newValue || "{}");
@@ -74,6 +76,9 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
       if (notificationRef.current && !notificationRef.current.contains(event.target)) {
         setShowNotifications(false);
       }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -82,7 +87,7 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
 
   const fetchNotifications = async () => {
     if (!userId) return;
-    
+
     setLoading(true);
     try {
       const res = await axios.get(`${API_BASE_URL}/notifications?userId=${userId}`);
@@ -130,7 +135,7 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
     try {
       const unreadNotifications = notifications.filter(n => !n.isRead);
       await Promise.all(
-        unreadNotifications.map(notif => 
+        unreadNotifications.map(notif =>
           axios.post(`${API_BASE_URL}/notifications/${notif._id}`, { userId })
         )
       );
@@ -142,7 +147,7 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
     }
   };
 
-  const handleProfileClick = () => navigate('/dashboard/profile');
+  const handleProfileClick = () => setShowProfileMenu(!showProfileMenu);
 
   const handleViewAllNotifications = () => {
     setShowNotifications(false);
@@ -155,7 +160,9 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    console.log('Searching for:', searchQuery);
+    if (searchQuery.trim()) {
+      navigate(`/dashboard/search?q=${encodeURIComponent(searchQuery)}`);
+    }
   };
 
   const getNotificationIcon = (type) => {
@@ -184,7 +191,7 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
     }
   };
 
-  const profileImageUrl = profilePic 
+  const profileImageUrl = profilePic
     ? `${API_BASE_URL}/uploads/${profilePic}`
     : null;
 
@@ -256,7 +263,7 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
                   )}
                 </div>
               </div>
-              
+
               {loading ? (
                 <div className="p-4 text-center">
                   <p className="text-gray-500">Loading...</p>
@@ -277,9 +284,8 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
                     {notifications.slice(0, 8).map((notification) => (
                       <div
                         key={notification._id}
-                        className={`p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                          !notification.isRead ? getNotificationBorder(notification.type) : 'opacity-70'
-                        }`}
+                        className={`p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${!notification.isRead ? getNotificationBorder(notification.type) : 'opacity-70'
+                          }`}
                       >
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center space-x-2">
@@ -321,7 +327,7 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
                       </div>
                     ))}
                   </div>
-                  
+
                   {notifications.length > 8 && (
                     <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
                       <button
@@ -354,41 +360,70 @@ const NavbarSection = ({ user, toggleTheme, isDark }) => {
           )}
         </motion.button>
 
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          onClick={handleProfileClick}
-          className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg transition-colors"
-          style={{ backgroundColor: 'var(--bg-card-hover)' }}
-        >
-          <div className="relative">
-            {profileImageUrl ? (
-              <img
-                src={profileImageUrl}
-                alt="Profile"
-                className="w-10 h-10 rounded-full object-cover ring-2 ring-[var(--accent)]/30 shadow-md"
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/40x40?text=U';
-                  e.target.onerror = null;
-                }}
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center ring-2 ring-[var(--accent)]/30 shadow-md">
-                <span className="text-sm font-semibold text-gray-600">
-                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                </span>
-              </div>
-            )}
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[var(--bg-card-hover)]"></div>
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-              {user?.name || 'Guest User'}
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              Fitness Enthusiast
-            </p>
-          </div>
-        </motion.div>
+        <div className="relative" ref={profileRef}>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            onClick={handleProfileClick}
+            className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg transition-colors"
+            style={{ backgroundColor: 'var(--bg-card-hover)' }}
+          >
+            <div className="relative">
+              {profileImageUrl ? (
+                <img
+                  src={profileImageUrl}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full object-cover ring-2 ring-[var(--accent)]/30 shadow-md"
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/40x40?text=U';
+                    e.target.onerror = null;
+                  }}
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center ring-2 ring-[var(--accent)]/30 shadow-md">
+                  <span className="text-sm font-semibold text-gray-600">
+                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
+                </div>
+              )}
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[var(--bg-card-hover)]"></div>
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {user?.name || 'Guest User'}
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Fitness Enthusiast
+              </p>
+            </div>
+          </motion.div>
+          {showProfileMenu && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-50 py-2 border"
+              style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}
+            >
+              <button
+                onClick={() => { setShowProfileMenu(false); navigate('/dashboard/profile'); }}
+                className="w-full text-left px-4 py-2 text-sm transition"
+                style={{ color: 'var(--text-primary)' }}
+                onMouseOver={(e) => e.target.style.backgroundColor = 'var(--bg-card-hover)'}
+                onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+              >
+                My Profile
+              </button>
+              <div className="my-1 border-t" style={{ borderColor: 'var(--border)' }}></div>
+              <button
+                onClick={() => { setShowProfileMenu(false); logout(); navigate('/login'); }}
+                className="w-full text-left px-4 py-2 text-sm text-red-500 transition flex items-center"
+                onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'}
+                onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+              >
+                <LogOut className="w-4 h-4 mr-2" /> Log Out
+              </button>
+            </motion.div>
+          )}
+        </div>
       </div>
     </motion.header>
   );

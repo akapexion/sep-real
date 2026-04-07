@@ -18,7 +18,7 @@ const AboutSection = () => {
           className="text-4xl md:text-5xl font-bold mb-6"
         >
           About{" "}
-          <span className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-transparent bg-clip-text">
+          <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 text-transparent bg-clip-text">
             FitTrack
           </span>
         </motion.h2>
@@ -40,10 +40,10 @@ const AboutSection = () => {
           {/* Card 1 */}
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="bg-gradient-to-b from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-2xl p-8 hover:shadow-[0_0_30px_rgba(255,165,0,0.4)] transition-all"
+            className="bg-gradient-to-b from-cyan-400/10 to-blue-500/10 border border-cyan-500/30 rounded-2xl p-8 hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] transition-all"
           >
-            <Dumbbell className="w-10 h-10 text-yellow-400 mb-4 mx-auto" />
-            <h3 className="text-xl font-semibold mb-3 text-yellow-300">
+            <Dumbbell className="w-10 h-10 text-cyan-400 mb-4 mx-auto" />
+            <h3 className="text-xl font-semibold mb-3 text-cyan-400">
               Smart Workout Tracking
             </h3>
             <p className="text-gray-300 text-sm leading-relaxed">
@@ -55,10 +55,10 @@ const AboutSection = () => {
           {/* Card 2 */}
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="bg-gradient-to-b from-yellow-500/10 to-orange-500/10 border border-orange-500/30 rounded-2xl p-8 hover:shadow-[0_0_30px_rgba(255,165,0,0.4)] transition-all"
+            className="bg-gradient-to-b from-cyan-400/10 to-blue-500/10 border border-cyan-500/30 rounded-2xl p-8 hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] transition-all"
           >
-            <Activity className="w-10 h-10 text-orange-400 mb-4 mx-auto" />
-            <h3 className="text-xl font-semibold mb-3 text-orange-300">
+            <Activity className="w-10 h-10 text-cyan-500 mb-4 mx-auto" />
+            <h3 className="text-xl font-semibold mb-3 text-cyan-500">
               AI Progress Insights
             </h3>
             <p className="text-gray-300 text-sm leading-relaxed">
@@ -70,10 +70,10 @@ const AboutSection = () => {
           {/* Card 3 */}
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="bg-gradient-to-b from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-2xl p-8 hover:shadow-[0_0_30px_rgba(255,165,0,0.4)] transition-all"
+            className="bg-gradient-to-b from-cyan-400/10 to-blue-500/10 border border-cyan-500/30 rounded-2xl p-8 hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] transition-all"
           >
-            <Users className="w-10 h-10 text-yellow-400 mb-4 mx-auto" />
-            <h3 className="text-xl font-semibold mb-3 text-yellow-300">
+            <Users className="w-10 h-10 text-cyan-400 mb-4 mx-auto" />
+            <h3 className="text-xl font-semibold mb-3 text-cyan-400">
               Connected Community
             </h3>
             <p className="text-gray-300 text-sm leading-relaxed">
@@ -88,15 +88,15 @@ const AboutSection = () => {
           whileHover={{ scale: 1.05 }}
           className="mt-16"
         >
-          <button className="px-10 py-4 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-full text-black font-semibold hover:shadow-[0_0_35px_rgba(255,165,0,0.7)] transition-all">
+          <button className="px-10 py-4 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full text-black font-semibold hover:shadow-[0_0_35px_rgba(34,211,238,0.4)] transition-all">
             Join the FitTrack Revolution
           </button>
         </motion.div>
       </div>
 
       {/* 🔶 Decorative Elements */}
-      <div className="absolute top-10 left-10 w-24 h-24 border-t-2 border-l-2 border-yellow-500/30 rounded-tl-xl"></div>
-      <div className="absolute bottom-10 right-10 w-24 h-24 border-b-2 border-r-2 border-orange-500/30 rounded-br-xl"></div>
+      <div className="absolute top-10 left-10 w-24 h-24 border-t-2 border-l-2 border-cyan-500/30 rounded-tl-xl"></div>
+      <div className="absolute bottom-10 right-10 w-24 h-24 border-b-2 border-r-2 border-cyan-500/30 rounded-br-xl"></div>
     </section>
   );
 };
