@@ -812,13 +812,36 @@ app.get("/feedback", authenticateToken, async (req, res) => {
 
 // =========== NEW SOCIAL & SEARCH ENDPOINTS ===========
 
+// Modified Users endpoint to support searching, filtering, and sorting
 app.get("/users", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    if (!userId) return res.status(400).send({ message: "userId required" });
+    const { search, role, sortBy } = req.query; // Get filters from query string
 
-    const users = await reg_model.find({ _id: { $ne: userId } })
-      .select("name email image followers following")
+    // 1. Base query: exclude current user
+    let query = { _id: { $ne: userId } };
+
+    // 2. Search filter (by name)
+    if (search) {
+      query.name = { $regex: search, $options: 'i' }; // case-insensitive search
+    }
+
+    // 3. Role filter
+    if (role && role !== 'all') {
+      query.role = role;
+    }
+
+    // 4. Sorting
+    let sortOption = {};
+    if (sortBy === 'followers') {
+      sortOption = { followers: -1 }; // Most followers first
+    } else {
+      sortOption = { createdAt: -1 }; // Newest users first
+    }
+
+    const users = await reg_model.find(query)
+      .select("name email image followers following role")
+      .sort(sortOption)
       .lean();
 
     res.send(users);
