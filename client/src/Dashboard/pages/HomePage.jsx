@@ -9,6 +9,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../pages/UseLanguage';
 import AdminPage from './AdminPage';
+import { Link } from 'react-router-dom';
 
 const API_BASE = "http://localhost:3000";
 
@@ -192,7 +193,7 @@ const HomePage = () => {
         className="p-6 card relative overflow-hidden"
         style={{ borderLeft: '4px solid var(--accent)' }}>
         <h1 className="text-2xl font-bold mb-2 z-10 relative">
-          {t('welcomeBack')}, {user?.name || t('fitnessEnthusiast')}
+          {t('Welcome')}, {user?.name || t('fitnessEnthusiast')}
         </h1>
         <p className="opacity-90 z-10 relative">{getStreakMessage()}</p>
         <div className="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-transparent to-[var(--accent)] opacity-20 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
@@ -221,14 +222,14 @@ const HomePage = () => {
             { label: t('trackProgress'), path: '/dashboard/progress', icon: Ruler, description: t('recordMeasurements') },
             { label: t('setGoals'), path: '/dashboard/goals', icon: CheckCircle, description: t('createTargets') }
           ].map((action, index) => (
-            <button key={index} onClick={() => window.location.href = action.path}
+            <Link to={action.path} key={index}
               className="p-4 rounded-xl text-center glass transition-all hover:scale-105 hover:-translate-y-1">
               <action.icon className="mx-auto w-7 h-7 mb-2" />
               <span className="text-sm font-medium block">{action.label}</span>
               <span className="text-xs opacity-75 mt-1 block" style={{ color: 'var(--text-primary)' }}>
                 {action.description}
               </span>
-            </button>
+            </Link>
           ))}
         </div>
       </motion.div>
@@ -246,7 +247,7 @@ const HomePage = () => {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="pt-4">
         <div className="flex justify-between items-center mb-4">
            <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>Community Activity</h2>
-           <button onClick={() => window.location.href = '/dashboard/community'} className="text-sm hover:underline" style={{ color: 'var(--accent)' }}>View Community</button>
+           <Link to="/dashboard/community" className="text-sm hover:underline" style={{ color: 'var(--accent)' }}>View Community</Link>
         </div>
         
         {feed.length === 0 ? (

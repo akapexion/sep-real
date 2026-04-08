@@ -1,61 +1,92 @@
 // src/Dashboard/components/RemindersSection.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
-import { 
-  Trash2, Edit2, Plus, Loader2, Bell, ToggleLeft, ToggleRight, 
-  Clock, AlertTriangle, Calendar, Utensils, Dumbbell, Target 
+import {
+  Trash2, Edit2, Plus, Loader2, Bell, ToggleLeft, ToggleRight,
+  Clock, AlertTriangle, Calendar, Utensils, Dumbbell, Target,
 } from "lucide-react";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
-import {z} from 'zod'
-import { useLanguage } from '../pages/UseLanguage';
+import { z } from "zod";
+import { useLanguage } from "../pages/UseLanguage";
 
-const API_BASE = "http://localhost:3000";   
+const API_BASE = "http://localhost:3000";
 
-const reminderSchema=z.object({
-  category:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  type:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  time:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  date:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-  title:z.any().refine((v) => v !== "" && v != null, {
-    message: "Please enter detail"
-  }),
-})
+const reminderSchema = z.object({
+  category: z.any().refine((v) => v !== "" && v != null, { message: "Please enter detail" }),
+  type: z.any().refine((v) => v !== "" && v != null, { message: "Please enter detail" }),
+  time: z.any().refine((v) => v !== "" && v != null, { message: "Please enter detail" }),
+  date: z.any().refine((v) => v !== "" && v != null, { message: "Please enter detail" }),
+  title: z.any().refine((v) => v !== "" && v != null, { message: "Please enter detail" }),
+});
+
+// ── Glassmorphism shared styles ──────────────────────────────────────────────
+const glassCard = {
+  background: "rgba(255,255,255,0.04)",
+  backdropFilter: "blur(16px)",
+  WebkitBackdropFilter: "blur(16px)",
+  border: "1px solid rgba(255,255,255,0.10)",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.08)",
+};
+
+const glassInput = {
+  background: "rgba(255,255,255,0.05)",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  color: "var(--text-primary)",
+  borderRadius: "10px",
+  transition: "all 0.2s ease",
+};
+
+const inputFocusStyle = `
+  .glass-input:focus {
+    outline: none;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent), 
+                inset 0 1px 0 rgba(255,255,255,0.1) !important;
+    background: rgba(255,255,255,0.08) !important;
+  }
+  .glass-input::placeholder { color: rgba(255,255,255,0.3); }
+  .glass-input option { background: var(--bg-card); color: var(--text-primary); }
+
+  .row-hover:hover { 
+    background: rgba(255,255,255,0.04) !important; 
+    transition: background 0.2s ease;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent); }
+    50%       { box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 70%, transparent); }
+  }
+`;
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function RemindersSection() {
-  const [reminders, setReminders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [activeTab, setActiveTab] = useState("all"); 
-  const [error,setError] = useState("");
+  const [reminders, setReminders]   = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [saving, setSaving]         = useState(false);
+  const [editingId, setEditingId]   = useState(null);
+  const [activeTab, setActiveTab]   = useState("all");
+  const [error, setError]           = useState("");
 
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [type, setType] = useState("workout");
+  const [title, setTitle]       = useState("");
+  const [date, setDate]         = useState("");
+  const [time, setTime]         = useState("");
+  const [type, setType]         = useState("workout");
   const [category, setCategory] = useState("reminder");
   const [priority, setPriority] = useState("medium");
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes]       = useState("");
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user   = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?._id;
+  const { t }  = useLanguage();
 
-  const { t } = useLanguage();
-
+  // ── All logic functions unchanged ─────────────────────────────────────────
   const resetForm = () => {
-    setTitle(""); setDate(""); setTime(""); setType("workout"); 
-    setCategory("reminder"); setPriority("medium"); setNotes(""); 
-    setEditingId(null);
+    setTitle(""); setDate(""); setTime(""); setType("workout");
+    setCategory("reminder"); setPriority("medium"); setNotes(""); setEditingId(null);
   };
 
   const fetchReminders = useCallback(async () => {
@@ -63,520 +94,575 @@ export default function RemindersSection() {
     try {
       const { data } = await axios.get(`${API_BASE}/reminders?userId=${userId}`);
       setReminders(data);
-    } catch { 
-      toast.error(t('failedToLoadReminders')); 
-    }
-    finally { setLoading(false); }
+    } catch { toast.error(t("failedToLoadReminders")); }
+    finally   { setLoading(false); }
   }, [userId, t]);
 
   const save = async (e) => {
     e.preventDefault();
-   
-    const result = reminderSchema.safeParse({title,date,time,category,type})
-    if(!result.success){
-      const formattedErrors = result.error.format();
-
+    const result = reminderSchema.safeParse({ title, date, time, category, type });
+    if (!result.success) {
+      const fe = result.error.format();
       setError({
-
-        title:formattedErrors.title?._errors[0] || "",
-        date: formattedErrors.date?._errors[0] || "",
-        time: formattedErrors.time?._errors[0] || "",
-        category: formattedErrors.category?._errors[0] || "",
-        type: formattedErrors.type?._errors[0] || "",
-       
-      })
+        title: fe.title?._errors[0] || "", date: fe.date?._errors[0] || "",
+        time: fe.time?._errors[0] || "", category: fe.category?._errors[0] || "",
+        type: fe.type?._errors[0] || "",
+      });
       return;
     }
-setError("")
-    if (!title || !date || !time) return toast.error(t('fillRequiredFields'));
+    setError("");
+    if (!title || !date || !time) return toast.error(t("fillRequiredFields"));
 
-    const fullDateTime = `${date}T${time}:00`; 
-
-    const payload = {
-      userId,
-      title,
-      date: fullDateTime,   
-      type,
-      category,
-      priority: category === "alert" ? priority : "none",
-      notes,
-      isActive: true,
-    };
+    const fullDateTime = `${date}T${time}:00`;
+    const payload = { userId, title, date: fullDateTime, type, category,
+      priority: category === "alert" ? priority : "none", notes, isActive: true };
 
     setSaving(true);
     try {
       if (editingId) {
         await axios.post(`${API_BASE}/reminders/${editingId}`, payload);
-        toast.success(
-          category === "alert" 
-            ? t('alertUpdated') 
-            : t('reminderUpdated')
-        );
+        toast.success(category === "alert" ? t("alertUpdated") : t("reminderUpdated"));
       } else {
         await axios.post(`${API_BASE}/reminders`, payload);
-        toast.success(
-          category === "alert" 
-            ? t('alertCreated') 
-            : t('reminderCreated')
-        );
-        
+        toast.success(category === "alert" ? t("alertCreated") : t("reminderCreated"));
         scheduleNotification(payload);
       }
-      resetForm();
-      fetchReminders();
-    } catch (err) {
-      console.error(err);
-      toast.error(t('saveFailed'));
-    } finally {
-      setSaving(false);
-    }
+      resetForm(); fetchReminders();
+    } catch (err) { console.error(err); toast.error(t("saveFailed")); }
+    finally { setSaving(false); }
   };
 
   const startEdit = (r) => {
-    setEditingId(r._id);
-    setTitle(r.title);
-    setType(r.type);
-    setCategory(r.category || "reminder");
-    setPriority(r.priority || "medium");
-    setNotes(r.notes || "");
-
-    const reminderDate = new Date(r.date);
-    const dateStr = reminderDate.toISOString().split("T")[0];
-    const timeStr = reminderDate.toTimeString().split(':').slice(0, 2).join(':');
-    
-    setDate(dateStr);
-    setTime(timeStr);
+    setEditingId(r._id); setTitle(r.title); setType(r.type);
+    setCategory(r.category || "reminder"); setPriority(r.priority || "medium"); setNotes(r.notes || "");
+    const rd = new Date(r.date);
+    setDate(rd.toISOString().split("T")[0]);
+    setTime(rd.toTimeString().split(":").slice(0, 2).join(":"));
   };
 
   const toggleActive = async (id, currentStatus) => {
     try {
-      await axios.patch(`${API_BASE}/reminders/${id}`, { 
-        isActive: !currentStatus 
-      });
-      toast.success(
-        !currentStatus 
-          ? t('activated') 
-          : t('deactivated')
-      );
+      await axios.patch(`${API_BASE}/reminders/${id}`, { isActive: !currentStatus });
+      toast.success(!currentStatus ? t("activated") : t("deactivated"));
       fetchReminders();
-    } catch (err) {
-      console.error(err);
-      toast.error(t('updateFailed'));
-    }
+    } catch (err) { console.error(err); toast.error(t("updateFailed")); }
   };
 
   const del = (id) => {
     showDeleteConfirm({
-      message: t('deleteReminderConfirmation'),
+      message: t("deleteReminderConfirmation"),
       onConfirm: async () => {
-        try {
-          await axios.delete(`${API_BASE}/reminders/${id}`);
-          toast.success(t('deleteSuccessfully'));
-          fetchReminders(); 
-        } catch (error) {
-          toast.error(t('unableToDelete'));
-        }
+        try { await axios.delete(`${API_BASE}/reminders/${id}`); toast.success(t("deleteSuccessfully")); fetchReminders(); }
+        catch { toast.error(t("unableToDelete")); }
       },
     });
   };
 
-  const filteredReminders = reminders.filter(reminder => {
-    if (activeTab === "all") return true;
-    return reminder.category === activeTab;
-  });
+  const filteredReminders = reminders.filter(r => activeTab === "all" || r.category === activeTab);
 
   const getIcon = (item) => {
-    if (item.category === "alert") {
-      return <AlertTriangle className="w-4 h-4" />;
-    }
-
+    if (item.category === "alert") return <AlertTriangle className="w-4 h-4" />;
     switch (item.type) {
-      case "workout": return <Dumbbell className="w-4 h-4" />;
-      case "meal": return <Utensils className="w-4 h-4" />;
-      case "goal": return <Target className="w-4 h-4" />;
+      case "workout":     return <Dumbbell className="w-4 h-4" />;
+      case "meal":        return <Utensils className="w-4 h-4" />;
+      case "goal":        return <Target className="w-4 h-4" />;
       case "appointment": return <Calendar className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
+      default:            return <Clock className="w-4 h-4" />;
     }
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "high": return "text-red-500 bg-red-500/20 border-red-500/30";
-      case "medium": return "text-yellow-500 bg-yellow-500/20 border-yellow-500/30";
-      case "low": return "text-blue-500 bg-blue-500/20 border-blue-500/30";
-      default: return "text-gray-500 bg-gray-500/20 border-gray-500/30";
+  const getPriorityColor = (p) => {
+    switch (p) {
+      case "high":   return "text-red-400 bg-red-500/15 border-red-500/30";
+      case "medium": return "text-yellow-400 bg-yellow-500/15 border-yellow-500/30";
+      case "low":    return "text-blue-400 bg-blue-500/15 border-blue-500/30";
+      default:       return "text-gray-400 bg-gray-500/15 border-gray-500/30";
     }
   };
 
-  const getCategoryStyle = (category) => {
-    return category === "alert" 
-      ? "text-red-500 bg-red-500/20 border-red-500/30"
-      : "text-[var(--accent)] bg-[var(--accent)]/20 border-[var(--accent)]/30";
-  };
+  const getCategoryStyle = (cat) =>
+    cat === "alert"
+      ? "text-red-400 bg-red-500/15 border border-red-500/30"
+      : "text-[var(--accent)] bg-[var(--accent)]/10 border border-[var(--accent)]/30";
 
   const scheduleNotification = (reminder) => {
     if (!("Notification" in window)) return;
-
     if (Notification.permission === "default") {
-      Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-          scheduleSingleNotification(reminder);
-        }
-      });
-    } else if (Notification.permission === "granted") {
-      scheduleSingleNotification(reminder);
-    }
+      Notification.requestPermission().then(p => { if (p === "granted") scheduleSingleNotification(reminder); });
+    } else if (Notification.permission === "granted") { scheduleSingleNotification(reminder); }
   };
 
   const scheduleSingleNotification = (reminder) => {
     const reminderTime = new Date(reminder.date).getTime();
-    const now = Date.now();
-    const timeUntilReminder = reminderTime - now;
-
-    if (timeUntilReminder > 0 && timeUntilReminder < 24 * 60 * 60 * 1000) {
+    const timeUntil    = reminderTime - Date.now();
+    if (timeUntil > 0 && timeUntil < 86400000) {
       setTimeout(() => {
         if (reminder.isActive) {
-          const notificationTitle = reminder.category === "alert" 
-            ? `🚨 ${t('alert')}: ${reminder.title}` 
-            : `⏰ ${t('reminder')}: ${reminder.title}`;
-
-          new Notification(notificationTitle, {
-            body: `${reminder.category === "alert" ? t('important') + ': ' : ''}${reminder.notes || t('timeForActivity', { activity: t(reminder.type) })}`,
-            icon: '/favicon.ico',
-            tag: reminder._id
+          const notifTitle = reminder.category === "alert"
+            ? `🚨 ${t("alert")}: ${reminder.title}`
+            : `⏰ ${t("reminder")}: ${reminder.title}`;
+          new Notification(notifTitle, {
+            body: `${reminder.category === "alert" ? t("important") + ": " : ""}${reminder.notes || t("timeForActivity", { activity: t(reminder.type) })}`,
+            icon: "/favicon.ico", tag: reminder._id,
           });
-
           createNotificationRecord(reminder);
         }
-      }, timeUntilReminder);
+      }, timeUntil);
     }
   };
 
   const createNotificationRecord = async (reminder) => {
     try {
       await axios.post(`${API_BASE}/notifications`, {
-        userId: reminder.userId,
-        type: reminder.category,
-        message: `${reminder.category === "alert" ? t('alert') : t('reminder')}: ${reminder.title}`,
-        isRead: false,
-        date: new Date().toISOString(),
-        priority: reminder.priority
+        userId: reminder.userId, type: reminder.category,
+        message: `${reminder.category === "alert" ? t("alert") : t("reminder")}: ${reminder.title}`,
+        isRead: false, date: new Date().toISOString(), priority: reminder.priority,
       });
-    } catch (err) {
-      console.error(t('failedToCreateNotification'), err);
-    }
+    } catch (err) { console.error(t("failedToCreateNotification"), err); }
   };
-
-  useEffect(() => {
-    if (reminders.length === 0) return;
-
-    const checkReminders = () => {
-      const now = new Date();
-      reminders.forEach(reminder => {
-        if (reminder.isActive) {
-          const reminderTime = new Date(reminder.date);
-          const timeDiff = reminderTime.getTime() - now.getTime();
-          
-          if (timeDiff > 0 && timeDiff <= 60000 && !reminder.notified) {
-            showBrowserNotification(reminder);
-          }
-        }
-      });
-    };
-
-    const interval = setInterval(checkReminders, 30000);
-    return () => clearInterval(interval);
-  }, [reminders, t]);
 
   const showBrowserNotification = (reminder) => {
     if (Notification.permission === "granted") {
-      const notificationTitle = reminder.category === "alert" 
-        ? `🚨 ${t('alert')}: ${reminder.title}` 
-        : `⏰ ${t('reminder')}: ${reminder.title}`;
-
-      new Notification(notificationTitle, {
-        body: `${reminder.category === "alert" ? t('important') + ': ' : ''}${reminder.notes || t('timeForActivity', { activity: t(reminder.type) })}`,
-        icon: '/favicon.ico',
+      const notifTitle = reminder.category === "alert"
+        ? `🚨 ${t("alert")}: ${reminder.title}`
+        : `⏰ ${t("reminder")}: ${reminder.title}`;
+      new Notification(notifTitle, {
+        body: `${reminder.category === "alert" ? t("important") + ": " : ""}${reminder.notes || t("timeForActivity", { activity: t(reminder.type) })}`,
+        icon: "/favicon.ico",
       });
-
       createNotificationRecord(reminder);
     }
   };
 
   useEffect(() => {
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
+    if (reminders.length === 0) return;
+    const checkReminders = () => {
+      const now = new Date();
+      reminders.forEach(r => {
+        if (r.isActive) {
+          const diff = new Date(r.date).getTime() - now.getTime();
+          if (diff > 0 && diff <= 60000 && !r.notified) showBrowserNotification(r);
+        }
+      });
+    };
+    const interval = setInterval(checkReminders, 30000);
+    return () => clearInterval(interval);
+  }, [reminders, t]);
+
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
   }, []);
 
-  useEffect(() => { 
-    fetchReminders(); 
-  }, [fetchReminders]);
+  useEffect(() => { fetchReminders(); }, [fetchReminders]);
+  // ── End logic ──────────────────────────────────────────────────────────────
 
   if (loading) return (
-    <div className="flex justify-center py-12">
-      <Loader2 className="w-8 h-8 animate-spin" style={{color:"var(--accent)"}}/>
+    <div className="flex justify-center items-center py-20">
+      <div style={{ position: "relative" }}>
+        <Loader2 className="w-10 h-10 animate-spin" style={{ color: "var(--accent)" }} />
+        <div style={{
+          position: "absolute", inset: "-6px", borderRadius: "50%",
+          background: "radial-gradient(circle, color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%)",
+          animation: "glow-pulse 2s ease-in-out infinite",
+        }} />
+      </div>
     </div>
   );
 
+  const tabs = ["all", "reminders", "alerts"];
+
   return (
-    <motion.div 
-      initial={{opacity:0,y:20}} 
-      animate={{opacity:1,y:0}}
-      className="mt-6 p-4 rounded-lg shadow-md"
-      style={{backgroundColor:"var(--bg-card)",border:"1px solid var(--border)"}}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold" style={{color:"var(--accent)"}}>
-          {t('remindersAndAlerts')}
-        </h3>
-        <div className="flex items-center space-x-2 text-sm" style={{color:"var(--text-muted)"}}>
-          <Bell className="w-4 h-4" />
-          <span>{t('realTimeNotifications')}</span>
-        </div>
-      </div>
+    <>
+      <style>{inputFocusStyle}</style>
 
-      <Toaster />
-      
-      <div className="flex space-x-1 mb-6 p-1 rounded-lg" style={{backgroundColor:"var(--bg-secondary)"}}>
-        {["all", "reminders", "alerts"].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              activeTab === tab 
-                ? "text-white shadow-sm" 
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-            style={{
-              backgroundColor: activeTab === tab ? "var(--accent)" : "transparent",
-              color: activeTab === tab ? "white" : "var(--text-secondary)"
-            }}
-          >
-            {tab === "all" ? t('all') : 
-             tab === "reminders" ? t('reminders') : t('alerts')}
-            {tab !== "all" && (
-              <span className="ml-1 text-xs opacity-75">
-                ({reminders.filter(r => r.category === tab).length})
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-      
-      <form onSubmit={save} className="grid md:grid-cols-2 gap-3 mb-6" noValidate>
-       <div> <input 
-          placeholder={`${t('title')} *`}
-          value={title} 
-          onChange={e=>setTitle(e.target.value)}
-          className="p-2 rounded w-full" 
-          style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}} 
-          required
-        />
-        <p className="mb-4 text-xs" style={{ color: "red" }}>{error.title}</p></div>
-      <div>
-          <select 
-          value={category} 
-          onChange={e=>setCategory(e.target.value)}
-          className="p-2 rounded w-full" 
-          style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}}
-        >
-          <option value="reminder">📅 {t('reminder')}</option>
-          <option value="alert">🚨 {t('alert')}</option>
-        </select>
-        <p className="mb-4 text-xs" style={{ color: "red" }}>{error.category}</p>
-      </div>
-<div>       <input 
-          type="date" 
-          value={date} 
-          onChange={e=>setDate(e.target.value)}
-          className="p-2 rounded w-full" 
-          style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}} 
-          required
-        />
-        <p className="mb-4 text-xs" style={{ color: "red" }}>{error.date}</p></div>
-     <div>
-         <input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          step="300"
-          className="p-2 rounded w-full"
-          style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}}
-          required
-        />
-        <p className="mb-4 text-xs" style={{ color: "red" }}>{error.time}</p>
-     </div>
-     <div>   <select 
-          value={type} 
-          onChange={e=>setType(e.target.value)}
-          className="p-2 rounded w-full" 
-          style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}}
-        >
-          {["workout","meal","goal","appointment","medication","other"].map(tp =>
-            <option key={tp} value={tp}>
-              {t(tp.charAt(0).toUpperCase() + tp.slice(1))}
-            </option>
-          )}
-        </select>
-<p className="mb-4 text-xs" style={{ color: "red" }}>{error.type}</p></div>
-        {category === "alert" && (
-        <div>
-            <select 
-            value={priority} 
-            onChange={e=>setPriority(e.target.value)}
-            className="p-2 rounded w-full" 
-            style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}}
-          >
-            <option value="low">🟢 {t('lowPriority')}</option>
-            <option value="medium">🟡 {t('mediumPriority')}</option>
-            <option value="high">🔴 {t('highPriority')}</option>
-          </select>
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="mt-6 rounded-2xl overflow-hidden"
+        style={{ ...glassCard, padding: "1.75rem" }}
+      >
+        <Toaster toastOptions={{
+          style: { ...glassCard, color: "var(--text-primary)", fontSize: "0.875rem" },
+        }} />
+
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div style={{
+              padding: "10px", borderRadius: "12px",
+              background: "color-mix(in srgb, var(--accent) 15%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
+              boxShadow: "0 0 16px color-mix(in srgb, var(--accent) 20%, transparent)",
+              animation: "glow-pulse 3s ease-in-out infinite",
+            }}>
+              <Bell className="w-5 h-5" style={{ color: "var(--accent)" }} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+                {t("remindersAndAlerts")}
+              </h3>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                {t("realTimeNotifications")}
+              </p>
+            </div>
+          </div>
+
+          {/* Live indicator */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{
+            background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)",
+          }}>
+            <span style={{
+              width: 7, height: 7, borderRadius: "50%", background: "#22c55e",
+              boxShadow: "0 0 8px #22c55e", display: "inline-block",
+              animation: "glow-pulse 2s ease-in-out infinite",
+            }} />
+            <span className="text-xs font-medium" style={{ color: "#22c55e" }}></span>
+          </div>
         </div>
-        )}
-        
-        <input 
-          placeholder={`${t('notes')} (${t('optional')})`}
-          value={notes} 
-          onChange={e=>setNotes(e.target.value)}
-          className="p-2 rounded md:col-span-2" 
-          style={{background:"var(--input-bg)",color:"var(--text-primary)",border:"1px solid var(--border)"}}
-        />
-        
-        <div className="md:col-span-2 flex gap-2">
-          <button 
-            type="submit" 
-            disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 rounded font-medium text-white"
-            style={{backgroundColor:"var(--accent)"}}
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : 
-             editingId ? <Edit2 className="w-4 h-4"/> : <Plus className="w-4 h-4"/>}
-            {saving ? t('saving') + "…" : 
-             editingId ? t('update') : 
-             `${t('add')} ${category === "alert" ? t('alert') : t('reminder')}`}
-          </button>
-          {editingId && (
-            <button 
-              type="button" 
-              onClick={resetForm}
-              className="px-4 py-2 rounded font-medium"
-              style={{background:"var(--bg-secondary)",color:"var(--text-primary)"}}
+
+        {/* ── Tab Bar ── */}
+        <div className="flex gap-1 p-1 rounded-xl mb-6" style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}>
+          {tabs.map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 capitalize"
+              style={activeTab === tab ? {
+                background: "var(--accent)",
+                color: "#fff",
+                boxShadow: "0 2px 12px color-mix(in srgb, var(--accent) 40%, transparent)",
+              } : {
+                color: "var(--text-muted)",
+                background: "transparent",
+              }}
             >
-              {t('cancel')}
+              {tab === "all" ? t("all") : tab === "reminders" ? t("reminders") : t("alerts")}
+              {tab !== "all" && (
+                <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full" style={{
+                  background: activeTab === tab ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.06)",
+                  color: activeTab === tab ? "#fff" : "var(--text-muted)",
+                }}>
+                  {reminders.filter(r => r.category === tab).length}
+                </span>
+              )}
             </button>
-          )}
+          ))}
         </div>
-      </form>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y" style={{borderColor:"var(--border)"}}>
-          <thead style={{background:"var(--bg-secondary)"}}>
-            <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>
-                {t('item')}
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>
-                {t('dateTime')}
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>
-                {t('type')}
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>
-                {t('status')}
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase" style={{color:"var(--text-secondary)"}}>
-                {t('actions')}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y" style={{borderColor:"var(--border)"}}>
-            {filteredReminders.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-6 text-center" style={{color:"var(--text-muted)"}}>
-                  {t('noItemsFound', { type: activeTab === "all" ? t('items') : t(activeTab) })}
-                </td>
-              </tr>
-            ) : filteredReminders.map(r => (
-              <tr key={r._id} className={`hover:bg-[var(--bg-card-hover)] ${!r.isActive?'opacity-50':''}`}>
-                <td className="px-4 py-3">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-full ${getCategoryStyle(r.category)}`}>
-                      {getIcon(r)}
-                    </div>
-                    <div>
-                      <div className="font-medium text-sm" style={{color:"var(--text-primary)"}}>
-                        {r.title}
-                        {r.category === "alert" && (
-                          <span className={`ml-2 px-2 py-1 rounded-full text-xs border ${getPriorityColor(r.priority)}`}>
-                            {t(r.priority + 'Priority')}
-                          </span>
-                        )}
-                      </div>
-                      {r.notes && (
-                        <div className="text-xs mt-1" style={{color:"var(--text-muted)"}}>
-                          {r.notes}
+        {/* ── Form ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          className="rounded-xl p-5 mb-6"
+          style={{
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{
+            color: "var(--accent)",
+            letterSpacing: "0.12em",
+          }}>
+            {editingId ? `✏️ ${t("update")}` : `＋ ${t("add")} ${category === "alert" ? t("alert") : t("reminder")}`}
+          </p>
+
+          <form onSubmit={save} className="grid md:grid-cols-2 gap-3" noValidate>
+
+            {/* Title */}
+            <div className="flex flex-col gap-1">
+              <input
+                placeholder={`${t("title")} *`}
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                className="glass-input w-full px-3 py-2.5 text-sm"
+                style={glassInput}
+                required
+              />
+              {error.title && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.title}</p>}
+            </div>
+
+            {/* Category */}
+            <div className="flex flex-col gap-1">
+              <select
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+                className="glass-input w-full px-3 py-2.5 text-sm"
+                style={glassInput}
+              >
+                <option value="reminder">📅 {t("reminder")}</option>
+                <option value="alert">🚨 {t("alert")}</option>
+              </select>
+              {error.category && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.category}</p>}
+            </div>
+
+            {/* Date */}
+            <div className="flex flex-col gap-1">
+              <input
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
+                className="glass-input w-full px-3 py-2.5 text-sm"
+                style={glassInput}
+                required
+              />
+              {error.date && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.date}</p>}
+            </div>
+
+            {/* Time */}
+            <div className="flex flex-col gap-1">
+              <input
+                type="time"
+                value={time}
+                onChange={e => setTime(e.target.value)}
+                step="300"
+                className="glass-input w-full px-3 py-2.5 text-sm"
+                style={glassInput}
+                required
+              />
+              {error.time && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.time}</p>}
+            </div>
+
+            {/* Type */}
+            <div className="flex flex-col gap-1">
+              <select
+                value={type}
+                onChange={e => setType(e.target.value)}
+                className="glass-input w-full px-3 py-2.5 text-sm"
+                style={glassInput}
+              >
+                {["workout", "meal", "goal", "appointment", "medication", "other"].map(tp => (
+                  <option key={tp} value={tp}>
+                    {t(tp.charAt(0).toUpperCase() + tp.slice(1))}
+                  </option>
+                ))}
+              </select>
+              {error.type && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.type}</p>}
+            </div>
+
+            {/* Priority (alerts only) */}
+            {category === "alert" && (
+              <div className="flex flex-col gap-1">
+                <select
+                  value={priority}
+                  onChange={e => setPriority(e.target.value)}
+                  className="glass-input w-full px-3 py-2.5 text-sm"
+                  style={glassInput}
+                >
+                  <option value="low">🟢 {t("lowPriority")}</option>
+                  <option value="medium">🟡 {t("mediumPriority")}</option>
+                  <option value="high">🔴 {t("highPriority")}</option>
+                </select>
+              </div>
+            )}
+
+            {/* Notes */}
+            <div className="md:col-span-2">
+              <input
+                placeholder={`${t("notes")} (${t("optional")})`}
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                className="glass-input w-full px-3 py-2.5 text-sm"
+                style={glassInput}
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="md:col-span-2 flex gap-2 pt-1">
+              <motion.button
+                type="submit"
+                disabled={saving}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+                style={{
+                  background: "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #000))",
+                  boxShadow: "0 4px 16px color-mix(in srgb, var(--accent) 35%, transparent)",
+                  border: "1px solid color-mix(in srgb, var(--accent) 50%, transparent)",
+                }}
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> :
+                 editingId ? <Edit2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                {saving ? t("saving") + "…" : editingId ? t("update") :
+                  `${t("add")} ${category === "alert" ? t("alert") : t("reminder")}`}
+              </motion.button>
+
+              {editingId && (
+                <motion.button
+                  type="button"
+                  onClick={resetForm}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-5 py-2.5 rounded-xl text-sm font-medium"
+                  style={{
+                    ...glassInput,
+                    color: "var(--text-primary)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                  }}
+                >
+                  {t("cancel")}
+                </motion.button>
+              )}
+            </div>
+          </form>
+        </motion.div>
+
+        {/* ── Table ── */}
+        <div className="rounded-xl overflow-hidden" style={{
+          border: "1px solid rgba(255,255,255,0.08)",
+          background: "rgba(255,255,255,0.02)",
+        }}>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                  {[t("item"), t("dateTime"), t("type"), t("status"), t("actions")].map(h => (
+                    <th key={h} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-widest"
+                      style={{ color: "var(--text-muted)", letterSpacing: "0.1em" }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <AnimatePresence>
+                  {filteredReminders.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-12 text-center">
+                        <div className="flex flex-col items-center gap-3">
+                          <div style={{
+                            padding: 16, borderRadius: "50%",
+                            background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                          }}>
+                            <Bell className="w-6 h-6" style={{ color: "var(--text-muted)" }} />
+                          </div>
+                          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                            {t("noItemsFound", { type: activeTab === "all" ? t("items") : t(activeTab) })}
+                          </p>
                         </div>
-                      )}
-                      <div className={`text-xs mt-1 px-2 py-1 rounded-full inline-block ${getCategoryStyle(r.category)}`}>
-                        {r.category === "alert" ? `🚨 ${t('alert')}` : `⏰ ${t('reminder')}`}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-sm" style={{color:"var(--text-primary)"}}>
-                  {new Date(r.date).toLocaleString()}
-                </td>
-                <td className="px-4 py-3 text-sm">
-                  <span 
-                    className="px-2 py-1 rounded-full text-xs capitalize"
-                    style={{
-                      backgroundColor: "var(--accent)/20",
-                      color: 'var(--accent)',
-                      border: '1px solid var(--accent)/30'
-                    }}
-                  >
-                    {t(r.type)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-sm">
-                  <button 
-                    onClick={() => toggleActive(r._id, r.isActive)}
-                    className="flex items-center space-x-2"
-                  >
-                    {r.isActive ? (
-                      <ToggleRight className="w-6 h-6" style={{color: "var(--accent)"}} />
-                    ) : (
-                      <ToggleLeft className="w-6 h-6" style={{color: "var(--text-muted)"}} />
-                    )}
-                    <span style={{color: r.isActive ? "var(--accent)" : "var(--text-muted)"}}>
-                      {r.isActive ? t('active') : t('inactive')}
-                    </span>
-                  </button>
-                </td>
-                <td className="px-4 py-3 text-sm">
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => startEdit(r)} 
-                      className="p-1 rounded hover:bg-[var(--bg-secondary)]"
-                      title={t('edit')}
+                      </td>
+                    </tr>
+                  ) : filteredReminders.map((r, i) => (
+                    <motion.tr
+                      key={r._id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: r.isActive ? 1 : 0.45, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ delay: i * 0.04, duration: 0.25 }}
+                      className="row-hover"
+                      style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
                     >
-                      <Edit2 className="w-4 h-4" style={{ color: "var(--accent)" }} />
-                    </button>
-                    <button 
-                      onClick={() => del(r._id)} 
-                      className="p-1 rounded hover:bg-red-500/10"
-                      title={t('delete')}
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </motion.div>
+                      {/* Item */}
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-xl ${getCategoryStyle(r.category)}`}
+                            style={{ backdropFilter: "blur(8px)" }}>
+                            {getIcon(r)}
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm flex items-center gap-2"
+                              style={{ color: "var(--text-primary)" }}>
+                              {r.title}
+                              {r.category === "alert" && (
+                                <span className={`px-2 py-0.5 rounded-full text-xs border ${getPriorityColor(r.priority)}`}>
+                                  {t(r.priority + "Priority")}
+                                </span>
+                              )}
+                            </div>
+                            {r.notes && (
+                              <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{r.notes}</div>
+                            )}
+                            <span className={`text-xs mt-1 px-2 py-0.5 rounded-full inline-block ${getCategoryStyle(r.category)}`}>
+                              {r.category === "alert" ? `🚨 ${t("alert")}` : `⏰ ${t("reminder")}`}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Date/Time */}
+                      <td className="px-5 py-4">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                            {new Date(r.date).toLocaleDateString()}
+                          </span>
+                          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                            {new Date(r.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Type badge */}
+                      <td className="px-5 py-4">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-medium capitalize"
+                          style={{
+                            background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                            color: "var(--accent)",
+                            border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
+                          }}>
+                          {t(r.type)}
+                        </span>
+                      </td>
+
+                      {/* Toggle */}
+                      <td className="px-5 py-4">
+                        <button onClick={() => toggleActive(r._id, r.isActive)}
+                          className="flex items-center gap-2 transition-all duration-200">
+                          {r.isActive ? (
+                            <ToggleRight className="w-6 h-6" style={{ color: "var(--accent)", filter: "drop-shadow(0 0 4px var(--accent))" }} />
+                          ) : (
+                            <ToggleLeft className="w-6 h-6" style={{ color: "var(--text-muted)" }} />
+                          )}
+                          <span className="text-xs font-medium" style={{
+                            color: r.isActive ? "var(--accent)" : "var(--text-muted)",
+                          }}>
+                            {r.isActive ? t("active") : t("inactive")}
+                          </span>
+                        </button>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-5 py-4">
+                        <div className="flex gap-1.5">
+                          <motion.button
+                            whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                            onClick={() => startEdit(r)}
+                            className="p-2 rounded-lg transition-all"
+                            style={{
+                              background: "color-mix(in srgb, var(--accent) 10%, transparent)",
+                              border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
+                            }}
+                            title={t("edit")}
+                          >
+                            <Edit2 className="w-3.5 h-3.5" style={{ color: "var(--accent)" }} />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                            onClick={() => del(r._id)}
+                            className="p-2 rounded-lg transition-all"
+                            style={{
+                              background: "rgba(239,68,68,0.08)",
+                              border: "1px solid rgba(239,68,68,0.2)",
+                            }}
+                            title={t("delete")}
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                          </motion.button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </motion.div>
+    </>
   );
 }

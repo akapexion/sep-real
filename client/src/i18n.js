@@ -80,7 +80,7 @@ export const t = (key, lang = 'en') => {
       welcomeBack: "Welcome back",
       fitnessEnthusiast: "Fitness Enthusiast",
       streakMessage: "You're on a {days}-day streak! Keep going! 💪",
-      readyForWorkout: "Ready for your next workout? Let's get moving! 🏃‍♂️",
+      readyForWorkout: "Ready for your next workout? Let's get moving!",
       totalWorkouts: "Total Workouts",
       goalsAchieved: "Goals Achieved",
       currentStreak: "Current Streak",

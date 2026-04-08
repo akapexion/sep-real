@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Dumbbell, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   return (
@@ -49,7 +50,7 @@ const HeroSection = () => {
               className="flex items-center justify-center gap-2 px-8 py-3 rounded-full text-black font-bold transition-all w-full sm:w-auto"
               style={{ background: "var(--accent)", boxShadow: "0 0 20px var(--accent)" }}
             >
-              Get Started <ArrowRight className="w-4 h-4" />
+              <Link to="/login" className="flex items-center gap-2"> Get Started <ArrowRight className="w-4 h-4" /> </Link>
             </motion.button>
 
             <motion.button
@@ -57,7 +58,8 @@ const HeroSection = () => {
               className="px-8 py-3 border rounded-full transition-all w-full sm:w-auto"
               style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
             >
-              Learn More
+              <Link to="/about" className="flex items-center gap-2"> Learn More</Link>
+              
             </motion.button>
           </div>
 

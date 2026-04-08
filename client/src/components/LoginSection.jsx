@@ -93,7 +93,7 @@ export default function LoginSection({ Loginuser }) {
           className="text-2xl font-bold mb-6 text-center"
           style={{ color: "var(--accent)" }}
         >
-          Welcome Back
+          Welcome
         </h3>
 
         <form onSubmit={handleLogin} className="" noValidate>
