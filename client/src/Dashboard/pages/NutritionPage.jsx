@@ -11,9 +11,6 @@ const NutritionPage = () => (
     className="p-4 sm:p-6 lg:p-8 min-h-screen"
   >
     <div className="max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6" style={{ color: "var(--accent)" }}>
-        Nutrition Tracker
-      </h1>
       <NutritionLogsSection />
     </div>
   </motion.main>

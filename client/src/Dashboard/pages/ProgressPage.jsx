@@ -46,13 +46,6 @@ const ProgressPage = () => {
       className="min-h-screen py-8"
     >
       <div className="max-w-5xl mx-auto px-4">
-        <h1
-          className="text-3xl md:text-4xl font-bold mb-10 text-center"
-          style={{ color: "var(--accent)" }}
-        >
-          Track Your Progress
-        </h1>
-
         {/* Input Form */}
         <div className="mb-12">
           <ProgressInputSection onProgressAdded={handleProgressAdded} />

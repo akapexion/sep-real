@@ -51,7 +51,7 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
 
       const interval = setInterval(() => {
         fetchNotifications();
-      }, 3000);
+      }, 30000);
 
       return () => clearInterval(interval);
     }
@@ -323,10 +323,20 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto border border-gray-200 dark:border-gray-700"
+              className="absolute right-0 mt-2 w-96 rounded-xl z-50 max-h-96 overflow-y-auto"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              }}
             >
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h3 className="font-semibold text-gray-800 dark:text-white">Notifications</h3>
+              <div
+                className="p-4 flex justify-between items-center"
+                style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}
+              >
+                <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Notifications</h3>
                 <div className="flex items-center space-x-2">
                   {unreadCount > 0 && (
                     <button
@@ -350,11 +360,11 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
 
               {loading ? (
                 <div className="p-4 text-center">
-                  <p className="text-gray-500">Loading...</p>
+                  <p style={{ color: 'var(--text-muted)' }}>Loading...</p>
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="p-6 text-center">
-                  <p className="text-gray-500 mb-4">No notifications</p>
+                  <p className="mb-4" style={{ color: 'var(--text-muted)' }}>No notifications</p>
                   <button
                     onClick={handleViewAllNotifications}
                     className="text-sm text-[var(--accent)] hover:underline"
@@ -364,25 +374,29 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
                 </div>
               ) : (
                 <>
-                  <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  <div style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }} className="divide-y divide-white/10">
                     {notifications.slice(0, 8).map((notification) => (
                       <div
                         key={notification._id}
-                        className={`p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${!notification.isRead ? getNotificationBorder(notification.type) : 'opacity-70'
-                          }`}
+                        className={`p-3 transition-colors ${!notification.isRead ? getNotificationBorder(notification.type) : 'opacity-70'}`}
+                        style={{
+                          '--hover-bg': 'rgba(255,255,255,0.06)',
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center space-x-2">
                             {getNotificationIcon(notification.type)}
-                            <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                            <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
                               {notification.type}
                             </span>
                           </div>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                             {new Date(notification.date).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-800 dark:text-white mb-2">
+                        <p className="text-sm mb-2" style={{ color: 'var(--text-primary)' }}>
                           {notification.message}
                         </p>
                         <div className="flex justify-between items-center">
@@ -413,7 +427,10 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
                   </div>
 
                   {notifications.length > 8 && (
-                    <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                    <div
+                      className="p-3"
+                      style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(255,255,255,0.04)' }}
+                    >
                       <button
                         onClick={handleViewAllNotifications}
                         className="w-full text-center text-sm text-[var(--accent)] hover:underline py-2 flex items-center justify-center space-x-1"

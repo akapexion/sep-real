@@ -75,16 +75,16 @@ const inputFocusStyle = `
 
 const ProfileSection = () => {
   const [profile, setProfile] = useState({ name: '', email: '', image: '', currentWeight: '' });
-  const [preview, setPreview]       = useState(null);
-  const [loading, setLoading]       = useState(true);
-  const [saving, setSaving]         = useState(false);
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [error, setError]           = useState({});
+  const [error, setError] = useState({});
 
-  const user       = JSON.parse(localStorage.getItem('user') || '{}');
-  const userId     = user._id;
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userId = user._id;
   const API_BASE_URL = 'http://localhost:3000';
-  const { t }      = useLanguage();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -94,12 +94,12 @@ const ProfileSection = () => {
         setProfile({ ...res.data, currentWeight: user.currentWeight || '' });
         setPreview(res.data.image ? `${API_BASE_URL}/uploads/${res.data.image}` : null);
       } catch { toast.error(t('failedToLoadProfile')); }
-      finally  { setLoading(false); }
+      finally { setLoading(false); }
     };
     fetchProfile();
   }, [userId]);
 
-  const handleChange    = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
@@ -266,11 +266,14 @@ const ProfileSection = () => {
 
           {/* Current weight pill */}
           {profile.currentWeight && (
-            <span className="px-3 py-1 rounded-full text-xs font-medium" style={{
-              background: "color-mix(in srgb, var(--accent) 12%, transparent)",
-              color: "var(--accent)",
-              border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
-            }}>
+            <span
+              className="px-3 py-1 rounded-full text-xs font-medium"
+              style={{
+                background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                color: "var(--accent)",
+                border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
+              }}
+            >
               ⚖️ {profile.currentWeight} kg
             </span>
           )}

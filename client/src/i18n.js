@@ -278,7 +278,7 @@ export const t = (key, lang = 'en') => {
       goalAdded: "Goal added",
       fitnessGoals: "Fitness Goals",
       noGoalsSetYet: "No goals set yet",
-      goalAchieved: "Goal Achieved! 🎉",
+      goalAchieved: "Goal Achieved",
       overdue: "Overdue",
       dueToday: "Due today",
       oneDayLeft: "1 day left",

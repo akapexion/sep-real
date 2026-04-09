@@ -189,11 +189,11 @@ const DashboardLayout = ({ user, logout, updateUser }) => {
                 }}>
                   <p className="text-xs font-semibold uppercase tracking-widest mb-3"
                     style={{ color: "var(--accent)", letterSpacing: "0.12em" }}>
-                    ⚖️ Your current weight
+                    Your current weight
                   </p>
                   <input
                     type="number"
-                    placeholder="e.g. 72 kg / 158 lbs"
+                    placeholder="define in k.g's"
                     value={weightInput}
                     onChange={(e) => setWeightInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSaveWeight()}
@@ -219,7 +219,7 @@ const DashboardLayout = ({ user, logout, updateUser }) => {
                 >
                   {isSavingWeight
                     ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
-                    : "Let's Go! 🚀"}
+                    : "Let's Go!"}
                 </motion.button>
               </motion.div>
             </motion.div>

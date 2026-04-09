@@ -24,7 +24,6 @@ const HomePage = () => {
     progressEntries: 0
   });
   const [recentActivity, setRecentActivity] = useState([]);
-  const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -38,7 +37,6 @@ const HomePage = () => {
           const parsed = JSON.parse(cached);
           setStats(parsed.stats);
           setRecentActivity(parsed.recentActivity);
-          setFeed(parsed.feed);
           setLoading(false);
         } catch (e) {
           console.error("Cache parsing error", e);
@@ -51,13 +49,12 @@ const HomePage = () => {
   const fetchDashboardData = async (isCached = false) => {
     try {
       if (!isCached) setLoading(true);
-      const [workoutsRes, goalsRes, nutritionRes, progressRes, notificationsRes, feedRes] = await Promise.all([
+      const [workoutsRes, goalsRes, nutritionRes, progressRes, notificationsRes] = await Promise.all([
         axios.get(`${API_BASE}/workouts?userId=${userId}`),
         axios.get(`${API_BASE}/goals?userId=${userId}`),
         axios.get(`${API_BASE}/nutrition?userId=${userId}`),
         axios.get(`${API_BASE}/progress?userId=${userId}`),
         axios.get(`${API_BASE}/notifications?userId=${userId}&limit=5`),
-        axios.get(`${API_BASE}/feed?userId=${userId}`)
       ]);
 
       const workouts = workoutsRes.data;
@@ -95,32 +92,9 @@ const HomePage = () => {
       const recentNotifs = notificationsRes.data.slice(0, 5);
       setRecentActivity(recentNotifs);
 
-      const myGoals = goals.map(g => ({
-        _id: 'goal_' + g._id,
-        user: { name: user.name, image: user.image },
-        content: `Set a new goal: ${g.goalType} target ${g.target}`,
-        type: 'GOAL',
-        date: g.startDate || g.createdAt || new Date()
-      }));
-
-      const myProgress = progressEntries.map(p => ({
-        _id: 'prog_' + p._id,
-        user: { name: user.name, image: user.image },
-        content: `Logged progress: ${p.weight ? p.weight + (user.weightUnit || 'kg') : 'Measurement updated'}`,
-        type: 'PROGRESS',
-        date: p.date || p.createdAt || new Date()
-      }));
-
-      const combinedFeed = [...(feedRes.data || []), ...myGoals, ...myProgress]
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 10);
-
-      setFeed(combinedFeed);
-
       sessionStorage.setItem(`dashboardData_${userId}`, JSON.stringify({
         stats: newStats,
         recentActivity: recentNotifs,
-        feed: combinedFeed
       }));
 
     } catch (error) {
@@ -241,37 +215,6 @@ const HomePage = () => {
           {t('fitnessMotivation')}
         </h2>
         <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{getMotivationMessage()}</p>
-      </motion.div>
-
-      {/* Social Feed */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="pt-4">
-        <div className="flex justify-between items-center mb-4">
-           <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>Community Activity</h2>
-           <Link to="/dashboard/community" className="text-sm hover:underline" style={{ color: 'var(--accent)' }}>View Community</Link>
-        </div>
-        
-        {feed.length === 0 ? (
-          <div className="p-8 text-center card">
-             <p style={{ color: 'var(--text-muted)' }}>Follow more users in the Community tab to see their active updates here!</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {feed.map(item => (
-              <motion.div key={item._id} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
-                className="p-4 flex items-start space-x-4 card">
-                <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-gray-600">
-                  {item.user?.image ? <img src={`${API_BASE}/uploads/${item.user.image}`} alt={item.user?.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex justify-center items-center font-bold text-white">{item.user?.name?.[0] || 'U'}</div>}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{item.user?.name}</p>
-                  <p className="text-sm mt-1" style={{ color: 'var(--text-primary)' }}>{item.content}</p>
-                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full mt-2 inline-block bg-[var(--bg-secondary)]" style={{ color: 'var(--accent)' }}>{item.type}</span>
-                  <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>{new Date(item.date).toLocaleString()}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
       </motion.div>
 
     </div>

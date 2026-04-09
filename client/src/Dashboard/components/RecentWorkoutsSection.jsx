@@ -83,6 +83,18 @@ const sharedStyles = `
 `;
 // ─────────────────────────────────────────────────────────────────────────────
 
+  // ── Reusable field wrapper ────────────────────────────────────────────────
+  const Field = ({ label, error, children }) => (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs font-semibold uppercase tracking-wider"
+        style={{ color: "var(--text-muted)", letterSpacing: "0.08em" }}>
+        {label}
+      </label>
+      {children}
+      {error && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error}</p>}
+    </div>
+  );
+
 export default function RecentWorkoutsSection() {
   const { formatWeight, getWeightUnit } = usePreferencesContext();
   const { t } = useLanguage();
@@ -186,18 +198,6 @@ export default function RecentWorkoutsSection() {
     setNotes(""); setCategory("Other"); setTags(CATEGORY_TAGS["Other"][0]);
     setDate(new Date().toISOString().split("T")[0]); setEditingId(null);
   };
-
-  // ── Reusable field wrapper ────────────────────────────────────────────────
-  const Field = ({ label, error, children }) => (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs font-semibold uppercase tracking-wider"
-        style={{ color: "var(--text-muted)", letterSpacing: "0.08em" }}>
-        {label}
-      </label>
-      {children}
-      {error && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error}</p>}
-    </div>
-  );
 
   const tableHeaders = [
     t("date"), t("exercise"), t("sets"), t("reps"),

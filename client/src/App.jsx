@@ -31,7 +31,6 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Setup global Axios interceptor to kick out deactivated users
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       (response) => response,
@@ -129,7 +128,7 @@ const App = () => {
             <Route path="/dashboard/schedule" element={<SchedulePage />} />
             <Route path="/dashboard/analytics" element={<AnalyticsPage />} />
             <Route path="/dashboard/settings" element={<SettingsPage />} />
-            <Route path="/dashboard/profile" element={<ProfilePage />} />
+            <Route path="/dashboard/profile" element={<ProfilePage user={user} />} />
             <Route path="/dashboard/notifications" element={<Notification />} />
             <Route path="/dashboard/reminders" element={<RemindersPage />} />
             <Route path="/dashboard/add-feedback" element={<FeedbackForm />} />
