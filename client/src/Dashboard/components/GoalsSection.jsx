@@ -7,6 +7,8 @@ import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
 import { Trash2, Edit2, Plus, Loader2, Target } from "lucide-react";
 import { usePreferencesContext } from "../pages/PreferencesContext";
 import { z } from "zod";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useLanguage } from "../pages/UseLanguage";
 
 const API_BASE = "http://localhost:3000";
@@ -18,9 +20,11 @@ const goalSchema = z.object({
     const d = new Date(v);     d.setHours(0, 0, 0, 0);
     return !isNaN(d.getTime()) && d >= today;
   }, { message: "Deadline cannot be in the past" }),
-  notes: z.string().optional(),
-  current: z.coerce.number().min(0, { message: "Current value cannot be negative" }),
-  target:  z.coerce.number().min(0.1, { message: "Target value must be greater than 0" }),
+  notes: z.string().trim().optional().refine(val => !val || /[a-zA-Z0-9]/.test(val), {
+    message: "Notes must contain at least one letter or number"
+  }),
+  current: z.coerce.number().min(0.1, { message: "Current value must be greater than 0" }),
+  target:  z.coerce.number().min(0.1, { message: "Target weight value must be greater than 0" }),
 });
 
 // ── Glassmorphism shared styles ──────────────────────────────────────────────
@@ -73,16 +77,29 @@ export default function GoalsSection() {
   const [loading, setLoading]   = useState(true);
   const [saving, setSaving]     = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [error, setError]       = useState({});
-
-  const [goalType, setGoalType] = useState("Weight Loss");
-  const [target, setTarget]     = useState("");
-  const [current, setCurrent]   = useState("");
-  const [deadline, setDeadline] = useState(new Date().toISOString().split("T")[0]);
-  const [notes, setNotes]       = useState("");
 
   const user   = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?._id;
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(goalSchema),
+    defaultValues: {
+      goalType: "Weight Loss",
+      target: "",
+      current: "",
+      deadline: new Date().toISOString().split("T")[0],
+      notes: "",
+    },
+  });
+
+  const watchedGoalType = watch("goalType");
 
   const isWeightRelated = (type) => {
     if (!type) return false;
@@ -94,15 +111,10 @@ export default function GoalsSection() {
     type.toLowerCase().includes("loss") || type.toLowerCase().includes("reduce");
 
   useEffect(() => {
-    if (isWeightRelated(goalType) && user?.currentWeight)
-      setCurrent(String(user.currentWeight));
-  }, [goalType]);
-
-  const resetForm = () => {
-    setGoalType("Weight Loss"); setTarget(""); setCurrent("");
-    setDeadline(new Date().toISOString().split("T")[0]);
-    setNotes(""); setEditingId(null); setError({});
-  };
+    if (isWeightRelated(watchedGoalType) && user?.currentWeight) {
+      setValue("current", user.currentWeight);
+    }
+  }, [watchedGoalType, user?.currentWeight, setValue]);
 
   const fetchGoals = useCallback(async () => {
     if (!userId) { setLoading(false); return; }
@@ -113,26 +125,15 @@ export default function GoalsSection() {
     finally  { setLoading(false); }
   }, [userId, t]);
 
-  const saveGoal = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     if (!userId) return toast.error(t("userNotLoggedIn"));
 
-    const result = goalSchema.safeParse({ goalType, current, target, deadline, notes });
-    if (!result.success) {
-      const fe = result.error.format();
-      setError({
-        goalType: fe.goalType?._errors[0] || "",
-        current:  fe.current?._errors[0]  || "",
-        deadline: fe.deadline?._errors[0] || "",
-        notes:    fe.notes?._errors[0]    || "",
-        target:   fe.target?._errors[0]   || "",
-      });
-      return;
-    }
-    setError({});
-
-    const payload = { userId, goalType, target: Number(target),
-      current: Number(current), deadline, notes };
+    const payload = { 
+      userId, 
+      ...data, 
+      target: Number(data.target),
+      current: Number(data.current) 
+    };
 
     setSaving(true);
     try {
@@ -144,21 +145,21 @@ export default function GoalsSection() {
         toast.success(t("goalAdded"));
       }
 
-      if (isWeightRelated(goalType)) {
-        const fake = { goalType, current: Number(current), target: Number(target) };
-        if (calculateProgress(fake) >= 100) {
-          try {
-            const wRes = await axios.post(`${API_BASE}/profile/weight`,
-              { userId, currentWeight: Number(current) });
-            const updatedUser = { ...user, currentWeight: wRes.data.currentWeight };
-            localStorage.setItem("user", JSON.stringify(updatedUser));
-            window.dispatchEvent(new CustomEvent("profile-updated", { detail: updatedUser }));
-            toast.success("Goal Achieved! Weight auto-updated.");
-          } catch (e) { console.error(e); }
-        }
+      const progress = calculateProgress(payload);
+      if (isWeightRelated(data.goalType) && progress >= 100) {
+        try {
+          const wRes = await axios.post(`${API_BASE}/profile/weight`,
+            { userId, currentWeight: Number(data.current) });
+          const updatedUser = { ...user, currentWeight: wRes.data.currentWeight };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          window.dispatchEvent(new CustomEvent("profile-updated", { detail: updatedUser }));
+          toast.success("Goal Achieved! Weight auto-updated.");
+        } catch (e) { console.error(e); }
       }
 
-      resetForm(); fetchGoals();
+      reset();
+      setEditingId(null);
+      fetchGoals();
     } catch { toast.error(editingId ? t("updateFailed") : t("addFailed")); }
     finally { setSaving(false); }
   };
@@ -174,10 +175,14 @@ export default function GoalsSection() {
   };
 
   const startEdit = (goal) => {
-    setEditingId(goal._id); setGoalType(goal.goalType);
-    setTarget(String(goal.target)); setCurrent(String(goal.current));
-    setDeadline(new Date(goal.deadline).toISOString().split("T")[0]);
-    setNotes(goal.notes || "");
+    setEditingId(goal._id);
+    reset({
+      goalType: goal.goalType,
+      target: goal.target,
+      current: goal.current,
+      deadline: new Date(goal.deadline).toISOString().split("T")[0],
+      notes: goal.notes || "",
+    });
   };
 
   const calculateProgress = (goal) => {
@@ -206,7 +211,6 @@ export default function GoalsSection() {
     return t("daysLeft", { days });
   };
 
-  // Progress bar color as CSS var-compatible inline style
   const getProgressStyle = (progress) => {
     if (progress >= 100) return { background: "#22c55e" };
     if (progress >= 75)  return { background: "var(--accent)" };
@@ -291,7 +295,7 @@ export default function GoalsSection() {
             {editingId ? `✏️ ${t("update")}` : `＋ ${t("add")} ${t("goal") || "Goal"}`}
           </p>
 
-          <form onSubmit={saveGoal} className="grid md:grid-cols-2 gap-3" noValidate>
+          <form onSubmit={handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-3" noValidate>
 
             {/* Goal Type */}
             <div className="flex flex-col gap-1">
@@ -300,16 +304,15 @@ export default function GoalsSection() {
                 {t("goalType")} *
               </label>
               <select
-                value={goalType}
-                onChange={(e) => setGoalType(e.target.value)}
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                {...register("goalType")}
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.goalType ? 'border-red-500' : ''}`}
                 style={glassInput}
               >
                 {goalTypes.map((gt) => (
                   <option key={gt} value={gt}>{gt}</option>
                 ))}
               </select>
-              {error.goalType && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.goalType}</p>}
+              {errors.goalType && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.goalType.message}</p>}
             </div>
 
             {/* Deadline */}
@@ -319,57 +322,55 @@ export default function GoalsSection() {
                 {t("deadline")} *
               </label>
               <input
+                {...register("deadline")}
                 type="date"
-                value={deadline}
                 min={new Date().toISOString().split("T")[0]}
-                onChange={(e) => setDeadline(e.target.value)}
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.deadline ? 'border-red-500' : ''}`}
                 style={glassInput}
               />
-              {error.deadline && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.deadline}</p>}
+              {errors.deadline && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.deadline.message}</p>}
             </div>
 
             {/* Target */}
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium uppercase tracking-wider pl-1"
                 style={{ color: "var(--text-muted)" }}>
-                {t("target")} {isWeightRelated(goalType) ? `(${unitLabel})` : ""} *
+                {t("target")} {isWeightRelated(watchedGoalType) ? `(${unitLabel})` : ""} *
               </label>
               <input
+                {...register("target")}
                 type="number"
+                step="any"
                 placeholder={t("target")}
-                value={target}
-                onChange={(e) => setTarget(e.target.value)}
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.target ? 'border-red-500' : ''}`}
                 style={glassInput}
               />
-              {error.target && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.target}</p>}
+              {errors.target && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.target.message}</p>}
             </div>
 
             {/* Current */}
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium uppercase tracking-wider pl-1"
                 style={{ color: "var(--text-muted)" }}>
-                {t("current")} {isWeightRelated(goalType) ? `(${unitLabel})` : ""} *
+                {t("current")} {isWeightRelated(watchedGoalType) ? `(${unitLabel})` : ""} *
               </label>
               <input
+                {...register("current")}
                 type="number"
+                step="any"
                 placeholder={t("current")}
-                value={current}
-                onChange={(e) => setCurrent(e.target.value)}
-                readOnly={isWeightRelated(goalType) && !!user?.currentWeight}
-                disabled
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                readOnly={isWeightRelated(watchedGoalType) && !!user?.currentWeight}
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.current ? 'border-red-500' : ''}`}
                 style={{
                   ...glassInput,
-                  ...(isWeightRelated(goalType) && user?.currentWeight ? {
+                  ...(isWeightRelated(watchedGoalType) && user?.currentWeight ? {
                     background: "rgba(239,68,68,0.08)",
                     border: "1px solid rgba(239,68,68,0.25)",
                     color: "#f87171",
                   } : {}),
                 }}
               />
-              {error.current && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.current}</p>}
+              {errors.current && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.current.message}</p>}
             </div>
 
             {/* Notes */}
@@ -379,13 +380,12 @@ export default function GoalsSection() {
                 {t("notes")}
               </label>
               <input
+                {...register("notes")}
                 placeholder={`${t("notes")} (${t("optional") || "optional"})`}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.notes ? 'border-red-500' : ''}`}
                 style={glassInput}
               />
-              {error.notes && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.notes}</p>}
+              {errors.notes && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.notes.message}</p>}
             </div>
 
             {/* Actions */}
@@ -411,7 +411,7 @@ export default function GoalsSection() {
               {editingId && (
                 <motion.button
                   type="button"
-                  onClick={resetForm}
+                  onClick={() => { reset(); setEditingId(null); }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="px-5 py-2.5 rounded-xl text-sm font-medium"

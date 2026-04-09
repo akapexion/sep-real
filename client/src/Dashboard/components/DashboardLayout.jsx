@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Outlet } from "react-router-dom";
 import axios from "axios";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { Loader2, Weight } from "lucide-react";
 import Navbar from "../pages/Navbar";
 import Sidebar from "../pages/Sidebar";
@@ -129,9 +129,7 @@ const DashboardLayout = ({ user, logout, updateUser }) => {
         className="dashboard-bg flex min-h-screen relative"
         style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}
       >
-        <Toaster toastOptions={{
-          style: { ...glassCard, color: "var(--text-primary)", fontSize: "0.875rem" },
-        }} />
+        
 
         {/* ── Weight Onboarding Modal ── */}
         <AnimatePresence>

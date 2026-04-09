@@ -4,13 +4,17 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import toast, { Toaster } from 'react-hot-toast';
 import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Mail, Weight, Camera, Save, Loader2 } from 'lucide-react';
 import { useLanguage } from '../pages/UseLanguage';
 
 const updProfile = z.object({
-  name: z.string().min(3, "Username must be at least 3 characters")
+  name: z.string().trim().min(3, "Name must be at least 3 characters")
+    .regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces")
     .refine((val) => /^[A-Z]/.test(val), { message: "First character must be uppercase" }),
-  email: z.email("Invalid email format"),
+  email: z.string().min(1, "Email is required").email("Invalid email format"),
+  currentWeight: z.string().optional().or(z.number().optional()),
 });
 
 // ── Glassmorphism shared styles ──────────────────────────────────────────────
@@ -74,57 +78,62 @@ const inputFocusStyle = `
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ProfileSection = () => {
-  const [profile, setProfile] = useState({ name: '', email: '', image: '', currentWeight: '' });
+  const [profileData, setProfileData] = useState({ name: '', email: '', image: '', currentWeight: '' });
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [error, setError] = useState({});
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userId = user._id;
   const API_BASE_URL = 'http://localhost:3000';
   const { t } = useLanguage();
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(updProfile),
+    defaultValues: {
+      name: '',
+      email: '',
+      currentWeight: '',
+    },
+  });
+
   useEffect(() => {
     const fetchProfile = async () => {
       if (!userId) { toast.error(t('userNotLoggedIn')); setLoading(false); return; }
       try {
         const res = await axios.get(`${API_BASE_URL}/profile?userId=${userId}`);
-        setProfile({ ...res.data, currentWeight: user.currentWeight || '' });
+        const fetchedProfile = { 
+          name: res.data.name || '', 
+          email: res.data.email || '', 
+          currentWeight: user.currentWeight || '' 
+        };
+        setProfileData(res.data);
+        reset(fetchedProfile);
         setPreview(res.data.image ? `${API_BASE_URL}/uploads/${res.data.image}` : null);
       } catch { toast.error(t('failedToLoadProfile')); }
       finally { setLoading(false); }
     };
     fetchProfile();
-  }, [userId]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setProfile((prev) => ({ ...prev, [name]: value }));
-  };
+  }, [userId, reset, t, user.currentWeight]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) { setSelectedFile(file); setPreview(URL.createObjectURL(file)); }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     if (!userId) { toast.error(t('userNotLoggedIn')); return; }
-
-    const result = updProfile.safeParse({ email: profile.email, name: profile.name });
-    if (!result.success) {
-      const fe = result.error.format();
-      setError({ email: fe.email?._errors[0] || "", name: fe.name?._errors[0] || "" });
-      return;
-    }
-    setError({});
 
     const formData = new FormData();
     formData.append('userId', userId);
-    formData.append('name', profile.name);
-    formData.append('email', profile.email);
+    formData.append('name', data.name);
+    formData.append('email', data.email);
     if (selectedFile) formData.append('profilePic', selectedFile);
 
     setSaving(true);
@@ -133,19 +142,19 @@ const ProfileSection = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      if (profile.currentWeight) {
+      if (data.currentWeight) {
         await axios.post(`${API_BASE_URL}/profile/weight`, {
-          userId, currentWeight: Number(profile.currentWeight),
+          userId, currentWeight: Number(data.currentWeight),
         });
       }
 
-      setProfile({ ...res.data, currentWeight: profile.currentWeight });
+      setProfileData(res.data);
       const newImageURL = res.data.image ? `${API_BASE_URL}/uploads/${res.data.image}` : null;
       setPreview(newImageURL);
 
       const updatedUser = {
         ...user, name: res.data.name, email: res.data.email, image: res.data.image,
-        currentWeight: profile.currentWeight ? Number(profile.currentWeight) : user.currentWeight,
+        currentWeight: data.currentWeight ? Number(data.currentWeight) : user.currentWeight,
       };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       window.dispatchEvent(new CustomEvent('profile-updated', { detail: updatedUser }));
@@ -237,7 +246,7 @@ const ProfileSection = () => {
                 }}
               >
                 <span className="text-3xl font-bold" style={{ color: "var(--accent)" }}>
-                  {profile.name?.charAt(0)?.toUpperCase() || 'U'}
+                  {profileData.name?.charAt(0)?.toUpperCase() || 'U'}
                 </span>
               </div>
             )}
@@ -257,15 +266,15 @@ const ProfileSection = () => {
           {/* Name + email display */}
           <div className="text-center">
             <p className="text-base font-semibold" style={{ color: "var(--text-primary)" }}>
-              {profile.name || "—"}
+              {profileData.name || "—"}
             </p>
             <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-              {profile.email || "—"}
+              {profileData.email || "—"}
             </p>
           </div>
 
           {/* Current weight pill */}
-          {profile.currentWeight && (
+          {user.currentWeight && (
             <span
               className="px-3 py-1 rounded-full text-xs font-medium"
               style={{
@@ -274,7 +283,7 @@ const ProfileSection = () => {
                 border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
               }}
             >
-              ⚖️ {profile.currentWeight} kg
+              ⚖️ {user.currentWeight} kg
             </span>
           )}
         </motion.div>
@@ -295,7 +304,7 @@ const ProfileSection = () => {
             ✏️ {t('updateProfile') || "Update Profile"}
           </p>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3" noValidate>
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3" noValidate>
 
             {/* Full Name */}
             <div className="flex flex-col gap-1">
@@ -304,16 +313,14 @@ const ProfileSection = () => {
                 <User className="w-3 h-3" /> {t('fullName')} *
               </label>
               <input
+                {...register("name")}
                 type="text"
-                name="name"
-                value={profile.name}
-                onChange={handleChange}
                 placeholder="John Doe"
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.name ? 'border-red-500' : ''}`}
                 style={glassInput}
               />
-              {error.name && (
-                <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.name}</p>
+              {errors.name && (
+                <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.name.message}</p>
               )}
             </div>
 
@@ -324,16 +331,14 @@ const ProfileSection = () => {
                 <Mail className="w-3 h-3" /> {t('emailAddress')} *
               </label>
               <input
+                {...register("email")}
                 type="email"
-                name="email"
-                value={profile.email}
-                onChange={handleChange}
                 placeholder="you@example.com"
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.email ? 'border-red-500' : ''}`}
                 style={glassInput}
               />
-              {error.email && (
-                <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.email}</p>
+              {errors.email && (
+                <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.email.message}</p>
               )}
             </div>
 
@@ -344,14 +349,15 @@ const ProfileSection = () => {
                 <Weight className="w-3 h-3" /> Current Weight (kg)
               </label>
               <input
+                {...register("currentWeight")}
                 type="number"
-                name="currentWeight"
-                value={profile.currentWeight}
-                onChange={handleChange}
                 placeholder="e.g. 72"
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.currentWeight ? 'border-red-500' : ''}`}
                 style={glassInput}
               />
+              {errors.currentWeight && (
+                <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.currentWeight.message}</p>
+              )}
             </div>
 
             {/* Profile Picture */}
@@ -403,4 +409,4 @@ const ProfileSection = () => {
   );
 };
 
-export default ProfileSection;
+export default ProfileSection;

@@ -10,15 +10,20 @@ import {
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
 import { z } from "zod";
 import { useLanguage } from "../pages/UseLanguage";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const API_BASE = "http://localhost:3000";
 
 const reminderSchema = z.object({
-  category: z.any().refine((v) => v !== "" && v != null, { message: "Please enter detail" }),
-  type: z.any().refine((v) => v !== "" && v != null, { message: "Please enter detail" }),
-  time: z.any().refine((v) => v !== "" && v != null, { message: "Please enter detail" }),
-  date: z.any().refine((v) => v !== "" && v != null, { message: "Please enter detail" }),
-  title: z.any().refine((v) => v !== "" && v != null, { message: "Please enter detail" }),
+  title: z.string().trim().min(1, { message: "Title is required" })
+    .refine(val => /[a-zA-Z0-9]/.test(val), "Must contain at least one letter or number"),
+  date: z.string().min(1, { message: "Date is required" }),
+  time: z.string().min(1, { message: "Time is required" }),
+  category: z.string().min(1, { message: "Category is required" }),
+  type: z.string().min(1, { message: "Type is required" }),
+  priority: z.string().optional(),
+  notes: z.string().trim().optional().refine(val => !val || /[a-zA-Z0-9]/.test(val), "Must contain at least one letter or number"),
 });
 
 // ── Glassmorphism shared styles ──────────────────────────────────────────────
@@ -69,25 +74,32 @@ export default function RemindersSection() {
   const [saving, setSaving]         = useState(false);
   const [editingId, setEditingId]   = useState(null);
   const [activeTab, setActiveTab]   = useState("all");
-  const [error, setError]           = useState("");
-
-  const [title, setTitle]       = useState("");
-  const [date, setDate]         = useState("");
-  const [time, setTime]         = useState("");
-  const [type, setType]         = useState("workout");
-  const [category, setCategory] = useState("reminder");
-  const [priority, setPriority] = useState("medium");
-  const [notes, setNotes]       = useState("");
 
   const user   = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?._id;
   const { t }  = useLanguage();
 
-  // ── All logic functions unchanged ─────────────────────────────────────────
-  const resetForm = () => {
-    setTitle(""); setDate(""); setTime(""); setType("workout");
-    setCategory("reminder"); setPriority("medium"); setNotes(""); setEditingId(null);
-  };
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(reminderSchema),
+    defaultValues: {
+      title: "",
+      date: "",
+      time: "",
+      category: "reminder",
+      type: "workout",
+      priority: "medium",
+      notes: "",
+    },
+  });
+
+  const watchedCategory = watch("category");
 
   const fetchReminders = useCallback(async () => {
     if (!userId) { setLoading(false); return; }
@@ -97,93 +109,6 @@ export default function RemindersSection() {
     } catch { toast.error(t("failedToLoadReminders")); }
     finally   { setLoading(false); }
   }, [userId, t]);
-
-  const save = async (e) => {
-    e.preventDefault();
-    const result = reminderSchema.safeParse({ title, date, time, category, type });
-    if (!result.success) {
-      const fe = result.error.format();
-      setError({
-        title: fe.title?._errors[0] || "", date: fe.date?._errors[0] || "",
-        time: fe.time?._errors[0] || "", category: fe.category?._errors[0] || "",
-        type: fe.type?._errors[0] || "",
-      });
-      return;
-    }
-    setError("");
-    if (!title || !date || !time) return toast.error(t("fillRequiredFields"));
-
-    const fullDateTime = `${date}T${time}:00`;
-    const payload = { userId, title, date: fullDateTime, type, category,
-      priority: category === "alert" ? priority : "none", notes, isActive: true };
-
-    setSaving(true);
-    try {
-      if (editingId) {
-        await axios.post(`${API_BASE}/reminders/${editingId}`, payload);
-        toast.success(category === "alert" ? t("alertUpdated") : t("reminderUpdated"));
-      } else {
-        await axios.post(`${API_BASE}/reminders`, payload);
-        toast.success(category === "alert" ? t("alertCreated") : t("reminderCreated"));
-        scheduleNotification(payload);
-      }
-      resetForm(); fetchReminders();
-    } catch (err) { console.error(err); toast.error(t("saveFailed")); }
-    finally { setSaving(false); }
-  };
-
-  const startEdit = (r) => {
-    setEditingId(r._id); setTitle(r.title); setType(r.type);
-    setCategory(r.category || "reminder"); setPriority(r.priority || "medium"); setNotes(r.notes || "");
-    const rd = new Date(r.date);
-    setDate(rd.toISOString().split("T")[0]);
-    setTime(rd.toTimeString().split(":").slice(0, 2).join(":"));
-  };
-
-  const toggleActive = async (id, currentStatus) => {
-    try {
-      await axios.patch(`${API_BASE}/reminders/${id}`, { isActive: !currentStatus });
-      toast.success(!currentStatus ? t("activated") : t("deactivated"));
-      fetchReminders();
-    } catch (err) { console.error(err); toast.error(t("updateFailed")); }
-  };
-
-  const del = (id) => {
-    showDeleteConfirm({
-      message: t("deleteReminderConfirmation"),
-      onConfirm: async () => {
-        try { await axios.delete(`${API_BASE}/reminders/${id}`); toast.success(t("deleteSuccessfully")); fetchReminders(); }
-        catch { toast.error(t("unableToDelete")); }
-      },
-    });
-  };
-
-  const filteredReminders = reminders.filter(r => activeTab === "all" || r.category === activeTab);
-
-  const getIcon = (item) => {
-    if (item.category === "alert") return <AlertTriangle className="w-4 h-4" />;
-    switch (item.type) {
-      case "workout":     return <Dumbbell className="w-4 h-4" />;
-      case "meal":        return <Utensils className="w-4 h-4" />;
-      case "goal":        return <Target className="w-4 h-4" />;
-      case "appointment": return <Calendar className="w-4 h-4" />;
-      default:            return <Clock className="w-4 h-4" />;
-    }
-  };
-
-  const getPriorityColor = (p) => {
-    switch (p) {
-      case "high":   return "text-red-400 bg-red-500/15 border-red-500/30";
-      case "medium": return "text-yellow-400 bg-yellow-500/15 border-yellow-500/30";
-      case "low":    return "text-blue-400 bg-blue-500/15 border-blue-500/30";
-      default:       return "text-gray-400 bg-gray-500/15 border-gray-500/30";
-    }
-  };
-
-  const getCategoryStyle = (cat) =>
-    cat === "alert"
-      ? "text-red-400 bg-red-500/15 border border-red-500/30"
-      : "text-[var(--accent)] bg-[var(--accent)]/10 border border-[var(--accent)]/30";
 
   const scheduleNotification = (reminder) => {
     if (!("Notification" in window)) return;
@@ -234,6 +159,98 @@ export default function RemindersSection() {
     }
   };
 
+  const onSubmit = async (data) => {
+    if (!userId) return toast.error(t("userNotLoggedIn"));
+
+    const fullDateTime = `${data.date}T${data.time}:00`;
+    const payload = { 
+      userId, 
+      ...data, 
+      date: fullDateTime,
+      priority: data.category === "alert" ? data.priority : "none",
+      isActive: true 
+    };
+
+    setSaving(true);
+    try {
+      if (editingId) {
+        await axios.post(`${API_BASE}/reminders/${editingId}`, payload);
+        toast.success(data.category === "alert" ? t("alertUpdated") : t("reminderUpdated"));
+      } else {
+        await axios.post(`${API_BASE}/reminders`, payload);
+        toast.success(data.category === "alert" ? t("alertCreated") : t("reminderCreated"));
+        scheduleNotification(payload);
+      }
+      reset();
+      setEditingId(null);
+      fetchReminders();
+    } catch (err) { 
+      console.error(err); 
+      toast.error(t("saveFailed")); 
+    } finally { 
+      setSaving(false); 
+    }
+  };
+
+  const startEdit = (r) => {
+    setEditingId(r._id);
+    const rd = new Date(r.date);
+    reset({
+      title: r.title,
+      type: r.type,
+      category: r.category || "reminder",
+      priority: r.priority || "medium",
+      notes: r.notes || "",
+      date: rd.toISOString().split("T")[0],
+      time: rd.toTimeString().split(":").slice(0, 2).join(":"),
+    });
+  };
+
+  const toggleActive = async (id, currentStatus) => {
+    try {
+      await axios.patch(`${API_BASE}/reminders/${id}`, { isActive: !currentStatus });
+      toast.success(!currentStatus ? t("activated") : t("deactivated"));
+      fetchReminders();
+    } catch (err) { console.error(err); toast.error(t("updateFailed")); }
+  };
+
+  const del = (id) => {
+    showDeleteConfirm({
+      message: t("deleteReminderConfirmation"),
+      onConfirm: async () => {
+        try { await axios.delete(`${API_BASE}/reminders/${id}`); toast.success(t("deleteSuccessfully")); fetchReminders(); }
+        catch { toast.error(t("unableToDelete")); }
+      },
+    });
+  };
+
+  const filteredReminders = reminders.filter(r => activeTab === "all" || r.category === activeTab);
+
+  const getIcon = (item) => {
+    if (item.category === "alert") return <AlertTriangle className="w-4 h-4" />;
+    switch (item.type) {
+      case "workout":     return <Dumbbell className="w-4 h-4" />;
+      case "meal":        return <Utensils className="w-4 h-4" />;
+      case "goal":        return <Target className="w-4 h-4" />;
+      case "appointment": return <Calendar className="w-4 h-4" />;
+      default:            return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  const getPriorityColor = (p) => {
+    switch (p) {
+      case "high":   return "text-red-400 bg-red-500/15 border-red-500/30";
+      case "medium": return "text-yellow-400 bg-yellow-500/15 border-yellow-500/30";
+      case "low":    return "text-blue-400 bg-blue-500/15 border-blue-500/30";
+      default:       return "text-gray-400 bg-gray-500/15 border-gray-500/30";
+    }
+  };
+
+  const getCategoryStyle = (cat) =>
+    cat === "alert"
+      ? "text-red-400 bg-red-500/15 border border-red-500/30"
+      : "text-[var(--accent)] bg-[var(--accent)]/10 border border-[var(--accent)]/30";
+
   useEffect(() => {
     if (reminders.length === 0) return;
     const checkReminders = () => {
@@ -254,7 +271,6 @@ export default function RemindersSection() {
   }, []);
 
   useEffect(() => { fetchReminders(); }, [fetchReminders]);
-  // ── End logic ──────────────────────────────────────────────────────────────
 
   if (loading) return (
     <div className="flex justify-center items-center py-20">
@@ -368,72 +384,64 @@ export default function RemindersSection() {
             color: "var(--accent)",
             letterSpacing: "0.12em",
           }}>
-            {editingId ? `✏️ ${t("update")}` : `＋ ${t("add")} ${category === "alert" ? t("alert") : t("reminder")}`}
+            {editingId ? `✏️ ${t("update")}` : `＋ ${t("add")} ${watchedCategory === "alert" ? t("alert") : t("reminder")}`}
           </p>
 
-          <form onSubmit={save} className="grid md:grid-cols-2 gap-3" noValidate>
+          <form onSubmit={handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-3" noValidate>
 
             {/* Title */}
             <div className="flex flex-col gap-1">
               <input
+                {...register("title")}
                 placeholder={`${t("title")} *`}
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.title ? 'border-red-500' : ''}`}
                 style={glassInput}
-                required
               />
-              {error.title && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.title}</p>}
+              {errors.title && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.title.message}</p>}
             </div>
 
             {/* Category */}
             <div className="flex flex-col gap-1">
               <select
-                value={category}
-                onChange={e => setCategory(e.target.value)}
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                {...register("category")}
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.category ? 'border-red-500' : ''}`}
                 style={glassInput}
               >
                 <option value="reminder">📅 {t("reminder")}</option>
                 <option value="alert">🚨 {t("alert")}</option>
               </select>
-              {error.category && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.category}</p>}
+              {errors.category && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.category.message}</p>}
             </div>
 
             {/* Date */}
             <div className="flex flex-col gap-1">
               <input
+                {...register("date")}
                 type="date"
-                value={date}
-                onChange={e => setDate(e.target.value)}
                 min={new Date().toISOString().split("T")[0]}
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.date ? 'border-red-500' : ''}`}
                 style={glassInput}
-                required
               />
-              {error.date && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.date}</p>}
+              {errors.date && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.date.message}</p>}
             </div>
 
             {/* Time */}
             <div className="flex flex-col gap-1">
               <input
+                {...register("time")}
                 type="time"
-                value={time}
-                onChange={e => setTime(e.target.value)}
                 step="300"
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.time ? 'border-red-500' : ''}`}
                 style={glassInput}
-                required
               />
-              {error.time && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.time}</p>}
+              {errors.time && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.time.message}</p>}
             </div>
 
             {/* Type */}
             <div className="flex flex-col gap-1">
               <select
-                value={type}
-                onChange={e => setType(e.target.value)}
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                {...register("type")}
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.type ? 'border-red-500' : ''}`}
                 style={glassInput}
               >
                 {["workout", "meal", "goal", "appointment", "medication", "other"].map(tp => (
@@ -442,34 +450,34 @@ export default function RemindersSection() {
                   </option>
                 ))}
               </select>
-              {error.type && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.type}</p>}
+              {errors.type && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.type.message}</p>}
             </div>
 
             {/* Priority (alerts only) */}
-            {category === "alert" && (
+            {watchedCategory === "alert" && (
               <div className="flex flex-col gap-1">
                 <select
-                  value={priority}
-                  onChange={e => setPriority(e.target.value)}
-                  className="glass-input w-full px-3 py-2.5 text-sm"
+                  {...register("priority")}
+                  className={`glass-input w-full px-3 py-2.5 text-sm ${errors.priority ? 'border-red-500' : ''}`}
                   style={glassInput}
                 >
                   <option value="low">🟢 {t("lowPriority")}</option>
                   <option value="medium">🟡 {t("mediumPriority")}</option>
                   <option value="high">🔴 {t("highPriority")}</option>
                 </select>
+                {errors.priority && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.priority.message}</p>}
               </div>
             )}
 
             {/* Notes */}
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 flex flex-col gap-1">
               <input
+                {...register("notes")}
                 placeholder={`${t("notes")} (${t("optional")})`}
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                className="glass-input w-full px-3 py-2.5 text-sm"
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.notes ? 'border-red-500' : ''}`}
                 style={glassInput}
               />
+              {errors.notes && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.notes.message}</p>}
             </div>
 
             {/* Actions */}
@@ -484,18 +492,19 @@ export default function RemindersSection() {
                   background: "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #000))",
                   boxShadow: "0 4px 16px color-mix(in srgb, var(--accent) 35%, transparent)",
                   border: "1px solid color-mix(in srgb, var(--accent) 50%, transparent)",
+                  opacity: saving ? 0.75 : 1,
                 }}
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> :
                  editingId ? <Edit2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                 {saving ? t("saving") + "…" : editingId ? t("update") :
-                  `${t("add")} ${category === "alert" ? t("alert") : t("reminder")}`}
+                  `${t("add")} ${watchedCategory === "alert" ? t("alert") : t("reminder")}`}
               </motion.button>
 
               {editingId && (
                 <motion.button
                   type="button"
-                  onClick={resetForm}
+                  onClick={() => { reset(); setEditingId(null); }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="px-5 py-2.5 rounded-xl text-sm font-medium"
@@ -609,7 +618,7 @@ export default function RemindersSection() {
                         </span>
                       </td>
 
-                      {/* Toggle */}
+                      {/* Toggle status */}
                       <td className="px-5 py-4">
                         <button onClick={() => toggleActive(r._id, r.isActive)}
                           className="flex items-center gap-2 transition-all duration-200">

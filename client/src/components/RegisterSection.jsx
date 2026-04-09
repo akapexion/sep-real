@@ -2,47 +2,78 @@ import React, { useState } from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
-import { z } from 'zod'
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const THEME = {
   accent: "#2563eb",
   bg: "#000000",
 };
-const userSchema = z.object({
-  name: z.string().min(3, "Username must be at least 3 characters").refine((val) => /^[A-Z]/.test(val), {
-    message: "First character must be uppercase"
-  }),
-  email: z.email("Invalid email format"),
-  password: z.string().min(8, "Password must be 8 characters").refine(
-    (val) => /[A-Z]/.test(val),
-    { message: "Password must contain at least one uppercase letter" }
-  )
-    .refine(
-      (val) => /[!@#$%^&*(),.?":{}|<>]/.test(val),
-      { message: "Password must contain at least one special character" }
-    ),
 
-  profilePic: z.any().refine((file) => file != null, { message: "Image is required" })
-
-});
+const registerSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(3, "Name must be at least 3 characters")
+      .regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces")
+      .refine((val) => /^[A-Z]/.test(val), {
+        message: "First character must be uppercase",
+      }),
+    email: z.string().min(1, "Email is required").email("Invalid email format"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .refine((val) => /[A-Z]/.test(val), {
+        message: "Password must contain at least one uppercase letter",
+      })
+      .refine((val) => /[!@#$%^&*(),.?":{}|<>]/.test(val), {
+        message: "Password must contain at least one special character",
+      }),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+    profilePic: z
+      .any()
+      .refine((file) => file instanceof File, { message: "Profile picture is required" }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 export default function RegisterSectionFitness() {
   const navigate = useNavigate();
   const [preview, setPreview] = useState(null);
   const [isHorizontal, setIsHorizontal] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [profilePic, setProfilePic] = useState(null);
-  const [error, setError] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const profilePicValue = watch("profilePic");
 
   const onPick = () => {
     document.getElementById("fitness-file")?.click();
   };
 
-  const onFile = (file) => {
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
+
+    setValue("profilePic", file, { shouldValidate: true });
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
@@ -55,57 +86,26 @@ export default function RegisterSectionFitness() {
     reader.readAsDataURL(file);
   };
 
-  const registerUser = async (e) => {
-    e.preventDefault();
-    const result = userSchema.safeParse({ name, email, password, profilePic });
-
-    if (!result.success) {
-      const formattedErrors = result.error.format();
-
-      // Set errors individually
-      setError({
-        name: formattedErrors.name?._errors[0] || "",
-        email: formattedErrors.email?._errors[0] || "",
-        password: formattedErrors.password?._errors[0] || "",
-        profilePic: formattedErrors.profilePic?._errors[0] || "",
-      });
-
-      return; // function exit
-    }
-    setError("")
-
-    if (password !== confirm) {
-      toast.error("Passwords do not match!");
-      return;
-    }
-
-
+  const onSubmit = async (data) => {
     const formData = new FormData();
-    formData.append("name", name);
-    formData.append("email", email);
-    formData.append("password", password);
-    formData.append("profilePic", profilePic);
-
-
+    formData.append("name", data.name);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+    formData.append("profilePic", data.profilePic);
 
     try {
       const res = await axios.post("http://localhost:3000/register", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      setName("");
-      setEmail("");
-      setPassword("");
-      setConfirm("");
-      setProfilePic(null);
-      setPreview(null);
-
       toast.success(res.data?.message || "Registration successful!");
       setTimeout(() => {
         navigate("/login");
       }, 2000);
     } catch (error) {
-      console.log(error);
+      const msg = error.response?.data?.message || "Registration failed";
+      toast.error(msg);
+      console.error("Register error:", error);
     }
   };
 
@@ -132,7 +132,7 @@ export default function RegisterSectionFitness() {
           className="w-full md:w-44 flex flex-col items-center justify-center relative border-b md:border-r md:border-b-0 p-4 md:p-0"
           style={{
             borderColor: "var(--border)",
-            background: "rgba(0,0,0,0.2)"
+            background: "rgba(0,0,0,0.2)",
           }}
         >
           <div className="absolute inset-0 overflow-hidden rounded-3xl">
@@ -161,12 +161,14 @@ export default function RegisterSectionFitness() {
             <button
               type="button"
               onClick={onPick}
-              className="mt-2 px-4 py-2 text-xs rounded-lg border font-bold transition-all duration-300 hover:scale-105"
-              style={{ 
+              className={`mt-2 px-4 py-2 text-xs rounded-lg border font-bold transition-all duration-300 hover:scale-105 ${
+                errors.profilePic ? "border-red-500" : ""
+              }`}
+              style={{
                 background: "var(--bg-card)",
-                borderColor: "var(--accent)", 
-                color: "var(--accent)",
-                boxShadow: "0 0 10px rgba(0,0,0,0.5)"
+                borderColor: errors.profilePic ? "#ef4444" : "var(--accent)",
+                color: errors.profilePic ? "#ef4444" : "var(--accent)",
+                boxShadow: "0 0 10px rgba(0,0,0,0.5)",
               }}
             >
               Upload Image
@@ -176,15 +178,13 @@ export default function RegisterSectionFitness() {
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  setProfilePic(file);
-                  onFile(file);
-                }
-              }}
+              onChange={handleFileChange}
             />
-            <p className="mb-4 text-xs" style={{ color: "red" }}>{error.profilePic}</p>
+            {errors.profilePic && (
+              <p className="mt-2 text-[10px] uppercase font-bold text-red-500 bg-black/50 px-2 py-0.5 rounded">
+                {errors.profilePic.message}
+              </p>
+            )}
           </div>
         </div>
 
@@ -195,74 +195,102 @@ export default function RegisterSectionFitness() {
           >
             Join the Team
           </h3>
-          <form onSubmit={registerUser} className="space-y-4" noValidate>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <div>
               <input
+                {...register("name")}
                 placeholder="Full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-300"
-                style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
-                onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
-                onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+                className={`w-full px-4 py-3 rounded-xl outline-none transition-all duration-300 border ${
+                  errors.name ? "border-red-500" : "border-transparent"
+                }`}
+                style={{
+                  background: "var(--input-bg)",
+                  color: "var(--text-primary)",
+                }}
               />
-              <p className="mt-1 text-xs text-red-500">{error.name}</p>
+              {errors.name && (
+                <p className="mt-1 text-xs text-red-500 pl-1">{errors.name.message}</p>
+              )}
             </div>
-            
+
             <div>
               <input
+                {...register("email")}
                 placeholder="Email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-300"
-                style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
-                onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
-                onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+                className={`w-full px-4 py-3 rounded-xl outline-none transition-all duration-300 border ${
+                  errors.email ? "border-red-500" : "border-transparent"
+                }`}
+                style={{
+                  background: "var(--input-bg)",
+                  color: "var(--text-primary)",
+                }}
               />
-              <p className="mt-1 text-xs text-red-500">{error.email}</p>
+              {errors.email && (
+                <p className="mt-1 text-xs text-red-500 pl-1">{errors.email.message}</p>
+              )}
             </div>
 
             <div>
               <input
+                {...register("password")}
                 placeholder="Create password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-300"
-                style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
-                onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
-                onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+                className={`w-full px-4 py-3 rounded-xl outline-none transition-all duration-300 border ${
+                  errors.password ? "border-red-500" : "border-transparent"
+                }`}
+                style={{
+                  background: "var(--input-bg)",
+                  color: "var(--text-primary)",
+                }}
               />
-              <p className="mt-1 text-xs text-red-500">{error.password}</p>
+              {errors.password && (
+                <p className="mt-1 text-xs text-red-500 pl-1">{errors.password.message}</p>
+              )}
             </div>
 
             <div>
               <input
+                {...register("confirmPassword")}
                 placeholder="Confirm password"
                 type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-300"
-                style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
-                onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
-                onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+                className={`w-full px-4 py-3 rounded-xl outline-none transition-all duration-300 border ${
+                  errors.confirmPassword ? "border-red-500" : "border-transparent"
+                }`}
+                style={{
+                  background: "var(--input-bg)",
+                  color: "var(--text-primary)",
+                }}
               />
+              {errors.confirmPassword && (
+                <p className="mt-1 text-xs text-red-500 pl-1">{errors.confirmPassword.message}</p>
+              )}
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl font-bold mt-4 hover:cursor-pointer transition-all duration-300 hover:scale-105 text-white"
-              style={{ background: "var(--accent)", boxShadow: "0 0 15px var(--accent)" }}
+              disabled={isSubmitting}
+              className="w-full py-3 rounded-xl font-bold mt-4 hover:cursor-pointer transition-all duration-300 hover:scale-105 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: "var(--accent)",
+                boxShadow: "0 0 15px var(--accent)",
+              }}
             >
-              Start Free
+              {isSubmitting ? "Processing..." : "Start Free"}
             </button>
           </form>
           <p className="text-center mt-6" style={{ color: "var(--text-muted)" }}>
-            Already have an account? <Link to="/login" className="hover:underline font-bold" style={{ color: "var(--accent)" }}>Login</Link>
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="hover:underline font-bold"
+              style={{ color: "var(--accent)" }}
+            >
+              Login
+            </Link>
           </p>
         </div>
       </div>
     </div>
   );
-}
+}

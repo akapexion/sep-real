@@ -10,6 +10,18 @@ import {
 } from 'lucide-react';
 import { usePreferencesContext } from '../pages/PreferencesContext';
 import { useLanguage } from '../pages/UseLanguage';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const settingsSchema = z.object({
+  notifications: z.object({
+    push: z.boolean(),
+  }),
+  units: z.enum(['metric', 'imperial']),
+  theme: z.enum(['dark', 'light']),
+  language: z.enum(['en', 'ur', 'es', 'fr', 'de']),
+});
 
 // ── Glassmorphism shared styles (mirrors RemindersSection) ───────────────────
 const glassCard = {
@@ -85,86 +97,86 @@ const SettingGroup = ({ icon: Icon, title, subtitle, children, delay = 0 }) => (
 );
 
 // Toggle checkbox component
-const GlassToggle = ({ name, checked, onChange, label, description }) => (
-  <label className="flex items-center gap-4 cursor-pointer group">
-    {/* Custom toggle */}
-    <div className="relative flex-shrink-0">
-      <input
-        type="checkbox"
-        name={name}
-        checked={checked}
-        onChange={onChange}
-        className="sr-only"
-      />
-      <div
-        onClick={() => onChange({ target: { name, type: 'checkbox', checked: !checked } })}
-        className="w-11 h-6 rounded-full transition-all duration-300 flex items-center cursor-pointer"
-        style={{
-          background: checked
-            ? 'var(--accent)'
-            : 'rgba(255,255,255,0.10)',
-          border: checked
-            ? '1px solid color-mix(in srgb, var(--accent) 50%, transparent)'
-            : '1px solid rgba(255,255,255,0.15)',
-          boxShadow: checked
-            ? '0 0 12px color-mix(in srgb, var(--accent) 35%, transparent)'
-            : 'none',
-          padding: '2px',
-        }}
-      >
-        <div
-          className="w-5 h-5 rounded-full bg-white transition-all duration-300 shadow-sm"
-          style={{ transform: checked ? 'translateX(20px)' : 'translateX(0px)' }}
+const GlassToggle = ({ register, name, label, description, watch }) => {
+  const checked = watch(name);
+  return (
+    <label className="flex items-center gap-4 cursor-pointer group">
+      <div className="relative flex-shrink-0">
+        <input
+          type="checkbox"
+          {...register(name)}
+          className="sr-only"
         />
+        <div
+          className="w-11 h-6 rounded-full transition-all duration-300 flex items-center cursor-pointer"
+          style={{
+            background: checked
+              ? 'var(--accent)'
+              : 'rgba(255,255,255,0.10)',
+            border: checked
+              ? '1px solid color-mix(in srgb, var(--accent) 50%, transparent)'
+              : '1px solid rgba(255,255,255,0.15)',
+            boxShadow: checked
+              ? '0 0 12px color-mix(in srgb, var(--accent) 35%, transparent)'
+              : 'none',
+            padding: '2px',
+          }}
+        >
+          <div
+            className="w-5 h-5 rounded-full bg-white transition-all duration-300 shadow-sm"
+            style={{ transform: checked ? 'translateX(20px)' : 'translateX(0px)' }}
+          />
+        </div>
       </div>
-    </div>
-    <div>
-      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{label}</p>
-      {description && (
-        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{description}</p>
-      )}
-    </div>
-  </label>
-);
+      <div>
+        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{label}</p>
+        {description && (
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{description}</p>
+        )}
+      </div>
+    </label>
+  );
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SettingSection = () => {
   const { preferences, updatePreferences, loading } = usePreferencesContext();
-  const { t }   = useLanguage();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
-  const [saving, setSaving]         = useState(false);
-  const [localPrefs, setLocalPrefs] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { isDirty },
+  } = useForm({
+    resolver: zodResolver(settingsSchema),
+    defaultValues: preferences || {
+      notifications: { push: false },
+      units: 'metric',
+      theme: 'dark',
+      language: 'en',
+    },
+  });
+
   useEffect(() => {
-    if (preferences) setLocalPrefs(JSON.parse(JSON.stringify(preferences)));
-  }, [preferences]);
+    if (preferences) {
+      reset(preferences);
+    }
+  }, [preferences, reset]);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    const [parent, child] = name.split('.');
-    setLocalPrefs(prev => {
-      const next = JSON.parse(JSON.stringify(prev));
-      if (child) {
-        if (!next[parent]) next[parent] = {};
-        next[parent][child] = type === 'checkbox' ? checked : value;
-      } else {
-        next[name] = type === 'checkbox' ? checked : value;
-      }
-      return next;
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!localPrefs) return;
+  const onSubmit = async (data) => {
     setSaving(true);
     try {
-      await updatePreferences(localPrefs);
+      await updatePreferences(data);
       toast.success(t('savedSuccessfully'));
+      reset(data);
     } catch (err) {
       toast.error(t('saveFailed'));
       console.error(err);
@@ -187,12 +199,11 @@ const SettingSection = () => {
   };
 
   const handleResetForm = () => {
-    setLocalPrefs(JSON.parse(JSON.stringify(preferences)));
+    reset(preferences);
     toast.success(t('changesDiscarded'));
   };
 
-  // ── Loading ──────────────────────────────────────────────────────────────
-  if (loading || !localPrefs) return (
+  if (loading) return (
     <div className="flex justify-center items-center py-20">
       <div style={{ position: 'relative' }}>
         <Loader2 className="w-10 h-10 animate-spin" style={{ color: 'var(--accent)' }} />
@@ -204,8 +215,6 @@ const SettingSection = () => {
       </div>
     </div>
   );
-
-  const hasChanges = JSON.stringify(localPrefs) !== JSON.stringify(preferences);
 
   return (
     <>
@@ -244,9 +253,8 @@ const SettingSection = () => {
             </div>
           </div>
 
-          {/* Unsaved changes badge */}
           <AnimatePresence>
-            {hasChanges && (
+            {isDirty && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -271,7 +279,7 @@ const SettingSection = () => {
         </div>
 
         {/* ── Settings form ── */}
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
 
           {/* Notifications */}
           <SettingGroup
@@ -281,9 +289,9 @@ const SettingSection = () => {
             delay={0.10}
           >
             <GlassToggle
+              register={register}
+              watch={watch}
               name="notifications.push"
-              checked={localPrefs.notifications?.push ?? false}
-              onChange={handleChange}
               label={t('pushNotifications')}
               description={t('receiveInAppAlerts')}
             />
@@ -302,9 +310,7 @@ const SettingSection = () => {
                 {t('measurementSystem')}
               </label>
               <select
-                name="units"
-                value={localPrefs.units}
-                onChange={handleChange}
+                {...register('units')}
                 className="glass-input w-full px-3 py-2.5 text-sm"
                 style={glassInput}
               >
@@ -328,9 +334,7 @@ const SettingSection = () => {
                   {t('theme')}
                 </label>
                 <select
-                  name="theme"
-                  value={localPrefs.theme}
-                  onChange={handleChange}
+                  {...register('theme')}
                   className="glass-input w-full px-3 py-2.5 text-sm"
                   style={glassInput}
                 >
@@ -345,9 +349,7 @@ const SettingSection = () => {
                   {t('language')}
                 </label>
                 <select
-                  name="language"
-                  value={localPrefs.language}
-                  onChange={handleChange}
+                  {...register('language')}
                   className="glass-input w-full px-3 py-2.5 text-sm"
                   style={glassInput}
                 >
@@ -365,11 +367,11 @@ const SettingSection = () => {
           <div className="flex gap-2 pt-2">
             <motion.button
               type="submit"
-              disabled={saving || !hasChanges}
-              whileHover={hasChanges ? { scale: 1.02 } : {}}
-              whileTap={hasChanges ? { scale: 0.98 } : {}}
+              disabled={saving || !isDirty}
+              whileHover={isDirty ? { scale: 1.02 } : {}}
+              whileTap={isDirty ? { scale: 0.98 } : {}}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
-              style={hasChanges ? {
+              style={isDirty ? {
                 background: 'linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #000))',
                 boxShadow: '0 4px 16px color-mix(in srgb, var(--accent) 35%, transparent)',
                 border: '1px solid color-mix(in srgb, var(--accent) 50%, transparent)',
@@ -382,11 +384,11 @@ const SettingSection = () => {
               }}
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {saving ? t('saving') + '…' : hasChanges ? t('save') : t('noChanges')}
+              {saving ? t('saving') + '…' : isDirty ? t('save') : t('noChanges')}
             </motion.button>
 
             <AnimatePresence>
-              {hasChanges && (
+              {isDirty && (
                 <motion.button
                   type="button"
                   onClick={handleResetForm}

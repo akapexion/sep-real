@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, MapPin, Phone, Send, MessageSquare, Clock, ArrowRight } from "lucide-react";
+import { Mail, MapPin, Phone, Send, MessageSquare, Clock } from "lucide-react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 // ── Injected styles (mirrors Hero / Footer / ComingSoon / AboutPage) ───────
 const contactPageStyles = `
@@ -77,22 +80,44 @@ const contactPageStyles = `
 `;
 
 const CONTACT_INFO = [
-  { icon: Mail,         title: "Email Us",       detail: "support@fittrack.com", link: "mailto:support@fittrack.com" },
-  { icon: Phone,        title: "Call Us",         detail: "+92 300 1234567",      link: "tel:+923001234567"           },
-  { icon: MapPin,       title: "Visit Us",        detail: "Karachi, Pakistan",    link: "#"                          },
-  { icon: Clock,        title: "Working Hours",   detail: "Mon–Sat: 9AM – 6PM",  link: "#"                          },
+  { icon: Mail, title: "Email Us", detail: "support@fittrack.com", link: "mailto:support@fittrack.com" },
+  { icon: Phone, title: "Call Us", detail: "+92 300 1234567", link: "tel:+923001234567" },
+  { icon: MapPin, title: "Visit Us", detail: "Karachi, Pakistan", link: "#" },
+  { icon: Clock, title: "Working Hours", detail: "Mon–Sat: 9AM – 6PM", link: "#" },
 ];
 
+const contactSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters")
+    .regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces"),
+  email: z.string().min(1, "Email is required").email("Invalid email format"),
+  subject: z.string().trim().min(5, "Subject must be at least 5 characters")
+    .refine(val => /[a-zA-Z0-9]/.test(val), "Must contain at least one letter or number"),
+  message: z.string().trim().min(10, "Message must be at least 10 characters")
+    .refine(val => /[a-zA-Z0-9]/.test(val), "Must contain at least one letter or number"),
+});
+
 const ContactPage = () => {
-  const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
   const [sent, setSent] = useState(false);
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      subject: "",
+      message: "",
+    },
+  });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const onSubmit = (data) => {
+    console.log("Contact form data:", data);
     setSent(true);
-    setFormData({ name: "", email: "", subject: "", message: "" });
+    reset();
   };
 
   return (
@@ -125,7 +150,7 @@ const ContactPage = () => {
         />
 
         {/* Floating orbs */}
-        <div className="fixed -z-10" style={{ top: "10%", left: "4%",  width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(34,211,238,0.10) 0%, transparent 70%)", filter: "blur(40px)", animation: "float-orb 10s ease-in-out infinite" }} />
+        <div className="fixed -z-10" style={{ top: "10%", left: "4%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(34,211,238,0.10) 0%, transparent 70%)", filter: "blur(40px)", animation: "float-orb 10s ease-in-out infinite" }} />
         <div className="fixed -z-10" style={{ bottom: "8%", right: "4%", width: 360, height: 360, borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.09) 0%, transparent 70%)", filter: "blur(50px)", animation: "float-orb 13s ease-in-out infinite reverse" }} />
         <div className="fixed -z-10" style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 540, height: 540, borderRadius: "50%", background: "radial-gradient(circle, rgba(34,211,238,0.04) 0%, transparent 65%)", filter: "blur(60px)", animation: "float-orb 18s ease-in-out infinite" }} />
 
@@ -295,7 +320,7 @@ const ContactPage = () => {
                   </button>
                 </motion.div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
                   {/* Name + Email row */}
                   <div className="grid sm:grid-cols-2 gap-5">
                     <div>
@@ -303,28 +328,24 @@ const ContactPage = () => {
                         Your Name
                       </label>
                       <input
+                        {...register("name")}
                         type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
                         placeholder="John Doe"
-                        className="cp-input"
+                        className={`cp-input ${errors.name ? 'border-red-500' : ''}`}
                       />
+                      {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
                     </div>
                     <div>
                       <label className="block text-xs uppercase tracking-widest mb-2" style={{ color: "var(--text-secondary)" }}>
                         Your Email
                       </label>
                       <input
+                        {...register("email")}
                         type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
                         placeholder="john@example.com"
-                        className="cp-input"
+                        className={`cp-input ${errors.email ? 'border-red-500' : ''}`}
                       />
+                      {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
                     </div>
                   </div>
 
@@ -334,14 +355,12 @@ const ContactPage = () => {
                       Subject
                     </label>
                     <input
+                      {...register("subject")}
                       type="text"
-                      name="subject"
-                      value={formData.subject}
-                      onChange={handleChange}
-                      required
                       placeholder="How can we help?"
-                      className="cp-input"
+                      className={`cp-input ${errors.subject ? 'border-red-500' : ''}`}
                     />
+                    {errors.subject && <p className="mt-1 text-xs text-red-500">{errors.subject.message}</p>}
                   </div>
 
                   {/* Message */}
@@ -350,15 +369,13 @@ const ContactPage = () => {
                       Message
                     </label>
                     <textarea
-                      name="message"
-                      value={formData.message}
-                      onChange={handleChange}
-                      required
+                      {...register("message")}
                       rows={6}
                       placeholder="Tell us more about your inquiry..."
-                      className="cp-input"
+                      className={`cp-input ${errors.message ? 'border-red-500' : ''}`}
                       style={{ resize: "none" }}
                     />
+                    {errors.message && <p className="mt-1 text-xs text-red-500">{errors.message.message}</p>}
                   </div>
 
                   {/* Submit — same primary btn as Hero/AboutPage */}
@@ -435,4 +452,4 @@ const ContactPage = () => {
   );
 };
 
-export default ContactPage;
+export default ContactPage;

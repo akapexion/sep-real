@@ -1,54 +1,44 @@
-import React, { useState } from "react";
+import React from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
-import { z } from 'zod'
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const THEME = {
   accent: "#2563eb",
   bg: "#000000",
 };
-const loginSchema = z.object({
-  email: z.email("Invalid email format").min(1, "Enter email"),
-  password: z.string("").min(1, "Password requires"),
 
-})
+const loginSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email format"),
+  password: z.string().min(1, "Password is required"),
+});
 
 export default function LoginSection({ Loginuser }) {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("")
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-
-    const result = loginSchema.safeParse({ email, password })
-    if (!result.success) {
-      const formattedErrors = result.error.format();
-
-      // Set errors individually
-      setError({
-
-        email: formattedErrors.email?._errors[0] || "",
-        password: formattedErrors.password?._errors[0] || "",
-
-      });
-
-      return; // function exit
-    }
-
+  const onSubmit = async (data) => {
     try {
-      const res = await axios.post(
-        "http://localhost:3000/login",
-        { email, password }
-      );
+      const res = await axios.post("http://localhost:3000/login", data);
 
       if (res.data.message === "Logged in") {
         const loggedInUser = res.data.registeredUser;
 
         localStorage.setItem("user", JSON.stringify(loggedInUser));
-
         localStorage.setItem("userId", loggedInUser._id);
         localStorage.setItem("token", res.data.token);
 
@@ -96,31 +86,41 @@ export default function LoginSection({ Loginuser }) {
           Welcome
         </h3>
 
-        <form onSubmit={handleLogin} className="" noValidate>
-          <input
-            placeholder="Email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-black/60 border border-blue-900 placeholder-[#aaaaaa] text-white outline-none"
-          />
-          <p className="mb-4 text-xs" style={{ color: "red" }}>{error.email}</p>
-          <input
-            placeholder="Password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-black/60 border border-blue-900 placeholder-[#aaaaaa] text-white outline-none"
-          />
-          <p className="mb-4 text-xs text-red-500">{error.password}</p>
+        <form onSubmit={handleSubmit(onSubmit)} className="" noValidate>
+          <div className="mb-4">
+            <input
+              {...register("email")}
+              placeholder="Email"
+              type="email"
+              className={`w-full px-4 py-3 rounded-xl bg-black/60 border ${
+                errors.email ? "border-red-500" : "border-blue-900"
+              } placeholder-[#aaaaaa] text-white outline-none focus:border-blue-500 transition-colors`}
+            />
+            {errors.email && (
+              <p className="mt-1 text-xs text-red-500 pl-1">{errors.email.message}</p>
+            )}
+          </div>
+
+          <div className="mb-4">
+            <input
+              {...register("password")}
+              placeholder="Password"
+              type="password"
+              className={`w-full px-4 py-3 rounded-xl bg-black/60 border ${
+                errors.password ? "border-red-500" : "border-blue-900"
+              } placeholder-[#aaaaaa] text-white outline-none focus:border-blue-500 transition-colors`}
+            />
+            {errors.password && (
+              <p className="mt-1 text-xs text-red-500 pl-1">{errors.password.message}</p>
+            )}
+          </div>
+
           <button
             type="submit"
-            className="w-full py-3 rounded-xl font-bold mt-4 hover:cursor-pointer transition-all duration-300 hover:scale-105 text-black"
-            style={{ 
+            className="w-full py-3 rounded-xl font-bold mt-2 hover:cursor-pointer transition-all duration-300 hover:scale-105 text-white"
+            style={{
               background: "var(--accent)",
-              boxShadow: "0 0 15px var(--accent)"
+              boxShadow: "0 0 15px var(--accent)",
             }}
           >
             Sign In
@@ -129,11 +129,15 @@ export default function LoginSection({ Loginuser }) {
 
         <p className="text-center mt-6" style={{ color: "var(--text-muted)" }}>
           Don't have an account?{" "}
-          <Link to="/register" className="hover:underline font-bold" style={{ color: "var(--accent)" }}>
+          <Link
+            to="/register"
+            className="hover:underline font-bold"
+            style={{ color: "var(--accent)" }}
+          >
             Register
           </Link>
         </p>
       </div>
     </div>
   );
-}
+}

@@ -5,6 +5,8 @@ import toast, { Toaster } from "react-hot-toast";
 import { Trash2, Edit2, Plus, Loader2, Download, FileText, Utensils } from "lucide-react";
 import { showDeleteConfirm } from "../../showDeleteConfirm.jsx";
 import { z } from "zod";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useLanguage } from "../pages/UseLanguage";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -107,20 +109,34 @@ export default function NutritionLogsSection() {
   const [saving, setSaving]     = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [activeTab, setActiveTab] = useState("All");
-  const [error, setError]       = useState({});
-
-  const [mealType,  setMealType]  = useState("Breakfast");
-  const [foodName,  setFoodName]  = useState("");
-  const [quantity,  setQuantity]  = useState("");
-  const [calories,  setCalories]  = useState("");
-  const [proteins,  setProteins]  = useState("");
-  const [carbs,     setCarbs]     = useState("");
-  const [fats,      setFats]      = useState("");
-  const [date,      setDate]      = useState(new Date().toISOString().split("T")[0]);
 
   const user   = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?._id;
   const { t }  = useLanguage();
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(nutrySchema),
+    defaultValues: {
+      mealType: "Breakfast",
+      foodName: "",
+      quantity: "",
+      calories: "",
+      proteins: "",
+      carbs: "",
+      fats: "",
+      date: new Date().toISOString().split("T")[0],
+    },
+  });
+
+  const watchedMealType = watch("mealType");
+  const watchedFoodName = watch("foodName");
 
   const calcTotals = (items) =>
     items.reduce(
@@ -133,29 +149,18 @@ export default function NutritionLogsSection() {
       { totalCalories: 0, totalProteins: 0, totalCarbs: 0, totalFats: 0 },
     );
 
-  const resetForm = () => {
-    setMealType("Breakfast"); setFoodName(""); setQuantity("");
-    setCalories(""); setProteins(""); setCarbs(""); setFats("");
-    setDate(new Date().toISOString().split("T")[0]);
-    setEditingId(null); setError({});
-  };
-
-  const handleMealChange = (e) => {
-    setMealType(e.target.value);
-    setFoodName(""); setCalories(""); setProteins(""); setCarbs(""); setFats(""); setQuantity("");
-  };
-
-  const handleFoodNameChange = (e) => {
-    const val = e.target.value;
-    setFoodName(val);
-    if (val === "Custom Entry" || val === "") return;
-    const item = (foodDatabase[mealType] || []).find(i => i.name === val);
-    if (item) {
-      setCalories(String(item.calories)); setProteins(String(item.proteins));
-      setCarbs(String(item.carbs));       setFats(String(item.fats));
-      if (!quantity) setQuantity("1 serving");
+  useEffect(() => {
+    if (watchedFoodName && watchedFoodName !== "Custom Entry") {
+      const item = (foodDatabase[watchedMealType] || []).find(i => i.name === watchedFoodName);
+      if (item) {
+        setValue("calories", item.calories);
+        setValue("proteins", item.proteins);
+        setValue("carbs", item.carbs);
+        setValue("fats", item.fats);
+        setValue("quantity", "1 serving");
+      }
     }
-  };
+  }, [watchedFoodName, watchedMealType, setValue]);
 
   const fetchLogs = useCallback(async () => {
     if (!userId) { setLoading(false); return; }
@@ -166,27 +171,21 @@ export default function NutritionLogsSection() {
     finally   { setLoading(false); }
   }, [userId, t]);
 
-  const saveLog = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     if (!userId) return toast.error("You must be logged in");
 
-    const result = nutrySchema.safeParse({ mealType, quantity, foodName, calories, proteins, carbs, fats, date });
-    if (!result.success) {
-      const fe = result.error.format();
-      setError({
-        mealType: fe.mealType?._errors[0] || "",  foodName: fe.foodName?._errors[0] || "",
-        quantity: fe.quantity?._errors[0] || "",   carbs:    fe.carbs?._errors[0]    || "",
-        date:     fe.date?._errors[0]     || "",   calories: fe.calories?._errors[0] || "",
-        fats:     fe.fats?._errors[0]     || "",   proteins: fe.proteins?._errors[0] || "",
-      });
-      return;
-    }
-    setError({});
-
     const payload = {
-      userId, mealType, date,
-      foodItems: [{ name: foodName, quantity, calories: Number(calories) || 0,
-        proteins: Number(proteins) || 0, carbs: Number(carbs) || 0, fats: Number(fats) || 0 }],
+      userId,
+      mealType: data.mealType,
+      date: data.date,
+      foodItems: [{ 
+        name: data.foodName, 
+        quantity: data.quantity, 
+        calories: Number(data.calories),
+        proteins: Number(data.proteins), 
+        carbs: Number(data.carbs), 
+        fats: Number(data.fats) 
+      }],
     };
 
     setSaving(true);
@@ -198,7 +197,9 @@ export default function NutritionLogsSection() {
         await axios.post(`${API_BASE}/nutrition`, payload);
         toast.success(t("logAdded"));
       }
-      resetForm(); fetchLogs();
+      reset();
+      setEditingId(null);
+      fetchLogs();
     } catch { toast.error(editingId ? t("updateFailed") : t("addFailed")); }
     finally { setSaving(false); }
   };
@@ -214,12 +215,18 @@ export default function NutritionLogsSection() {
   };
 
   const startEdit = (log) => {
-    setEditingId(log._id); setMealType(log.mealType);
-    setDate(new Date(log.date).toISOString().split("T")[0]);
+    setEditingId(log._id);
     const first = log.foodItems[0];
-    setFoodName(first.name); setQuantity(first.quantity);
-    setCalories(String(first.calories)); setProteins(String(first.proteins));
-    setCarbs(String(first.carbs));       setFats(String(first.fats));
+    reset({
+      mealType: log.mealType,
+      foodName: first.name,
+      quantity: first.quantity,
+      calories: first.calories,
+      proteins: first.proteins,
+      carbs: first.carbs,
+      fats: first.fats,
+      date: new Date(log.date).toISOString().split("T")[0],
+    });
   };
 
   const exportPDF = async () => {
@@ -394,80 +401,75 @@ export default function NutritionLogsSection() {
             {editingId ? `✏️ ${t("update")}` : `＋ ${t("add")} ${t("nutritionLog") || "Nutrition Log"}`}
           </p>
 
-          <form onSubmit={saveLog} className="grid md:grid-cols-2 gap-3" noValidate>
+          <form onSubmit={handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-3" noValidate>
 
             {/* Meal Type */}
             <div className="flex flex-col gap-1">
-              <select value={mealType} onChange={handleMealChange}
-                className="glass-input w-full px-3 py-2.5 text-sm" style={glassInput}>
+              <select {...register("mealType")}
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.mealType ? 'border-red-500' : ''}`} style={glassInput}>
                 {["Breakfast", "Lunch", "Dinner", "Snacks", "Other"].map(meal => (
                   <option key={meal} value={meal}>{t(meal) || meal}</option>
                 ))}
               </select>
-              {error.mealType && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.mealType}</p>}
+              {errors.mealType && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.mealType.message}</p>}
             </div>
 
             {/* Date */}
             <div className="flex flex-col gap-1">
-              <input type="date" value={date} onChange={e => setDate(e.target.value)}
+              <input {...register("date")} type="date"
                 min={new Date().toISOString().split("T")[0]}
-                className="glass-input w-full px-3 py-2.5 text-sm" style={glassInput} required />
-              {error.date && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.date}</p>}
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.date ? 'border-red-500' : ''}`} style={glassInput} required />
+              {errors.date && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.date.message}</p>}
             </div>
 
             {/* Food Name */}
             <div className="flex flex-col gap-1">
               <input
-                list={`food-options-${mealType}`}
+                {...register("foodName")}
+                list={`food-options-${watchedMealType}`}
                 placeholder={`${t("foodName") || "Food name"} *`}
-                value={foodName} onChange={handleFoodNameChange}
-                className="glass-input w-full px-3 py-2.5 text-sm" style={glassInput} required />
-              <datalist id={`food-options-${mealType}`}>
-                {(foodDatabase[mealType] || []).map(item => (
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.foodName ? 'border-red-500' : ''}`} style={glassInput} required />
+              <datalist id={`food-options-${watchedMealType}`}>
+                {(foodDatabase[watchedMealType] || []).map(item => (
                   <option key={item.name} value={item.name} />
                 ))}
               </datalist>
-              {error.foodName && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.foodName}</p>}
+              {errors.foodName && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.foodName.message}</p>}
             </div>
 
             {/* Quantity */}
             <div className="flex flex-col gap-1">
-              <input placeholder={`${t("quantity") || "Quantity"} *`} value={quantity}
-                onChange={e => setQuantity(e.target.value)}
-                className="glass-input w-full px-3 py-2.5 text-sm" style={glassInput} required />
-              {error.quantity && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.quantity}</p>}
+              <input {...register("quantity")} placeholder={`${t("quantity") || "Quantity"} *`}
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.quantity ? 'border-red-500' : ''}`} style={glassInput} required />
+              {errors.quantity && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.quantity.message}</p>}
             </div>
 
             {/* Calories */}
             <div className="flex flex-col gap-1">
-              <input type="number" placeholder={`${t("calories") || "Calories"} *`} value={calories}
-                onChange={e => setCalories(e.target.value)}
-                className="glass-input w-full px-3 py-2.5 text-sm" style={glassInput} required />
-              {error.calories && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.calories}</p>}
+              <input {...register("calories")} type="number" placeholder={`${t("calories") || "Calories"} *`}
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.calories ? 'border-red-500' : ''}`} style={glassInput} required />
+              {errors.calories && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.calories.message}</p>}
             </div>
 
             {/* Proteins */}
             <div className="flex flex-col gap-1">
-              <input type="number" placeholder={`${t("proteins") || "Proteins"} (g) *`} value={proteins}
-                onChange={e => setProteins(e.target.value)}
-                className="glass-input w-full px-3 py-2.5 text-sm" style={glassInput} required />
-              {error.proteins && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.proteins}</p>}
+              <input {...register("proteins")} type="number" placeholder={`${t("proteins") || "Proteins"} (g) *`}
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.proteins ? 'border-red-500' : ''}`} style={glassInput} required />
+              {errors.proteins && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.proteins.message}</p>}
             </div>
 
             {/* Carbs */}
             <div className="flex flex-col gap-1">
-              <input type="number" placeholder={`${t("carbs") || "Carbs"} (g) *`} value={carbs}
-                onChange={e => setCarbs(e.target.value)}
-                className="glass-input w-full px-3 py-2.5 text-sm" style={glassInput} required />
-              {error.carbs && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.carbs}</p>}
+              <input {...register("carbs")} type="number" placeholder={`${t("carbs") || "Carbs"} (g) *`}
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.carbs ? 'border-red-500' : ''}`} style={glassInput} required />
+              {errors.carbs && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.carbs.message}</p>}
             </div>
 
             {/* Fats */}
             <div className="flex flex-col gap-1">
-              <input type="number" placeholder={`${t("fats") || "Fats"} (g) *`} value={fats}
-                onChange={e => setFats(e.target.value)}
-                className="glass-input w-full px-3 py-2.5 text-sm" style={glassInput} required />
-              {error.fats && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{error.fats}</p>}
+              <input {...register("fats")} type="number" placeholder={`${t("fats") || "Fats"} (g) *`}
+                className={`glass-input w-full px-3 py-2.5 text-sm ${errors.fats ? 'border-red-500' : ''}`} style={glassInput} required />
+              {errors.fats && <p className="text-xs pl-1" style={{ color: "#f87171" }}>{errors.fats.message}</p>}
             </div>
 
             {/* Actions */}
@@ -489,7 +491,7 @@ export default function NutritionLogsSection() {
 
               {editingId && (
                 <motion.button
-                  type="button" onClick={resetForm}
+                  type="button" onClick={() => { reset(); setEditingId(null); }}
                   whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   className="px-5 py-2.5 rounded-xl text-sm font-medium"
                   style={{ ...glassInput, color: "var(--text-primary)", border: "1px solid rgba(255,255,255,0.12)" }}
@@ -668,4 +670,4 @@ export default function NutritionLogsSection() {
       </motion.div>
     </>
   );
-}
+}

@@ -145,7 +145,7 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
       await axios.post(`${API_BASE_URL}/notifications/${notificationId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      latestNotifId.current = null; // reset so next fetch updates state
+      latestNotifId.current = null;
       await fetchNotifications();
       toast.success('Marked as read');
     } catch (err) {
@@ -161,7 +161,7 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
       await axios.delete(`${API_BASE_URL}/notifications/${notificationId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      latestNotifId.current = null; // reset so next fetch updates state
+      latestNotifId.current = null;
       toast.success('Deleted');
       await fetchNotifications();
     } catch (err) {
@@ -181,7 +181,7 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
           })
         )
       );
-      latestNotifId.current = null; // reset so next fetch updates state
+      latestNotifId.current = null;
       await fetchNotifications();
       toast.success('All notifications marked as read');
     } catch (err) {
@@ -229,13 +229,13 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
   const getNotificationBorder = (type) => {
     switch (type) {
       case 'goal':
-        return 'border-l-4 border-green-500 bg-green-50 dark:bg-green-900/20';
+        return 'border-l-4 border-green-500 bg-green-50';
       case 'reminder':
-        return 'border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20';
+        return 'border-l-4 border-blue-500 bg-blue-50';
       case 'alert':
-        return 'border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20';
+        return 'border-l-4 border-red-500 bg-red-50';
       default:
-        return 'border-l-4 border-gray-500 bg-gray-50 dark:bg-gray-900/20';
+        return 'border-l-4 border-gray-300 bg-gray-50';
     }
   };
 
@@ -325,18 +325,16 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
               animate={{ opacity: 1, y: 0 }}
               className="absolute right-0 mt-2 w-96 rounded-xl z-50 max-h-96 overflow-y-auto"
               style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                background: '#ffffff',
+                border: '1px solid #e5e7eb',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
               }}
             >
               <div
                 className="p-4 flex justify-between items-center"
-                style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}
+                style={{ borderBottom: '1px solid #e5e7eb' }}
               >
-                <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Notifications</h3>
+                <h3 className="font-semibold" style={{ color: '#111827' }}>Notifications</h3>
                 <div className="flex items-center space-x-2">
                   {unreadCount > 0 && (
                     <button
@@ -360,11 +358,11 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
 
               {loading ? (
                 <div className="p-4 text-center">
-                  <p style={{ color: 'var(--text-muted)' }}>Loading...</p>
+                  <p style={{ color: '#6b7280' }}>Loading...</p>
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="p-6 text-center">
-                  <p className="mb-4" style={{ color: 'var(--text-muted)' }}>No notifications</p>
+                  <p className="mb-4" style={{ color: '#6b7280' }}>No notifications</p>
                   <button
                     onClick={handleViewAllNotifications}
                     className="text-sm text-[var(--accent)] hover:underline"
@@ -374,29 +372,26 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
                 </div>
               ) : (
                 <>
-                  <div style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }} className="divide-y divide-white/10">
+                  <div className="divide-y divide-gray-100">
                     {notifications.slice(0, 8).map((notification) => (
                       <div
                         key={notification._id}
                         className={`p-3 transition-colors ${!notification.isRead ? getNotificationBorder(notification.type) : 'opacity-70'}`}
-                        style={{
-                          '--hover-bg': 'rgba(255,255,255,0.06)',
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)'}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
                         onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center space-x-2">
                             {getNotificationIcon(notification.type)}
-                            <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+                            <span className="text-xs font-medium uppercase tracking-wide" style={{ color: '#6b7280' }}>
                               {notification.type}
                             </span>
                           </div>
-                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          <span className="text-xs" style={{ color: '#9ca3af' }}>
                             {new Date(notification.date).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-sm mb-2" style={{ color: 'var(--text-primary)' }}>
+                        <p className="text-sm mb-2" style={{ color: '#111827' }}>
                           {notification.message}
                         </p>
                         <div className="flex justify-between items-center">
@@ -429,7 +424,7 @@ const NavbarSection = ({ user, toggleTheme, isDark, logout }) => {
                   {notifications.length > 8 && (
                     <div
                       className="p-3"
-                      style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(255,255,255,0.04)' }}
+                      style={{ borderTop: '1px solid #e5e7eb', background: '#f9fafb' }}
                     >
                       <button
                         onClick={handleViewAllNotifications}

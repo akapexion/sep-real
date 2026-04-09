@@ -79,7 +79,7 @@ export const t = (key, lang = 'en') => {
       // Homepage
       welcomeBack: "Welcome back",
       fitnessEnthusiast: "Fitness Enthusiast",
-      streakMessage: "You're on a {days}-day streak! Keep going! 💪",
+      streakMessage: "You're on a {days}-day streak! Keep going!",
       readyForWorkout: "Ready for your next workout? Let's get moving!",
       totalWorkouts: "Total Workouts",
       goalsAchieved: "Goals Achieved",
@@ -107,8 +107,8 @@ export const t = (key, lang = 'en') => {
       createTargets: "Create targets",
       fitnessMotivation: "Fitness Motivation",
       firstWorkoutMotivation: "Your fitness journey starts with a single step. Log your first workout today! 🚀",
-      beginnerMotivation: "Great start! Consistency is key. Keep building those healthy habits! 🌟",
-      experiencedMotivation: "You're building amazing momentum! Your future self will thank you. 🌈",
+      beginnerMotivation: "Great start! Consistency is key. Keep building those healthy habits!",
+      experiencedMotivation: "You're building amazing momentum! Your future self will thank you.",
       failedToLoadDashboard: "Failed to load dashboard data",
       days: "days",
 
